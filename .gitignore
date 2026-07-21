@@ -1,0 +1,16 @@
+# Local secrets
+.env
+**/.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node.js
+node_modules/
+dist/
+
+# Local tooling
+.DS_Store
+Thumbs.db

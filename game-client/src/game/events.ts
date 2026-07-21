@@ -1,0 +1,35 @@
+export type GameEventMap = {
+  'world:ready': undefined
+  'player:moved': { x: number; y: number }
+  'npc:near': { id: number | null; name: string | null }
+  'npc:interact': { id: number }
+  'input:direction': { x: number; y: number }
+  'input:interact': undefined
+  'scene:world': undefined
+  'scene:battle': { enemyName: string }
+  'battle:impact': { damage: number; target: 'enemy' | 'player' }
+}
+
+type Handler<T> = (payload: T) => void
+
+class TypedEventBus {
+  private readonly target = new EventTarget()
+  private readonly wrapped = new WeakMap<Function, EventListener>()
+
+  on<K extends keyof GameEventMap>(event: K, handler: Handler<GameEventMap[K]>): void {
+    const listener: EventListener = (item) => handler((item as CustomEvent<GameEventMap[K]>).detail)
+    this.wrapped.set(handler, listener)
+    this.target.addEventListener(event, listener)
+  }
+
+  off<K extends keyof GameEventMap>(event: K, handler: Handler<GameEventMap[K]>): void {
+    const listener = this.wrapped.get(handler)
+    if (listener) this.target.removeEventListener(event, listener)
+  }
+
+  emit<K extends keyof GameEventMap>(event: K, payload: GameEventMap[K]): void {
+    this.target.dispatchEvent(new CustomEvent(event, { detail: payload }))
+  }
+}
+
+export const gameEvents = new TypedEventBus()
