@@ -20,23 +20,26 @@ export class BattleScene extends Phaser.Scene {
         })
             .setOrigin(0.5);
         this.enemy = new CardSpirit(this, width * 0.72, height * 0.42, data.enemyName ?? '训练木偶', 'npc', 0xb45309);
-        this.playerSpirit = new CardSpirit(this, width * 0.28, height * 0.58, profile.name, `player-${avatarGender}`, 0x15803d);
-        gameEvents.on('battle:impact', this.onImpact);
+        this.playerSpirit = new CardSpirit(this, width * 0.28, height * 0.58, profile.name, `player-${avatarGender}-combat`, 0x15803d);
+        gameEvents.on('battle:action', this.onBattleAction);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            gameEvents.off('battle:impact', this.onImpact);
+            gameEvents.off('battle:action', this.onBattleAction);
         });
     }
-    onImpact = ({ target }) => {
-        const spirit = target === 'enemy' ? this.enemy : this.playerSpirit;
-        if (!spirit)
+    onBattleAction = ({ target, targetDefeated, result, }) => {
+        const attacker = target === 'enemy' ? this.playerSpirit : this.enemy;
+        const defender = target === 'enemy' ? this.enemy : this.playerSpirit;
+        if (!attacker || !defender)
             return;
-        this.tweens.add({
-            targets: spirit,
-            x: spirit.x + (target === 'enemy' ? 16 : -16),
-            alpha: 0.55,
-            yoyo: true,
-            duration: 90,
-            repeat: 1,
+        attacker.playAttack(target === 'enemy' ? 1 : -1, () => {
+            defender.playHit(() => {
+                if (targetDefeated)
+                    defender.playDeath();
+                if (result === 'victory')
+                    this.time.delayedCall(180, () => this.playerSpirit.playVictory());
+                if (result === 'defeat')
+                    this.time.delayedCall(180, () => this.enemy.playVictory());
+            });
         });
     };
 }

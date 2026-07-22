@@ -7,7 +7,12 @@ export type GameEventMap = {
   'input:interact': undefined
   'scene:world': undefined
   'scene:battle': { enemyName: string }
-  'battle:impact': { damage: number; target: 'enemy' | 'player' }
+  'battle:action': {
+    damage: number
+    target: 'enemy' | 'player'
+    targetDefeated: boolean
+    result: 'active' | 'victory' | 'defeat' | 'abandoned'
+  }
 }
 
 type Handler<T> = (payload: T) => void

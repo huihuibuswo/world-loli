@@ -8,9 +8,17 @@ const game = useGameStore()
 const battle = computed(() => game.battle!)
 const hand = computed(() => battle.value.hand_cards.map((id) => game.cardById.get(id)).filter(Boolean))
 
-watch(() => battle.value?.last_action, (next, previous) => {
-  if (next && next !== previous && next.damage) {
-    gameEvents.emit('battle:impact', { damage: next.damage, target: next.type === 'enemy_attack' ? 'player' : 'enemy' })
+watch(() => battle.value?.version, (nextVersion, previousVersion) => {
+  const action = battle.value?.last_action
+  if (action?.damage !== undefined && previousVersion !== undefined && nextVersion !== previousVersion) {
+    const target = action.type === 'enemy_attack' ? 'player' : 'enemy'
+    const targetState = target === 'enemy' ? battle.value.enemy_state : battle.value.player_state
+    gameEvents.emit('battle:action', {
+      damage: action.damage,
+      target,
+      targetDefeated: targetState.hp <= 0,
+      result: battle.value.status,
+    })
   }
 })
 </script>

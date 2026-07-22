@@ -6,5 +6,5 @@ export declare class BattleScene extends Phaser.Scene {
     create(data: {
         enemyName?: string;
     }): void;
-    private readonly onImpact;
+    private readonly onBattleAction;
 }

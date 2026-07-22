@@ -8,11 +8,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   state: PlayerState = 'idle'
   direction: 'up' | 'down' | 'left' | 'right' = 'down'
   private virtual = new Phaser.Math.Vector2(0, 0)
+  private readonly idleTexture: string
+  private readonly walkTexture: string
+  private readonly walkAnimationKey: string
 
   constructor(scene: Phaser.Scene, x: number, y: number, avatarGender?: 'female' | 'male') {
     const requestedTexture = avatarGender === 'male' ? 'player-male' : 'player-female'
     const texture = scene.textures.exists(requestedTexture) ? requestedTexture : 'player-female'
     super(scene, x, y, texture)
+    const gender = texture === 'player-male' ? 'male' : 'female'
+    this.idleTexture = texture
+    this.walkTexture = `player-${gender}-walk`
+    this.walkAnimationKey = `player-${gender}-walk-cycle`
     scene.add.existing(this)
     scene.physics.add.existing(this)
     this.setCollideWorldBounds(true)
@@ -28,6 +35,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   move(cursors: Phaser.Types.Input.Keyboard.CursorKeys, wasd: Record<string, Phaser.Input.Keyboard.Key>): void {
     if (this.state === 'disabled' || this.state === 'battle') {
       this.setVelocity(0)
+      this.stopWalkAnimation()
       return
     }
     const input = new Phaser.Math.Vector2(
@@ -38,12 +46,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (input.lengthSq() === 0) {
       this.setVelocity(0)
       this.state = 'idle'
+      this.stopWalkAnimation()
       this.setDepth(this.y)
       return
     }
     input.normalize().scale(this.speed)
     this.setVelocity(input.x, input.y)
     this.state = 'walk'
+    this.startWalkAnimation()
     if (Math.abs(input.x) > Math.abs(input.y)) {
       this.direction = input.x > 0 ? 'right' : 'left'
     } else {
@@ -51,5 +61,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
     this.setFlipX(this.direction === 'left')
     this.setDepth(this.y)
+  }
+
+  private startWalkAnimation(): void {
+    if (this.anims.currentAnim?.key === this.walkAnimationKey && this.anims.isPlaying) return
+    this.setTexture(this.walkTexture, 0).setDisplaySize(84, 84)
+    this.play(this.walkAnimationKey)
+  }
+
+  private stopWalkAnimation(): void {
+    if (this.texture.key === this.idleTexture) return
+    this.stop()
+    this.setTexture(this.idleTexture).setDisplaySize(84, 84)
   }
 }

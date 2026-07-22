@@ -20,9 +20,11 @@ export type GameEventMap = {
     'scene:battle': {
         enemyName: string;
     };
-    'battle:impact': {
+    'battle:action': {
         damage: number;
         target: 'enemy' | 'player';
+        targetDefeated: boolean;
+        result: 'active' | 'victory' | 'defeat' | 'abandoned';
     };
 };
 type Handler<T> = (payload: T) => void;
