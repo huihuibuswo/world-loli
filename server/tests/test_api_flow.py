@@ -59,6 +59,27 @@ def test_complete_demo_backend_flow() -> None:
             assert profile.json()["data"]["current_map"] is not None
             assert profile.json()["data"]["avatar_gender"] == "male"
 
+            map_response = client.get(
+                f"/api/v1/map/{profile.json()['data']['current_map']}",
+                headers=headers_a,
+            )
+            assert map_response.status_code == 200
+            map_data = map_response.json()["data"]
+            assert map_data["map_name"] == "晨曦村"
+            map_npcs = {
+                item["template_name"]: item["sprite"]
+                for item in map_data["resource"]["objects"]
+                if item["type"] == "npc"
+            }
+            assert map_npcs == {
+                "训练木偶": "training-dummy",
+                "训练教官": "npc-trainer",
+                "晨曦村村长": "npc-village-chief",
+                "铁匠少女苏娜": "npc-suna",
+                "杂货商": "npc-shopkeeper",
+                "森林向导": "npc-forest-guide",
+            }
+
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200
             cards = cards_response.json()["data"]
@@ -137,6 +158,59 @@ def test_complete_demo_backend_flow() -> None:
             assert spirits.status_code == 200
             spirit_data = spirits.json()["data"]
             assert [item["name"] for item in spirit_data] == ["狼娘·露娜"]
+            assert spirit_data[0]["exp"] == 60
+            assert spirit_data[0]["affection"] == 2
+
+            second_battle_response = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": enemy_id},
+                headers=headers_a,
+            )
+            assert second_battle_response.status_code == 201, second_battle_response.text
+            second_battle = second_battle_response.json()["data"]
+            second_playable = sorted(
+                (card_by_id[card_id] for card_id in set(second_battle["hand_cards"])),
+                key=lambda item: item["effect"].get("damage", 0),
+                reverse=True,
+            )
+            second_first_play = client.post(
+                f"/api/v1/battle/{second_battle['battle_id']}/play-card",
+                json={
+                    "card_id": second_playable[0]["id"],
+                    "expected_version": second_battle["version"],
+                },
+                headers=headers_a,
+            )
+            assert second_first_play.status_code == 200, second_first_play.text
+            second_after_first = second_first_play.json()["data"]
+            assert second_after_first["last_action"]["damage"] == 16
+            second_completion = client.post(
+                f"/api/v1/battle/{second_battle['battle_id']}/play-card",
+                json={
+                    "card_id": second_playable[-1]["id"],
+                    "expected_version": second_after_first["version"],
+                },
+                headers=headers_a,
+            )
+            assert second_completion.status_code == 200, second_completion.text
+            assert second_completion.json()["data"]["status"] == "victory"
+            assert second_completion.json()["data"]["reward"]["spirit_exp"] == 60
+
+            growth = client.get(
+                f"/api/v1/spirits/{spirit_data[0]['id']}/growth", headers=headers_a
+            )
+            assert growth.status_code == 200
+            assert growth.json()["data"]["exp"] == 120
+            assert growth.json()["data"]["affection"] == 4
+
+            level_up = client.post(
+                f"/api/v1/spirits/{spirit_data[0]['id']}/level",
+                json={"levels": 1},
+                headers=headers_a,
+            )
+            assert level_up.status_code == 200, level_up.text
+            assert level_up.json()["data"]["level"] == 2
+            assert level_up.json()["data"]["exp"] == 20
 
             affection = client.post(
                 f"/api/v1/spirits/{spirit_data[0]['id']}/affection",
@@ -144,6 +218,10 @@ def test_complete_demo_backend_flow() -> None:
                 headers=headers_a,
             )
             assert affection.status_code == 200
+            assert affection.json()["data"]["interaction_available_at"] is not None
+            refreshed_spirits = client.get("/api/v1/spirits", headers=headers_a)
+            assert refreshed_spirits.status_code == 200
+            assert refreshed_spirits.json()["data"][0]["interaction_available_at"] is not None
             affection_spam = client.post(
                 f"/api/v1/spirits/{spirit_data[0]['id']}/affection",
                 json={"source": "dialog"},
@@ -153,7 +231,7 @@ def test_complete_demo_backend_flow() -> None:
 
             save = client.get("/api/v1/save", headers=headers_a)
             assert save.status_code == 200
-            assert save.json()["data"]["player"]["gold"] == 10
+            assert save.json()["data"]["player"]["gold"] == 20
         finally:
             if user_ids:
                 with SessionLocal() as db:

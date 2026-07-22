@@ -30,6 +30,7 @@ export interface MapObject {
   type: string
   template_id?: number
   template_name?: string
+  sprite?: string
   x: number
   y: number
 }
@@ -54,6 +55,8 @@ export interface NpcData {
   battle_deck: Record<string, unknown>
   reward: Record<string, unknown>
   is_card_spirit: boolean
+  sprite: string
+  actions: string[]
 }
 
 export interface CardData {
@@ -79,10 +82,13 @@ export interface SpiritData {
   type: string
   story: string
   avatar: string | null
+  base_skill: { name?: string; [key: string]: unknown }
+  awakening_skill: { name?: string; [key: string]: unknown }
   level: number
   exp: number
   affection: number
   awaken_level: number
+  interaction_available_at: string | null
 }
 
 export interface DeckData {
@@ -108,5 +114,5 @@ export interface BattleData {
   debuffs: unknown[]
   last_action?: { type: string; damage?: number; card_id?: number }
   result?: string
-  reward?: Record<string, unknown>
+  reward?: { gold?: number; spirit_exp?: number; spirit_affection?: number; [key: string]: unknown }
 }

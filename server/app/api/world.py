@@ -24,14 +24,17 @@ def _map_data(item: MapData) -> dict:
 
 
 def _npc_data(item: NpcTemplate) -> dict:
+    reward = item.reward or {}
     return {
         "id": item.id,
         "name": item.name,
         "type": item.type,
         "story": item.story,
         "battle_deck": item.battle_deck,
-        "reward": item.reward,
+        "reward": reward,
         "is_card_spirit": item.is_card_spirit,
+        "sprite": reward.get("sprite", "training-dummy"),
+        "actions": reward.get("actions", ["dialog", "battle"]),
     }
 
 

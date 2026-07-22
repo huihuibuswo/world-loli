@@ -43,6 +43,11 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
       <p class="eyebrow">BATTLE COMPLETE</p>
       <h2>{{ battle.status === 'victory' ? '胜利' : '战斗结束' }}</h2>
       <p>{{ battle.status === 'victory' ? '林间的回响化作新的力量。' : '休整之后，再次启程。' }}</p>
+      <div v-if="battle.status === 'victory'" class="battle-rewards" aria-label="战斗奖励">
+        <span v-if="battle.reward?.gold">金币 +{{ battle.reward.gold }}</span>
+        <span v-if="battle.reward?.spirit_exp">卡灵经验 +{{ battle.reward.spirit_exp }}</span>
+        <span v-if="battle.reward?.spirit_affection">羁绊 +{{ battle.reward.spirit_affection }}</span>
+      </div>
       <button class="button primary" type="button" @click="game.leaveBattle"><RotateCcw :size="18" />返回世界</button>
     </div>
 

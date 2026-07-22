@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { defineStore } from 'pinia';
+import { acceptHMRUpdate, defineStore } from 'pinia';
 import { api, errorMessage, requestData } from '@/api/client';
 export const useGameStore = defineStore('game', () => {
     const player = ref(null);
@@ -15,6 +15,21 @@ export const useGameStore = defineStore('game', () => {
     const notice = ref('');
     const cardById = computed(() => new Map(cards.value.map((card) => [card.id, card])));
     const activeDeck = computed(() => decks.value.find((deck) => deck.is_active) ?? null);
+    let noticeTimer = null;
+    function showNotice(message) {
+        notice.value = message;
+        if (noticeTimer)
+            window.clearTimeout(noticeTimer);
+        noticeTimer = window.setTimeout(() => {
+            notice.value = '';
+            noticeTimer = null;
+        }, 3000);
+    }
+    function replaceSpirit(nextSpirit) {
+        const index = spirits.value.findIndex((spirit) => spirit.id === nextSpirit.id);
+        if (index >= 0)
+            spirits.value[index] = nextSpirit;
+    }
     function normalizePlayer(profile) {
         return {
             ...profile,
@@ -170,10 +185,37 @@ export const useGameStore = defineStore('game', () => {
         error.value = '';
         try {
             await requestData(api.post('/save'));
-            notice.value = '冒险进度已保存';
-            window.setTimeout(() => {
-                notice.value = '';
-            }, 3000);
+            showNotice('冒险进度已保存');
+        }
+        catch (cause) {
+            error.value = errorMessage(cause);
+        }
+        finally {
+            actionLoading.value = false;
+        }
+    }
+    async function interactWithSpirit(spiritId) {
+        actionLoading.value = true;
+        error.value = '';
+        try {
+            const spirit = await requestData(api.post(`/spirits/${spiritId}/affection`, { source: 'dialog' }));
+            replaceSpirit(spirit);
+            showNotice(`与 ${spirit.name} 的羁绊加深了`);
+        }
+        catch (cause) {
+            error.value = errorMessage(cause);
+        }
+        finally {
+            actionLoading.value = false;
+        }
+    }
+    async function levelUpSpirit(spiritId) {
+        actionLoading.value = true;
+        error.value = '';
+        try {
+            const spirit = await requestData(api.post(`/spirits/${spiritId}/level`, { levels: 1 }));
+            replaceSpirit(spirit);
+            showNotice(`${spirit.name} 提升至 Lv.${spirit.level}`);
         }
         catch (cause) {
             error.value = errorMessage(cause);
@@ -215,6 +257,11 @@ export const useGameStore = defineStore('game', () => {
         leaveBattle,
         savePosition,
         saveGame,
+        interactWithSpirit,
+        levelUpSpirit,
         reset,
     };
 });
+if (import.meta.hot) {
+    import.meta.hot.accept(acceptHMRUpdate(useGameStore, import.meta.hot));
+}

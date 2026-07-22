@@ -139,10 +139,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[], SpiritData[] | {
         id: number;
         template_id: number;
@@ -152,10 +161,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[]>;
     battle: import("vue").Ref<{
         battle_id: number;
@@ -184,7 +202,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null, BattleData | {
         battle_id: number;
         enemy_id: number;
@@ -212,7 +235,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null>;
     dialogNpc: import("vue").Ref<{
         id: number;
@@ -272,8 +300,10 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     leaveBattle: () => Promise<void>;
     savePosition: (x: number, y: number) => Promise<void>;
     saveGame: () => Promise<void>;
+    interactWithSpirit: (spiritId: number) => Promise<void>;
+    levelUpSpirit: (spiritId: number) => Promise<void>;
     reset: () => void;
-}, "loading" | "error" | "map" | "cards" | "player" | "decks" | "spirits" | "battle" | "dialogNpc" | "actionLoading" | "notice">, Pick<{
+}, "map" | "cards" | "player" | "decks" | "spirits" | "battle" | "dialogNpc" | "loading" | "actionLoading" | "error" | "notice">, Pick<{
     player: import("vue").Ref<{
         id: number;
         name: string;
@@ -413,10 +443,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[], SpiritData[] | {
         id: number;
         template_id: number;
@@ -426,10 +465,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[]>;
     battle: import("vue").Ref<{
         battle_id: number;
@@ -458,7 +506,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null, BattleData | {
         battle_id: number;
         enemy_id: number;
@@ -486,7 +539,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null>;
     dialogNpc: import("vue").Ref<{
         id: number;
@@ -546,6 +604,8 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     leaveBattle: () => Promise<void>;
     savePosition: (x: number, y: number) => Promise<void>;
     saveGame: () => Promise<void>;
+    interactWithSpirit: (spiritId: number) => Promise<void>;
+    levelUpSpirit: (spiritId: number) => Promise<void>;
     reset: () => void;
 }, "cardById" | "activeDeck">, Pick<{
     player: import("vue").Ref<{
@@ -687,10 +747,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[], SpiritData[] | {
         id: number;
         template_id: number;
@@ -700,10 +769,19 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
         type: string;
         story: string;
         avatar: string | null;
+        base_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
+        awakening_skill: {
+            [x: string]: unknown;
+            name?: string | undefined;
+        };
         level: number;
         exp: number;
         affection: number;
         awaken_level: number;
+        interaction_available_at: string | null;
     }[]>;
     battle: import("vue").Ref<{
         battle_id: number;
@@ -732,7 +810,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null, BattleData | {
         battle_id: number;
         enemy_id: number;
@@ -760,7 +843,12 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
             card_id?: number | undefined;
         } | undefined;
         result?: string | undefined;
-        reward?: Record<string, unknown> | undefined;
+        reward?: {
+            [x: string]: unknown;
+            gold?: number | undefined;
+            spirit_exp?: number | undefined;
+            spirit_affection?: number | undefined;
+        } | undefined;
     } | null>;
     dialogNpc: import("vue").Ref<{
         id: number;
@@ -820,5 +908,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     leaveBattle: () => Promise<void>;
     savePosition: (x: number, y: number) => Promise<void>;
     saveGame: () => Promise<void>;
+    interactWithSpirit: (spiritId: number) => Promise<void>;
+    levelUpSpirit: (spiritId: number) => Promise<void>;
     reset: () => void;
-}, "reset" | "bootstrap" | "openNpc" | "closeDialog" | "startBattle" | "playCard" | "endTurn" | "leaveBattle" | "savePosition" | "saveGame">>;
+}, "bootstrap" | "openNpc" | "closeDialog" | "startBattle" | "playCard" | "endTurn" | "leaveBattle" | "savePosition" | "saveGame" | "interactWithSpirit" | "levelUpSpirit" | "reset">>;

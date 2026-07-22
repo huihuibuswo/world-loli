@@ -102,6 +102,25 @@ if (__VLS_ctx.battle.status !== 'active') {
     (__VLS_ctx.battle.status === 'victory' ? '胜利' : '战斗结束');
     __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({});
     (__VLS_ctx.battle.status === 'victory' ? '林间的回响化作新的力量。' : '休整之后，再次启程。');
+    if (__VLS_ctx.battle.status === 'victory') {
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "battle-rewards" },
+            'aria-label': "战斗奖励",
+        });
+        /** @type {__VLS_StyleScopedClasses['battle-rewards']} */ ;
+        if (__VLS_ctx.battle.reward?.gold) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
+            (__VLS_ctx.battle.reward.gold);
+        }
+        if (__VLS_ctx.battle.reward?.spirit_exp) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
+            (__VLS_ctx.battle.reward.spirit_exp);
+        }
+        if (__VLS_ctx.battle.reward?.spirit_affection) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
+            (__VLS_ctx.battle.reward.spirit_affection);
+        }
+    }
     __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
         ...{ onClick: (__VLS_ctx.game.leaveBattle) },
         ...{ class: "button primary" },
@@ -155,7 +174,7 @@ else {
                         throw 0;
                     return (__VLS_ctx.game.playCard(card.id));
                     // @ts-ignore
-                    [game, game, game, game, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, hand,];
+                    [game, game, game, game, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, hand,];
                 } },
             key: (`${card.id}-${index}`),
             ...{ class: "battle-card" },

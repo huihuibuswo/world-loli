@@ -19,9 +19,19 @@ from app.schemas import CardUpgradeRequest, SpiritAffectionRequest, SpiritLevelR
 
 
 router = APIRouter(tags=["collection"])
+INTERACTION_COOLDOWN = timedelta(seconds=60)
 
 
-def _spirit_data(spirit: PlayerCardSpirit, template: CardSpiritTemplate) -> dict:
+def _spirit_data(
+    spirit: PlayerCardSpirit,
+    template: CardSpiritTemplate,
+    record: AffectionRecord | None = None,
+) -> dict:
+    interaction_available_at = (
+        record.last_interaction_time + INTERACTION_COOLDOWN
+        if record and record.last_interaction_time
+        else None
+    )
     return {
         "id": spirit.id,
         "template_id": template.id,
@@ -37,6 +47,7 @@ def _spirit_data(spirit: PlayerCardSpirit, template: CardSpiritTemplate) -> dict
         "exp": spirit.exp,
         "affection": spirit.affection,
         "awaken_level": spirit.awaken_level,
+        "interaction_available_at": interaction_available_at,
         "acquired_at": spirit.acquired_at,
     }
 
@@ -58,12 +69,17 @@ def _card_data(card: PlayerCard, template: CardTemplate) -> dict:
     }
 
 
-def _owned_spirit(db: Session, player_id: int, spirit_id: int) -> tuple[PlayerCardSpirit, CardSpiritTemplate]:
-    row = db.execute(
+def _owned_spirit(
+    db: Session, player_id: int, spirit_id: int, *, lock: bool = False
+) -> tuple[PlayerCardSpirit, CardSpiritTemplate]:
+    statement = (
         select(PlayerCardSpirit, CardSpiritTemplate)
         .join(CardSpiritTemplate, CardSpiritTemplate.id == PlayerCardSpirit.spirit_template_id)
         .where(PlayerCardSpirit.id == spirit_id, PlayerCardSpirit.player_id == player_id)
-    ).one_or_none()
+    )
+    if lock:
+        statement = statement.with_for_update(of=PlayerCardSpirit)
+    row = db.execute(statement).one_or_none()
     if row is None:
         abort(404, "卡牌精灵不存在")
     return row[0], row[1]
@@ -85,12 +101,18 @@ def list_spirits(
     player: Player = Depends(get_current_player), db: Session = Depends(get_db)
 ) -> dict:
     rows = db.execute(
-        select(PlayerCardSpirit, CardSpiritTemplate)
+        select(PlayerCardSpirit, CardSpiritTemplate, AffectionRecord)
         .join(CardSpiritTemplate, CardSpiritTemplate.id == PlayerCardSpirit.spirit_template_id)
+        .outerjoin(
+            AffectionRecord,
+            AffectionRecord.player_card_spirit_id == PlayerCardSpirit.id,
+        )
         .where(PlayerCardSpirit.player_id == player.id)
         .order_by(PlayerCardSpirit.id)
     ).all()
-    return ok([_spirit_data(spirit, template) for spirit, template in rows])
+    return ok(
+        [_spirit_data(spirit, template, record) for spirit, template, record in rows]
+    )
 
 
 @router.get("/spirits/{spirit_id}")
@@ -100,7 +122,10 @@ def get_spirit(
     db: Session = Depends(get_db),
 ) -> dict:
     spirit, template = _owned_spirit(db, player.id, spirit_id)
-    return ok(_spirit_data(spirit, template))
+    record = db.scalar(
+        select(AffectionRecord).where(AffectionRecord.player_card_spirit_id == spirit.id)
+    )
+    return ok(_spirit_data(spirit, template, record))
 
 
 @router.post("/spirits/{spirit_id}/affection")
@@ -110,7 +135,9 @@ def add_affection(
     player: Player = Depends(get_current_player),
     db: Session = Depends(get_db),
 ) -> dict:
-    spirit, template = _owned_spirit(db, player.id, spirit_id)
+    spirit, template = _owned_spirit(db, player.id, spirit_id, lock=True)
+    if spirit.affection >= 100:
+        abort(409, "羁绊已达到上限")
     record = db.scalar(
         select(AffectionRecord).where(AffectionRecord.player_card_spirit_id == spirit.id)
     )
@@ -121,15 +148,18 @@ def add_affection(
             interaction_count=0,
         )
         db.add(record)
-    elif record.last_interaction_time and datetime.now(UTC) - record.last_interaction_time < timedelta(seconds=60):
+    elif (
+        record.last_interaction_time
+        and datetime.now(UTC) - record.last_interaction_time < INTERACTION_COOLDOWN
+    ):
         abort(429, "互动过于频繁，请稍后再试")
     points = {"dialog": 1, "battle": 2, "gift": 3, "quest": 5}[payload.source]
-    spirit.affection += points
+    spirit.affection = min(100, spirit.affection + points)
     record.affection_value = spirit.affection
     record.interaction_count += 1
     record.last_interaction_time = datetime.now(UTC)
     db.commit()
-    return ok(_spirit_data(spirit, template), "好感度已提升")
+    return ok(_spirit_data(spirit, template, record), "好感度已提升")
 
 
 @router.post("/spirits/{spirit_id}/level")
@@ -139,14 +169,17 @@ def level_spirit(
     player: Player = Depends(get_current_player),
     db: Session = Depends(get_db),
 ) -> dict:
-    spirit, template = _owned_spirit(db, player.id, spirit_id)
+    spirit, template = _owned_spirit(db, player.id, spirit_id, lock=True)
     cost = sum(level * 100 for level in range(spirit.level, spirit.level + payload.levels))
     if spirit.exp < cost:
         abort(409, "卡牌精灵经验不足")
     spirit.exp -= cost
     spirit.level += payload.levels
     db.commit()
-    return ok(_spirit_data(spirit, template), "卡牌精灵已升级")
+    record = db.scalar(
+        select(AffectionRecord).where(AffectionRecord.player_card_spirit_id == spirit.id)
+    )
+    return ok(_spirit_data(spirit, template, record), "卡牌精灵已升级")
 
 
 @router.get("/spirits/{spirit_id}/growth")

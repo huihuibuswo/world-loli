@@ -15,6 +15,7 @@ let world = null;
 let saveTimer = null;
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0);
 const isBattle = computed(() => Boolean(game.battle));
+const currentMapName = computed(() => game.map?.map_name || '晨曦村');
 watch(isBattle, (next) => {
     if (next && game.battle) {
         gameEvents.emit('scene:battle', { enemyName: game.battle.enemy_state.name });
@@ -202,7 +203,7 @@ if (!__VLS_ctx.isBattle) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.aside)({
         ...{ class: "minimap-frame" },
         role: "img",
-        'aria-label': "晨雾森林小地图",
+        'aria-label': (`${__VLS_ctx.currentMapName}小地图`),
     });
     /** @type {__VLS_StyleScopedClasses['minimap-frame']} */ ;
 }
@@ -224,6 +225,7 @@ if (!__VLS_ctx.isBattle) {
         size: (16),
     }, ...__VLS_functionalComponentArgsRest(__VLS_21));
     __VLS_asFunctionalElement1(__VLS_intrinsics.strong, __VLS_intrinsics.strong)({});
+    (__VLS_ctx.currentMapName);
     __VLS_asFunctionalElement1(__VLS_intrinsics.small, __VLS_intrinsics.small)({});
 }
 if (!__VLS_ctx.isBattle && __VLS_ctx.nearNpc) {

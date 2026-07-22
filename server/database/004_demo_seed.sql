@@ -46,6 +46,7 @@ VALUES (
     '{"hp":20,"attack":3}'::JSONB,
     jsonb_build_object(
         'gold', 10,
+        'spirit_exp', 60,
         'actions', jsonb_build_array('dialog', 'battle'),
         'spirit_template_id', (SELECT id FROM card_spirit_templates WHERE name = '狼娘·露娜'),
         'card_template_ids', jsonb_build_array(

@@ -18,6 +18,7 @@ let saveTimer: number | null = null
 
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
+const currentMapName = computed(() => game.map?.map_name || '晨曦村')
 
 watch(isBattle, (next) => {
   if (next && game.battle) {
@@ -77,10 +78,10 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <aside v-if="!isBattle" class="minimap-frame" role="img" aria-label="晨雾森林小地图" />
+    <aside v-if="!isBattle" class="minimap-frame" role="img" :aria-label="`${currentMapName}小地图`" />
 
     <div v-if="!isBattle" class="quest-card glass-panel">
-      <span><Heart :size="16" />当前旅程</span><strong>探索晨雾森林</strong><small>靠近林中居民，按 E 与其交谈</small>
+      <span><Heart :size="16" />当前地图</span><strong>{{ currentMapName }}</strong><small>靠近村中居民，按 E 与其交谈</small>
     </div>
 
     <div v-if="!isBattle && nearNpc" class="interaction-hint" role="status">

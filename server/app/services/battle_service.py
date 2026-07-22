@@ -42,6 +42,21 @@ def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
         hand.append(draw.pop(0))
 
 
+def _damage_with_affection(damage: int, affection: int) -> int:
+    """Apply the documented affection tiers without changing card configuration."""
+    if affection <= 0 or damage <= 0:
+        return damage
+    if affection <= 20:
+        percent = 5
+    elif affection <= 50:
+        percent = 10
+    elif affection <= 80:
+        percent = 20
+    else:
+        percent = 30
+    return damage + max(1, damage * percent // 100)
+
+
 def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
     existing = db.scalar(
         select(ActiveBattle).where(
@@ -61,12 +76,13 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
         abort(409, "请先设置一副启用套牌")
 
     deck_rows = db.execute(
-        select(DeckCard, PlayerCard)
+        select(DeckCard, PlayerCard, CardTemplate)
         .join(PlayerCard, PlayerCard.id == DeckCard.card_id)
+        .join(CardTemplate, CardTemplate.id == PlayerCard.card_template_id)
         .where(DeckCard.deck_id == active_deck.id, DeckCard.player_id == player.id)
         .order_by(DeckCard.card_id)
     ).all()
-    draw_pile = [card.id for item, card in deck_rows for _ in range(item.amount)]
+    draw_pile = [card.id for item, card, _ in deck_rows for _ in range(item.amount)]
     if not draw_pile:
         abort(409, "启用套牌中没有卡牌")
 
@@ -85,6 +101,9 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
         "discard_cards": [],
         "buffs": [],
         "debuffs": [],
+        "spirit_template_ids": sorted(
+            {template.source_spirit_id for _, _, template in deck_rows if template.source_spirit_id}
+        ),
     }
     _draw_to_hand(state)
     battle = ActiveBattle(player_id=player.id, enemy_id=enemy.id, state_json=state)
@@ -161,6 +180,28 @@ def _complete_battle(
             else:
                 owned_card.count += 1
 
+        db.flush()
+        spirit_exp = max(0, min(int(reward.get("spirit_exp", 0)), 1_000_000))
+        spirit_affection = 2
+        participant_ids = [
+            int(item) for item in battle.state_json.get("spirit_template_ids", [])
+        ]
+        if participant_ids:
+            participants = db.scalars(
+                select(PlayerCardSpirit)
+                .where(
+                    PlayerCardSpirit.player_id == player.id,
+                    PlayerCardSpirit.spirit_template_id.in_(participant_ids),
+                )
+                .with_for_update()
+            ).all()
+            for spirit in participants:
+                spirit.exp += spirit_exp
+                spirit.affection = min(100, spirit.affection + spirit_affection)
+            if participants:
+                reward["spirit_exp"] = spirit_exp
+                reward["spirit_affection"] = spirit_affection
+
     battle.status = result
     state = deepcopy(battle.state_json)
     state["result"] = result
@@ -205,6 +246,15 @@ def play_card(
     base_damage = max(0, min(int(effect.get("damage", 0)), 1_000_000))
     per_level = max(0, min(int((template.upgrade_json or {}).get("damage_per_level", 0)), 100_000))
     damage = base_damage + (card.level - 1) * per_level
+    if template.source_spirit_id:
+        spirit = db.scalar(
+            select(PlayerCardSpirit).where(
+                PlayerCardSpirit.player_id == player.id,
+                PlayerCardSpirit.spirit_template_id == template.source_spirit_id,
+            )
+        )
+        if spirit is not None:
+            damage = _damage_with_affection(damage, spirit.affection)
     state["energy"] -= template.cost
     state["hand_cards"].remove(card_id)
     state["discard_cards"].append(card_id)

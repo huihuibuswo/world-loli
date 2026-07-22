@@ -11,6 +11,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly idleTexture: string
   private readonly walkTexture: string
   private readonly walkAnimationKey: string
+  private readonly walkDisplaySize: number
 
   constructor(scene: Phaser.Scene, x: number, y: number, avatarGender?: 'female' | 'male') {
     const requestedTexture = avatarGender === 'male' ? 'player-male' : 'player-female'
@@ -20,12 +21,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.idleTexture = texture
     this.walkTexture = `player-${gender}-walk`
     this.walkAnimationKey = `player-${gender}-walk-cycle`
+    this.walkDisplaySize = gender === 'female' ? 91.5 : 86.5
     scene.add.existing(this)
     scene.physics.add.existing(this)
     this.setCollideWorldBounds(true)
     this.setDepth(y)
     this.setDisplaySize(84, 84)
-    this.setCircle(60, 68, 120)
+    this.syncCollisionBody()
   }
 
   setVirtualDirection(x: number, y: number): void {
@@ -65,7 +67,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   private startWalkAnimation(): void {
     if (this.anims.currentAnim?.key === this.walkAnimationKey && this.anims.isPlaying) return
-    this.setTexture(this.walkTexture, 0).setDisplaySize(84, 84)
+    this.setTexture(this.walkTexture, 0).setDisplaySize(this.walkDisplaySize, this.walkDisplaySize)
+    this.syncCollisionBody()
     this.play(this.walkAnimationKey)
   }
 
@@ -73,5 +76,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.texture.key === this.idleTexture) return
     this.stop()
     this.setTexture(this.idleTexture).setDisplaySize(84, 84)
+    this.syncCollisionBody()
+  }
+
+  private syncCollisionBody(): void {
+    const frameWidth = this.frame.realWidth
+    const frameHeight = this.frame.realHeight
+    const scale = Math.abs(this.scaleX)
+    const radius = 20 / scale
+    const offsetX = frameWidth / 2 - radius
+    const offsetY = frameHeight / 2 + 17 / scale - radius
+    this.setCircle(radius, offsetX, offsetY)
   }
 }
