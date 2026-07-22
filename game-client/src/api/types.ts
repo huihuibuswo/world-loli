@@ -14,6 +14,7 @@ export interface AuthResult {
 export interface PlayerProfile {
   id: number
   name: string
+  avatar_gender: 'female' | 'male'
   level: number
   exp: number
   hp: number

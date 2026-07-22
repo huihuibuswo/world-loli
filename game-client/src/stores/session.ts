@@ -28,6 +28,7 @@ export const useSessionStore = defineStore('session', () => {
     password: string,
     email: string,
     playerName: string,
+    avatarGender: 'female' | 'male',
   ): Promise<void> {
     loading.value = true
     error.value = ''
@@ -38,6 +39,7 @@ export const useSessionStore = defineStore('session', () => {
           password,
           email: email || null,
           player_name: playerName || null,
+          avatar_gender: avatarGender,
         }),
       )
       saveToken(result.access_token)

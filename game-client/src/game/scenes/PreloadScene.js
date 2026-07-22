@@ -3,22 +3,20 @@ export class PreloadScene extends Phaser.Scene {
     constructor() {
         super('PreloadScene');
     }
+    preload() {
+        const root = '/assets/generated';
+        this.load.image('player-female', `${root}/sprites/adventurer-female.png`);
+        this.load.image('player-male', `${root}/sprites/adventurer-male.png`);
+        this.load.image('npc', `${root}/sprites/training-dummy.png`);
+        this.load.image('obstacle', `${root}/sprites/forest-obstacle.png`);
+        this.load.image('forest-stump', `${root}/sprites/forest-stump.png`);
+        this.load.image('ancient-forest-tree', `${root}/sprites/ancient-forest-tree.png`);
+        this.load.image('village-signpost', `${root}/sprites/village-signpost.png`);
+        this.load.image('grass-ground', `${root}/textures/grass-ground.webp`);
+        this.load.image('dirt-path', `${root}/textures/dirt-path.webp`);
+        this.load.image('moon-arena', `${root}/backgrounds/moon-arena.webp`);
+    }
     create() {
-        const graphics = this.make.graphics({ x: 0, y: 0 });
-        graphics.fillStyle(0x31a66a).fillCircle(28, 28, 27);
-        graphics.lineStyle(3, 0xd9ffe8).strokeCircle(28, 28, 24);
-        graphics.fillStyle(0xf6d07c).fillTriangle(28, 5, 17, 22, 39, 22);
-        graphics.generateTexture('player', 56, 56);
-        graphics.clear();
-        graphics.fillStyle(0xd97706).fillCircle(29, 29, 28);
-        graphics.lineStyle(3, 0xffedbd).strokeCircle(29, 29, 24);
-        graphics.fillStyle(0x0f172a).fillCircle(21, 27, 3).fillCircle(37, 27, 3);
-        graphics.generateTexture('npc', 58, 58);
-        graphics.clear();
-        graphics.fillStyle(0x17382a).fillRoundedRect(0, 0, 96, 96, 18);
-        graphics.lineStyle(2, 0x295d45).strokeRoundedRect(1, 1, 94, 94, 18);
-        graphics.generateTexture('obstacle', 96, 96);
-        graphics.destroy();
         this.scene.start('WorldScene');
     }
 }

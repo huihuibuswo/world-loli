@@ -8,6 +8,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     email: EmailStr | None = None
     player_name: str | None = Field(default=None, min_length=1, max_length=64)
+    avatar_gender: Literal["female", "male"] = "female"
 
 
 class LoginRequest(BaseModel):

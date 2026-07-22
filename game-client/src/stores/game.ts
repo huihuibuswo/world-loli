@@ -27,6 +27,13 @@ export const useGameStore = defineStore('game', () => {
   const cardById = computed(() => new Map(cards.value.map((card) => [card.id, card])))
   const activeDeck = computed(() => decks.value.find((deck) => deck.is_active) ?? null)
 
+  function normalizePlayer(profile: PlayerProfile): PlayerProfile {
+    return {
+      ...profile,
+      avatar_gender: profile.avatar_gender === 'male' ? 'male' : 'female',
+    }
+  }
+
   async function refreshCollections(): Promise<void> {
     const [nextCards, nextDecks, nextSpirits] = await Promise.all([
       requestData<CardData[]>(api.get('/cards')),
@@ -42,7 +49,7 @@ export const useGameStore = defineStore('game', () => {
     loading.value = true
     error.value = ''
     try {
-      player.value = await requestData<PlayerProfile>(api.get('/player/profile'))
+      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
       if (player.value.current_map) {
         map.value = await requestData<MapData>(api.get(`/map/${player.value.current_map}`))
       }
@@ -147,7 +154,7 @@ export const useGameStore = defineStore('game', () => {
   async function leaveBattle(): Promise<void> {
     battle.value = null
     sessionStorage.removeItem('world_battle_id')
-    player.value = await requestData<PlayerProfile>(api.get('/player/profile'))
+    player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
     await refreshCollections()
   }
 

@@ -21,7 +21,7 @@ export const useSessionStore = defineStore('session', () => {
             loading.value = false;
         }
     }
-    async function register(username, password, email, playerName) {
+    async function register(username, password, email, playerName, avatarGender) {
         loading.value = true;
         error.value = '';
         try {
@@ -30,6 +30,7 @@ export const useSessionStore = defineStore('session', () => {
                 password,
                 email: email || null,
                 player_name: playerName || null,
+                avatar_gender: avatarGender,
             }));
             saveToken(result.access_token);
             authenticated.value = true;

@@ -10,7 +10,7 @@ defineEmits<{ close: []; battle: [id: number] }>()
   <div class="modal-backdrop" @click.self="$emit('close')">
     <section class="dialog-card" role="dialog" aria-modal="true" :aria-labelledby="`npc-${npc.id}`">
       <button class="icon-button close" type="button" aria-label="关闭对话" @click="$emit('close')"><X :size="20" /></button>
-      <div class="npc-portrait" aria-hidden="true"><span>{{ npc.name.slice(0, 1) }}</span></div>
+      <div class="npc-portrait" aria-hidden="true"><img src="/assets/generated/sprites/training-dummy.png" alt=""></div>
       <p class="eyebrow">{{ npc.type === 'enemy' ? '林间挑战者' : '旅途相遇' }}</p>
       <h2 :id="`npc-${npc.id}`">{{ npc.name }}</h2>
       <p class="dialog-story">{{ npc.story || '风掠过树梢，对方正静静等待你的回应。' }}</p>

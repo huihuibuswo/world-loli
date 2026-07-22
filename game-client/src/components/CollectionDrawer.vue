@@ -19,9 +19,11 @@ const tab = ref<'cards' | 'spirits' | 'deck'>('cards')
       </nav>
       <div class="collection-grid" role="tabpanel">
         <article v-for="card in tab === 'cards' ? game.cards : []" :key="card.id" class="collection-item">
+          <img class="collection-art" :src="card.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'" alt="">
           <span class="rarity">{{ card.rarity }}</span><strong>{{ card.name }}</strong><small>{{ card.type }} · 费用 {{ card.cost }}</small><p>持有 ×{{ card.count }}</p>
         </article>
         <article v-for="spirit in tab === 'spirits' ? game.spirits : []" :key="spirit.id" class="collection-item spirit">
+          <img class="collection-art" :src="spirit.avatar || '/assets/generated/portraits/luna.webp'" alt="">
           <span class="rarity">{{ spirit.rarity }}</span><strong>{{ spirit.name }}</strong><small>{{ spirit.race }} · Lv.{{ spirit.level }}</small><p>羁绊 {{ spirit.affection }}</p>
         </article>
         <template v-if="tab === 'deck'">

@@ -3,6 +3,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     player: import("vue").Ref<{
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;
@@ -15,6 +16,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     } | null, PlayerProfile | {
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;
@@ -271,10 +273,11 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     savePosition: (x: number, y: number) => Promise<void>;
     saveGame: () => Promise<void>;
     reset: () => void;
-}, "loading" | "error" | "map" | "player" | "cards" | "decks" | "spirits" | "battle" | "dialogNpc" | "actionLoading" | "notice">, Pick<{
+}, "loading" | "error" | "map" | "cards" | "player" | "decks" | "spirits" | "battle" | "dialogNpc" | "actionLoading" | "notice">, Pick<{
     player: import("vue").Ref<{
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;
@@ -287,6 +290,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     } | null, PlayerProfile | {
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;
@@ -547,6 +551,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     player: import("vue").Ref<{
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;
@@ -559,6 +564,7 @@ export declare const useGameStore: import("pinia").StoreDefinition<"game", Pick<
     } | null, PlayerProfile | {
         id: number;
         name: string;
+        avatar_gender: "female" | "male";
         level: number;
         exp: number;
         hp: number;

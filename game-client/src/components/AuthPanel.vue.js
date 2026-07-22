@@ -8,12 +8,68 @@ const username = ref('');
 const password = ref('');
 const email = ref('');
 const playerName = ref('');
+const avatarGender = ref('female');
+const usernameError = ref('');
+const passwordError = ref('');
+const emailError = ref('');
+const usernameInput = ref(null);
+const passwordInput = ref(null);
+const emailInput = ref(null);
+function clearFieldErrors() {
+    usernameError.value = '';
+    passwordError.value = '';
+    emailError.value = '';
+}
+function changeMode(nextMode) {
+    mode.value = nextMode;
+    clearFieldErrors();
+}
+function validateUsername() {
+    const value = username.value.trim();
+    if (!value)
+        usernameError.value = '请输入账户名';
+    else if (mode.value === 'register' && value.length < 3)
+        usernameError.value = '账户名至少需要 3 位';
+    else if (mode.value === 'register' && !/^[A-Za-z0-9_]+$/.test(value))
+        usernameError.value = '账户名只能包含英文、数字和下划线';
+    else
+        usernameError.value = '';
+    return !usernameError.value;
+}
+function validatePassword() {
+    if (!password.value)
+        passwordError.value = '请输入密码';
+    else if (mode.value === 'register' && password.value.length < 8)
+        passwordError.value = '密码至少需要 8 位';
+    else
+        passwordError.value = '';
+    return !passwordError.value;
+}
+function validateEmail() {
+    if (mode.value !== 'register' || !email.value.trim() || emailInput.value?.validity.valid)
+        emailError.value = '';
+    else
+        emailError.value = '请输入有效的邮箱地址';
+    return !emailError.value;
+}
 async function submit() {
+    const usernameValid = validateUsername();
+    const passwordValid = validatePassword();
+    const emailValid = validateEmail();
+    if (!usernameValid || !passwordValid || !emailValid) {
+        if (!usernameValid)
+            usernameInput.value?.focus();
+        else if (!passwordValid)
+            passwordInput.value?.focus();
+        else
+            emailInput.value?.focus();
+        return;
+    }
     try {
         if (mode.value === 'login')
             await session.login(username.value.trim(), password.value);
         else
-            await session.register(username.value.trim(), password.value, email.value.trim(), playerName.value.trim());
+            await session.register(username.value.trim(), password.value, email.value.trim(), playerName.value.trim(), avatarGender.value);
         emit('authenticated');
     }
     catch { /* store exposes the user-facing error */ }
@@ -86,9 +142,9 @@ __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
 /** @type {__VLS_StyleScopedClasses['auth-tabs']} */ ;
 __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
     ...{ onClick: (...[$event]) => {
-            return (__VLS_ctx.mode = 'login');
+            return (__VLS_ctx.changeMode('login'));
             // @ts-ignore
-            [mode,];
+            [changeMode,];
         } },
     ...{ class: ({ active: __VLS_ctx.mode === 'login' }) },
     role: "tab",
@@ -98,9 +154,9 @@ __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
 /** @type {__VLS_StyleScopedClasses['active']} */ ;
 __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
     ...{ onClick: (...[$event]) => {
-            return (__VLS_ctx.mode = 'register');
+            return (__VLS_ctx.changeMode('register'));
             // @ts-ignore
-            [mode, mode, mode,];
+            [changeMode, mode, mode,];
         } },
     ...{ class: ({ active: __VLS_ctx.mode === 'register' }) },
     role: "tab",
@@ -110,22 +166,40 @@ __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
 /** @type {__VLS_StyleScopedClasses['active']} */ ;
 __VLS_asFunctionalElement1(__VLS_intrinsics.form, __VLS_intrinsics.form)({
     ...{ onSubmit: (__VLS_ctx.submit) },
+    novalidate: true,
 });
 __VLS_asFunctionalElement1(__VLS_intrinsics.header, __VLS_intrinsics.header)({});
 __VLS_asFunctionalElement1(__VLS_intrinsics.h2, __VLS_intrinsics.h2)({});
 (__VLS_ctx.mode === 'login' ? '欢迎回来，旅人' : '写下冒险的第一页');
 __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({});
-(__VLS_ctx.mode === 'login' ? '登录后继续上次的旅途。' : '账户名至少 3 位，密码至少 6 位。');
+(__VLS_ctx.mode === 'login' ? '登录后继续上次的旅途。' : '创建账户，开启新的冒险。');
 __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({});
-__VLS_asFunctionalElement1(__VLS_intrinsics.input)({
+__VLS_asFunctionalElement1(__VLS_intrinsics.input, __VLS_intrinsics.input)({
+    ...{ onBlur: (__VLS_ctx.validateUsername) },
+    ...{ onInput: (...[$event]) => {
+            return (__VLS_ctx.usernameError && __VLS_ctx.validateUsername());
+            // @ts-ignore
+            [mode, mode, mode, mode, submit, validateUsername, validateUsername, usernameError,];
+        } },
+    ref: "usernameInput",
     name: "username",
-    minlength: "3",
-    maxlength: "32",
+    maxlength: "64",
     autocomplete: "username",
     required: true,
-    placeholder: "输入账户名",
+    placeholder: (__VLS_ctx.mode === 'register' ? '3-64 位，仅限英文、数字和下划线' : '输入账户名'),
+    'aria-invalid': (Boolean(__VLS_ctx.usernameError)),
+    'aria-describedby': "username-error",
 });
 (__VLS_ctx.username);
+if (__VLS_ctx.usernameError) {
+    __VLS_asFunctionalElement1(__VLS_intrinsics.small, __VLS_intrinsics.small)({
+        id: "username-error",
+        ...{ class: "field-error" },
+        role: "alert",
+    });
+    /** @type {__VLS_StyleScopedClasses['field-error']} */ ;
+    (__VLS_ctx.usernameError);
+}
 if (__VLS_ctx.mode === 'register') {
     __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({});
     __VLS_asFunctionalElement1(__VLS_intrinsics.input)({
@@ -137,25 +211,100 @@ if (__VLS_ctx.mode === 'register') {
     (__VLS_ctx.playerName);
 }
 if (__VLS_ctx.mode === 'register') {
-    __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({});
+    __VLS_asFunctionalElement1(__VLS_intrinsics.fieldset, __VLS_intrinsics.fieldset)({
+        ...{ class: "avatar-picker" },
+    });
+    /** @type {__VLS_StyleScopedClasses['avatar-picker']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.legend, __VLS_intrinsics.legend)({});
+    __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({
+        ...{ class: ({ selected: __VLS_ctx.avatarGender === 'female' }) },
+    });
+    /** @type {__VLS_StyleScopedClasses['selected']} */ ;
     __VLS_asFunctionalElement1(__VLS_intrinsics.input)({
+        type: "radio",
+        name: "avatar-gender",
+        value: "female",
+    });
+    (__VLS_ctx.avatarGender);
+    __VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+        src: "/assets/generated/sprites/adventurer-female.png",
+        alt: "女冒险者",
+    });
+    __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
+    __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({
+        ...{ class: ({ selected: __VLS_ctx.avatarGender === 'male' }) },
+    });
+    /** @type {__VLS_StyleScopedClasses['selected']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.input)({
+        type: "radio",
+        name: "avatar-gender",
+        value: "male",
+    });
+    (__VLS_ctx.avatarGender);
+    __VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+        src: "/assets/generated/sprites/adventurer-male.png",
+        alt: "男冒险者",
+    });
+    __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
+}
+if (__VLS_ctx.mode === 'register') {
+    __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({});
+    __VLS_asFunctionalElement1(__VLS_intrinsics.input, __VLS_intrinsics.input)({
+        ...{ onBlur: (__VLS_ctx.validateEmail) },
+        ...{ onInput: (...[$event]) => {
+                if (!(__VLS_ctx.mode === 'register'))
+                    throw 0;
+                return (__VLS_ctx.emailError && __VLS_ctx.validateEmail());
+                // @ts-ignore
+                [mode, mode, mode, mode, usernameError, usernameError, usernameError, username, playerName, avatarGender, avatarGender, avatarGender, avatarGender, validateEmail, validateEmail, emailError,];
+            } },
+        ref: "emailInput",
         name: "email",
         type: "email",
         autocomplete: "email",
         placeholder: "name@example.com",
+        'aria-invalid': (Boolean(__VLS_ctx.emailError)),
+        'aria-describedby': "email-error",
     });
     (__VLS_ctx.email);
+    if (__VLS_ctx.emailError) {
+        __VLS_asFunctionalElement1(__VLS_intrinsics.small, __VLS_intrinsics.small)({
+            id: "email-error",
+            ...{ class: "field-error" },
+            role: "alert",
+        });
+        /** @type {__VLS_StyleScopedClasses['field-error']} */ ;
+        (__VLS_ctx.emailError);
+    }
 }
 __VLS_asFunctionalElement1(__VLS_intrinsics.label, __VLS_intrinsics.label)({});
-__VLS_asFunctionalElement1(__VLS_intrinsics.input)({
+__VLS_asFunctionalElement1(__VLS_intrinsics.input, __VLS_intrinsics.input)({
+    ...{ onBlur: (__VLS_ctx.validatePassword) },
+    ...{ onInput: (...[$event]) => {
+            return (__VLS_ctx.passwordError && __VLS_ctx.validatePassword());
+            // @ts-ignore
+            [emailError, emailError, emailError, email, validatePassword, validatePassword, passwordError,];
+        } },
+    ref: "passwordInput",
     name: "password",
     type: "password",
-    minlength: "6",
+    maxlength: "128",
     autocomplete: (__VLS_ctx.mode === 'login' ? 'current-password' : 'new-password'),
     required: true,
-    placeholder: "输入密码",
+    placeholder: (__VLS_ctx.mode === 'register' ? '至少 8 位密码' : '输入密码'),
+    'aria-invalid': (Boolean(__VLS_ctx.passwordError)),
+    'aria-describedby': "password-error",
 });
 (__VLS_ctx.password);
+if (__VLS_ctx.passwordError) {
+    __VLS_asFunctionalElement1(__VLS_intrinsics.small, __VLS_intrinsics.small)({
+        id: "password-error",
+        ...{ class: "field-error" },
+        role: "alert",
+    });
+    /** @type {__VLS_StyleScopedClasses['field-error']} */ ;
+    (__VLS_ctx.passwordError);
+}
 if (__VLS_ctx.session.error) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
         ...{ class: "form-error" },
@@ -184,7 +333,7 @@ const __VLS_7 = __VLS_6({
 }, ...__VLS_functionalComponentArgsRest(__VLS_6));
 (__VLS_ctx.session.loading ? '请稍候…' : __VLS_ctx.mode === 'login' ? '进入世界' : '开始冒险');
 // @ts-ignore
-[mode, mode, mode, mode, mode, mode, mode, mode, mode, submit, username, playerName, email, password, session, session, session, session, LogIn, UserPlus,];
+[mode, mode, mode, mode, passwordError, passwordError, passwordError, password, session, session, session, session, LogIn, UserPlus,];
 const __VLS_export = (await import('vue')).defineComponent({
     __typeEmits: {},
 });

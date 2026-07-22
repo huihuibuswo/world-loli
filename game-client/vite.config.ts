@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    extensions: ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx', '.json'],
   },
   server: {
     port: 5173,

@@ -132,6 +132,12 @@ for (const [card] of __VLS_vFor((__VLS_ctx.tab === 'cards' ? __VLS_ctx.game.card
         ...{ class: "collection-item" },
     });
     /** @type {__VLS_StyleScopedClasses['collection-item']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+        ...{ class: "collection-art" },
+        src: (card.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'),
+        alt: "",
+    });
+    /** @type {__VLS_StyleScopedClasses['collection-art']} */ ;
     __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
         ...{ class: "rarity" },
     });
@@ -154,6 +160,12 @@ for (const [spirit] of __VLS_vFor((__VLS_ctx.tab === 'spirits' ? __VLS_ctx.game.
     });
     /** @type {__VLS_StyleScopedClasses['collection-item']} */ ;
     /** @type {__VLS_StyleScopedClasses['spirit']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+        ...{ class: "collection-art" },
+        src: (spirit.avatar || '/assets/generated/portraits/luna.webp'),
+        alt: "",
+    });
+    /** @type {__VLS_StyleScopedClasses['collection-art']} */ ;
     __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
         ...{ class: "rarity" },
     });

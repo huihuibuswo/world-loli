@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Coins, Heart, LogOut, Save, Sparkles, Swords } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Coins, Heart, LogOut, Save, Swords } from 'lucide-vue-next'
 import BattlePanel from '@/components/BattlePanel.vue'
 import CollectionDrawer from '@/components/CollectionDrawer.vue'
 import DialogModal from '@/components/DialogModal.vue'
@@ -19,6 +19,14 @@ let saveTimer: number | null = null
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
 
+watch(isBattle, (next) => {
+  if (next && game.battle) {
+    gameEvents.emit('scene:battle', { enemyName: game.battle.enemy_state.name })
+  } else {
+    gameEvents.emit('scene:world', undefined)
+  }
+})
+
 const onNear = (npc: { id: number | null; name: string | null }): void => { nearNpc.value = npc.id && npc.name ? { id: npc.id, name: npc.name } : null }
 const onInteract = ({ id }: { id: number }): void => { void game.openNpc(id) }
 const onMoved = ({ x, y }: { x: number; y: number }): void => {
@@ -32,7 +40,6 @@ function interact(): void { gameEvents.emit('input:interact', undefined) }
 async function beginBattle(id: number): Promise<void> {
   try {
     await game.startBattle(id)
-    if (game.battle) gameEvents.emit('scene:battle', { enemyName: game.battle.enemy_state.name })
   } catch { /* store presents the error */ }
 }
 
@@ -59,7 +66,7 @@ onBeforeUnmount(() => {
 
     <header v-if="!isBattle" class="world-hud">
       <div class="player-chip glass-panel">
-        <div class="avatar"><Sparkles :size="21" /></div>
+        <div class="avatar"><img :src="`/assets/generated/sprites/adventurer-${game.player?.avatar_gender ?? 'female'}.png`" alt=""></div>
         <div class="player-info"><div><strong>{{ game.player?.name }}</strong><span>Lv.{{ game.player?.level }}</span></div><div class="mini-hp"><i :style="{ width: `${hpPercent}%` }" /></div></div>
       </div>
       <div class="hud-actions glass-panel">
@@ -69,6 +76,8 @@ onBeforeUnmount(() => {
         <button class="icon-button" type="button" aria-label="退出登录" title="退出登录" @click="$emit('logout')"><LogOut :size="19" /></button>
       </div>
     </header>
+
+    <aside v-if="!isBattle" class="minimap-frame" role="img" aria-label="晨雾森林小地图" />
 
     <div v-if="!isBattle" class="quest-card glass-panel">
       <span><Heart :size="16" />当前旅程</span><strong>探索晨雾森林</strong><small>靠近林中居民，按 E 与其交谈</small>

@@ -36,6 +36,7 @@ class Player(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(64))
+    avatar_gender: Mapped[str] = mapped_column(String(8), default="female")
     level: Mapped[int] = mapped_column(Integer, default=1)
     exp: Mapped[int] = mapped_column(BigInteger, default=0)
     hp: Mapped[int] = mapped_column(Integer, default=100)

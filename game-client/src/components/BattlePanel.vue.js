@@ -160,6 +160,12 @@ else {
         });
         /** @type {__VLS_StyleScopedClasses['card-cost']} */ ;
         (card.cost);
+        __VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+            ...{ class: "card-art" },
+            src: (card.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'),
+            alt: "",
+        });
+        /** @type {__VLS_StyleScopedClasses['card-art']} */ ;
         __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
             ...{ class: "card-sigil" },
         });

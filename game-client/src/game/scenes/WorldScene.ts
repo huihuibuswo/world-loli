@@ -7,6 +7,7 @@ import { Player } from '@/game/entities/Player'
 export class WorldScene extends Phaser.Scene {
   private player!: Player
   private npcs: NPC[] = []
+  private playerMapMarker!: Phaser.GameObjects.Arc
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>
   private interactKey!: Phaser.Input.Keyboard.Key
@@ -28,15 +29,50 @@ export class WorldScene extends Phaser.Scene {
 
     this.drawWorld(width, height)
     const obstacles = this.physics.add.staticGroup()
-    ;[
-      [640, 420],
-      [830, 260],
-      [1050, 520],
-      [430, 690],
-      [1270, 350],
-    ].forEach(([x, y]) => obstacles.create(x, y, 'obstacle'))
+    const obstacleLayout: Array<{
+      x: number
+      y: number
+      texture: string
+      size: number
+      body: { shape: 'circle'; radius: number; offsetX: number; offsetY: number } | { shape: 'rect'; width: number; height: number; offsetX: number; offsetY: number }
+    }> = [
+      { x: 640, y: 420, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 34, offsetX: 14, offsetY: 27 } },
+      { x: 830, y: 260, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 32, offsetX: 16, offsetY: 40 } },
+      { x: 1050, y: 520, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 34, offsetX: 14, offsetY: 27 } },
+      { x: 430, y: 690, texture: 'village-signpost', size: 110, body: { shape: 'rect', width: 66, height: 28, offsetX: 22, offsetY: 75 } },
+      { x: 1270, y: 350, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 32, offsetX: 16, offsetY: 40 } },
+      { x: 360, y: 520, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 900, y: 590, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1400, y: 410, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1740, y: 680, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1530, y: 1060, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1050, y: 1450, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 520, y: 1260, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 280, y: 820, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1880, y: 1120, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1810, y: 1530, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1510, y: 1850, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 1080, y: 1840, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 650, y: 1750, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+      { x: 220, y: 1580, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 88, height: 44, offsetX: 116, offsetY: 250 } },
+    ]
+    obstacleLayout.forEach(({ x, y, texture, size, body: bodyConfig }) => {
+      const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
+      const bodyCenterOffsetY = -size / 2 + bodyConfig.offsetY + bodyHalfHeight
+      const obstacle = obstacles.create(x, y - bodyCenterOffsetY, texture) as Phaser.Physics.Arcade.Image
+      obstacle.setDisplaySize(size, size).setDepth(y).refreshBody()
+      const body = obstacle.body as Phaser.Physics.Arcade.StaticBody
+      if (bodyConfig.shape === 'circle') {
+        body.setCircle(bodyConfig.radius, 0, 0)
+        body.setOffset(bodyConfig.offsetX, bodyConfig.offsetY)
+      } else {
+        body.setSize(bodyConfig.width, bodyConfig.height, false)
+        body.setOffset(bodyConfig.offsetX, bodyConfig.offsetY)
+      }
+    })
 
-    this.player = new Player(this, profile.position_x, profile.position_y)
+    const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
+    this.player = new Player(this, profile.position_x, profile.position_y, avatarGender)
     this.physics.add.collider(this.player, obstacles)
     this.npcs = (map.resource.objects ?? [])
       .filter((item) => item.type === 'npc' && item.template_id)
@@ -45,6 +81,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
     this.cameras.main.setZoom(1.08)
+    this.createMinimap(bounds.min_x, bounds.min_y, width, height)
     this.cursors = this.input.keyboard!.createCursorKeys()
     this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as Record<string, Phaser.Input.Keyboard.Key>
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E)
@@ -61,6 +98,7 @@ export class WorldScene extends Phaser.Scene {
 
   update(time: number): void {
     this.player.move(this.cursors, this.wasd)
+    this.playerMapMarker.setPosition(this.player.x, this.player.y)
     this.updateNearbyNpc()
     if (Phaser.Input.Keyboard.JustDown(this.interactKey)) this.interact()
     if (time - this.lastPositionEmit > 600 && this.player.body?.velocity.lengthSq()) {
@@ -93,20 +131,32 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private createMinimap(minX: number, minY: number, width: number, height: number): void {
+    const viewport = { x: 1110, y: 82, width: 150, height: 150 }
+    const minimap = this.cameras
+      .add(viewport.x, viewport.y, viewport.width, viewport.height)
+      .setName('world-minimap')
+      .setBounds(minX, minY, width, height)
+      .setBackgroundColor('rgba(0, 0, 0, 0)')
+      .setRoundPixels(true)
+    minimap.setZoom(Math.min(viewport.width / width, viewport.height / height) * 0.94)
+    minimap.centerOn(minX + width / 2, minY + height / 2)
+
+    this.playerMapMarker = this.add
+      .circle(this.player.x, this.player.y, 38, 0xfef3c7)
+      .setStrokeStyle(9, 0x15803d)
+      .setDepth(100_000)
+    const npcMarkers = this.npcs.map((npc) =>
+      this.add.circle(npc.x, npc.y, 30, 0xf59e0b).setDepth(99_999),
+    )
+    this.cameras.main.ignore([this.playerMapMarker, ...npcMarkers])
+  }
+
   private drawWorld(width: number, height: number): void {
-    const graphics = this.add.graphics().setDepth(-10)
-    graphics.fillStyle(0x0b2118).fillRect(0, 0, width, height)
-    const tile = 96
-    for (let y = 0; y < height; y += tile) {
-      for (let x = 0; x < width; x += tile) {
-        const even = (x / tile + y / tile) % 2 === 0
-        graphics.fillStyle(even ? 0x123424 : 0x153a28, 0.95).fillRoundedRect(x + 3, y + 3, 90, 90, 14)
-        if ((x * 3 + y * 7) % 480 === 0) {
-          graphics.fillStyle(0x286444, 0.7).fillCircle(x + 30, y + 28, 8)
-        }
-      }
-    }
-    graphics.fillStyle(0x9b722d, 0.45).fillRoundedRect(70, 90, 1050, 116, 48)
-    graphics.fillStyle(0xc49744, 0.25).fillRoundedRect(115, 124, 970, 46, 22)
+    this.add.tileSprite(0, 0, width, height, 'grass-ground').setOrigin(0).setDepth(-10)
+    const path = this.add.tileSprite(70, 90, 1050, 116, 'dirt-path').setOrigin(0).setDepth(-9)
+    const maskShape = this.make.graphics({ x: 0, y: 0 }, false)
+    maskShape.fillStyle(0xffffff).fillRoundedRect(70, 90, 1050, 116, 48)
+    path.setMask(maskShape.createGeometryMask())
   }
 }

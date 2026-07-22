@@ -26,10 +26,12 @@ export class WorldGame {
   }
 
   private readonly startBattle = ({ enemyName }: { enemyName: string }): void => {
+    this.game.scene.stop('WorldScene')
     this.game.scene.start('BattleScene', { enemyName })
   }
 
   private readonly startWorld = (): void => {
+    this.game.scene.stop('BattleScene')
     this.game.scene.start('WorldScene')
   }
 

@@ -44,6 +44,7 @@ watch(() => battle.value?.last_action, (next, previous) => {
         <button v-for="(card, index) in hand" :key="`${card!.id}-${index}`" class="battle-card" type="button"
           :disabled="game.actionLoading || card!.cost > battle.energy" @click="game.playCard(card!.id)">
           <span class="card-cost">{{ card!.cost }}</span>
+          <img class="card-art" :src="card!.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'" alt="">
           <span class="card-sigil"><Shield v-if="card!.type === 'defense'" :size="30" /><Swords v-else :size="30" /></span>
           <strong>{{ card!.name }}</strong><small>{{ card!.effect.damage ? `造成 ${card!.effect.damage} 点伤害` : '施放卡牌效果' }}</small>
         </button>

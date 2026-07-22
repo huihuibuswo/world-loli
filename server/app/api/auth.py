@@ -39,6 +39,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
     player = Player(
         user_id=user.id,
         name=(payload.player_name or username).strip(),
+        avatar_gender=payload.avatar_gender,
         current_map=first_map.id if first_map else None,
         position_x=float(spawn.get("x", 0)),
         position_y=float(spawn.get("y", 0)),

@@ -22,6 +22,7 @@ def player_data(player: Player) -> dict:
     return {
         "id": player.id,
         "name": player.name,
+        "avatar_gender": player.avatar_gender,
         "level": player.level,
         "exp": player.exp,
         "hp": player.hp,

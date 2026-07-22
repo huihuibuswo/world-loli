@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 export declare class WorldScene extends Phaser.Scene {
     private player;
     private npcs;
+    private playerMapMarker;
     private cursors;
     private wasd;
     private interactKey;
@@ -13,5 +14,6 @@ export declare class WorldScene extends Phaser.Scene {
     private readonly onVirtualDirection;
     private readonly interact;
     private updateNearbyNpc;
+    private createMinimap;
     private drawWorld;
 }

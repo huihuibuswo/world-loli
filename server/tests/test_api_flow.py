@@ -12,13 +12,14 @@ def _auth(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def _register(client: TestClient, username: str) -> tuple[str, int]:
+def _register(client: TestClient, username: str, avatar_gender: str = "female") -> tuple[str, int]:
     response = client.post(
         "/api/v1/auth/register",
         json={
             "username": username,
             "password": "SafePassword123!",
             "email": f"{username}@example.com",
+            "avatar_gender": avatar_gender,
         },
     )
     assert response.status_code == 201, response.text
@@ -37,7 +38,7 @@ def test_complete_demo_backend_flow() -> None:
             assert client.get("/health/live").json() == {"status": "ok"}
             assert client.get("/health/ready").json() == {"status": "ready"}
 
-            token_a, user_a = _register(client, username_a)
+            token_a, user_a = _register(client, username_a, "male")
             user_ids.append(user_a)
             headers_a = _auth(token_a)
 
@@ -56,6 +57,7 @@ def test_complete_demo_backend_flow() -> None:
             profile = client.get("/api/v1/player/profile", headers=headers_a)
             assert profile.status_code == 200
             assert profile.json()["data"]["current_map"] is not None
+            assert profile.json()["data"]["avatar_gender"] == "male"
 
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200

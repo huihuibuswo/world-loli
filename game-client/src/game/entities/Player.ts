@@ -9,13 +9,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   direction: 'up' | 'down' | 'left' | 'right' = 'down'
   private virtual = new Phaser.Math.Vector2(0, 0)
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player')
+  constructor(scene: Phaser.Scene, x: number, y: number, avatarGender?: 'female' | 'male') {
+    const requestedTexture = avatarGender === 'male' ? 'player-male' : 'player-female'
+    const texture = scene.textures.exists(requestedTexture) ? requestedTexture : 'player-female'
+    super(scene, x, y, texture)
     scene.add.existing(this)
     scene.physics.add.existing(this)
     this.setCollideWorldBounds(true)
-    this.setDepth(20)
-    this.setCircle(20, 8, 8)
+    this.setDepth(y)
+    this.setDisplaySize(84, 84)
+    this.setCircle(60, 68, 120)
   }
 
   setVirtualDirection(x: number, y: number): void {
@@ -35,7 +38,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (input.lengthSq() === 0) {
       this.setVelocity(0)
       this.state = 'idle'
-      this.setScale(1, 1)
+      this.setDepth(this.y)
       return
     }
     input.normalize().scale(this.speed)
@@ -47,5 +50,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.direction = input.y > 0 ? 'down' : 'up'
     }
     this.setFlipX(this.direction === 'left')
+    this.setDepth(this.y)
   }
 }

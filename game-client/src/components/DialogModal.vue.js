@@ -54,8 +54,10 @@ __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
     'aria-hidden': "true",
 });
 /** @type {__VLS_StyleScopedClasses['npc-portrait']} */ ;
-__VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
-(__VLS_ctx.npc.name.slice(0, 1));
+__VLS_asFunctionalElement1(__VLS_intrinsics.img)({
+    src: "/assets/generated/sprites/training-dummy.png",
+    alt: "",
+});
 __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
     ...{ class: "eyebrow" },
 });
@@ -78,7 +80,7 @@ __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
     ...{ onClick: (...[$event]) => {
             return (__VLS_ctx.$emit('battle', __VLS_ctx.npc.id));
             // @ts-ignore
-            [$emit, npc, npc, npc, npc, npc, npc,];
+            [$emit, npc, npc, npc, npc, npc,];
         } },
     ...{ class: "button primary" },
     type: "button",

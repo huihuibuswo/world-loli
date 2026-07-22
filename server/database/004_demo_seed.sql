@@ -9,11 +9,15 @@ VALUES (
     'rare',
     'physical',
     '来自迷雾森林的狼族少女。',
-    NULL,
+    '/assets/generated/portraits/luna.webp',
     '{"name":"月牙撕裂","damage":12}'::JSONB,
     '{"name":"银月觉醒","damage_bonus":8}'::JSONB
 )
 ON CONFLICT (name) DO NOTHING;
+
+UPDATE card_spirit_templates
+SET avatar = '/assets/generated/portraits/luna.webp'
+WHERE name = '狼娘·露娜' AND avatar IS NULL;
 
 INSERT INTO card_templates (
     name, type, cost, rarity, source_spirit_id, effect_json, upgrade_json

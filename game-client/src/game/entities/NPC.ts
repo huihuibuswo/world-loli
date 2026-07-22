@@ -11,10 +11,14 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, 'npc')
     scene.add.existing(this)
     scene.physics.add.existing(this, true)
-    this.setDepth(15)
-    this.setCircle(22, 7, 7)
+    this.setDepth(y)
+    this.setDisplaySize(92, 92)
+    const body = this.body as Phaser.Physics.Arcade.StaticBody
+    body.updateFromGameObject()
+    body.setSize(32, 26, false)
+    body.setOffset(30, 62)
     scene.add
-      .text(x, y - 46, npcName, {
+      .text(x, y - 58, npcName, {
         fontFamily: 'ui-rounded, sans-serif',
         fontSize: '17px',
         color: '#fff7dc',
@@ -22,6 +26,6 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
         padding: { x: 8, y: 4 },
       })
       .setOrigin(0.5)
-      .setDepth(16)
+      .setDepth(y + 1)
   }
 }

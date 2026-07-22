@@ -22,9 +22,11 @@ export class WorldGame {
         gameEvents.on('scene:world', this.startWorld);
     }
     startBattle = ({ enemyName }) => {
+        this.game.scene.stop('WorldScene');
         this.game.scene.start('BattleScene', { enemyName });
     };
     startWorld = () => {
+        this.game.scene.stop('BattleScene');
         this.game.scene.start('WorldScene');
     };
     destroy() {

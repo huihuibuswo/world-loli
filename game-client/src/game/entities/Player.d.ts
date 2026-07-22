@@ -6,7 +6,7 @@ export declare class Player extends Phaser.Physics.Arcade.Sprite {
     state: PlayerState;
     direction: 'up' | 'down' | 'left' | 'right';
     private virtual;
-    constructor(scene: Phaser.Scene, x: number, y: number);
+    constructor(scene: Phaser.Scene, x: number, y: number, avatarGender?: 'female' | 'male');
     setVirtualDirection(x: number, y: number): void;
     move(cursors: Phaser.Types.Input.Keyboard.CursorKeys, wasd: Record<string, Phaser.Input.Keyboard.Key>): void;
 }

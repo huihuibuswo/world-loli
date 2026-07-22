@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import type { PlayerProfile } from '@/api/types'
 import { CardSpirit } from '@/game/entities/CardSpirit'
 import { gameEvents } from '@/game/events'
 
@@ -12,11 +13,9 @@ export class BattleScene extends Phaser.Scene {
 
   create(data: { enemyName?: string }): void {
     const { width, height } = this.scale
-    const background = this.add.graphics()
-    background.fillGradientStyle(0x07140f, 0x07140f, 0x18213a, 0x10182c, 1)
-    background.fillRect(0, 0, width, height)
-    background.fillStyle(0x1f7a4c, 0.12).fillCircle(width * 0.18, height * 0.28, 250)
-    background.fillStyle(0xd97706, 0.1).fillCircle(width * 0.8, height * 0.35, 300)
+    const profile = this.registry.get('world-player') as PlayerProfile
+    const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
+    this.add.image(width / 2, height / 2, 'moon-arena').setDisplaySize(width, height)
     this.add
       .text(width / 2, 54, '月影竞技场', {
         fontFamily: 'ui-rounded, sans-serif',
@@ -24,8 +23,8 @@ export class BattleScene extends Phaser.Scene {
         color: '#fff1bd',
       })
       .setOrigin(0.5)
-    this.enemy = new CardSpirit(this, width * 0.72, height * 0.3, data.enemyName ?? '训练木偶', 0xb45309)
-    this.playerSpirit = new CardSpirit(this, width * 0.28, height * 0.58, '冒险者', 0x15803d)
+    this.enemy = new CardSpirit(this, width * 0.72, height * 0.42, data.enemyName ?? '训练木偶', 'npc', 0xb45309)
+    this.playerSpirit = new CardSpirit(this, width * 0.28, height * 0.58, profile.name, `player-${avatarGender}`, 0x15803d)
     gameEvents.on('battle:impact', this.onImpact)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       gameEvents.off('battle:impact', this.onImpact)
