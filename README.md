@@ -1,4 +1,4 @@
-# 逗萝大陆（World Loli）
+# 斗萝大陆（World Loli）
 
 一款以世界探索、NPC 互动、卡牌战斗和卡灵养成为核心的 Web 游戏 Demo。
 
@@ -180,4 +180,3 @@ docker compose exec api pytest
 ## 当前状态
 
 本项目目前是可联调的游戏 Demo，重点验证核心玩法与前后端数据闭环。设计资料位于 `doc/`；其中包含世界观、卡牌战斗、地图、角色、NPC、数据库、API 以及客户端实现设计。
-

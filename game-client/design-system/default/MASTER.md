@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** 逗萝大陆
+**Project:** 斗萝大陆
 **Generated:** 2026-07-21 18:09:43
 **Category:** Card & Board Game
 **Design Dials:** Variance 6/10 (Balanced / Modern) | Motion 4/10 (Standard) | Density 6/10 (Standard)

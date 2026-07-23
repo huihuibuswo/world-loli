@@ -42,6 +42,7 @@ export interface MapObject {
   available?: boolean
   available_at?: string | null
   icon?: string | null
+  habitat?: string
   x: number
   y: number
 }
@@ -129,6 +130,7 @@ export interface PlantNode extends Omit<PlantData, 'amount'> {
   type: 'collectible_plant'
   template_id: number
   node_id: string
+  habitat: string
   x: number
   y: number
   available: boolean

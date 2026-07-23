@@ -22,6 +22,20 @@ type MapPlant = {
   minimapMarker?: Phaser.GameObjects.Arc
 }
 
+type WorldBounds = { min_x: number; min_y: number; max_x: number; max_y: number }
+
+type ObstacleLayoutItem = {
+  x: number
+  y: number
+  texture: string
+  size: number
+  body:
+    | { shape: 'circle'; radius: number; offsetX: number; offsetY: number }
+    | { shape: 'rect'; width: number; height: number; offsetX: number; offsetY: number }
+}
+
+type ReservedPlantArea = { x: number; y: number; radius: number }
+
 export class WorldScene extends Phaser.Scene {
   private player!: Player
   private npcs: NPC[] = []
@@ -51,13 +65,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.drawWorld(width, height, map.map_type)
     const obstacles = this.physics.add.staticGroup()
-    const obstacleLayout: Array<{
-      x: number
-      y: number
-      texture: string
-      size: number
-      body: { shape: 'circle'; radius: number; offsetX: number; offsetY: number } | { shape: 'rect'; width: number; height: number; offsetX: number; offsetY: number }
-    }> = [
+    const obstacleLayout: ObstacleLayoutItem[] = [
       { x: 1180, y: 620, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
       { x: 1160, y: 300, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
       { x: 1050, y: 520, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
@@ -141,6 +149,10 @@ export class WorldScene extends Phaser.Scene {
         padding: { x: 9, y: 5 },
       }).setOrigin(0.5).setDepth(portal.y + 1)
     })
+    const reservedPlantAreas: ReservedPlantArea[] = [
+      ...this.npcs.map((npc) => ({ x: npc.x, y: npc.y, radius: 86 })),
+      ...this.portals.map((portal) => ({ x: portal.x, y: portal.y, radius: 112 })),
+    ]
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     this.plants = (map.resource.objects ?? []).flatMap((item) => {
       if (
@@ -151,8 +163,17 @@ export class WorldScene extends Phaser.Scene {
       const rarity: MapPlant['rarity'] = item.rarity === 'rare' || item.rarity === 'uncommon'
         ? item.rarity
         : 'common'
-      const display = this.add.container(item.x, item.y).setDepth(item.y)
       const spriteSize = { common: 88, uncommon: 98, rare: 110 }[rarity]
+      const position = this.resolveVisiblePlantPosition(
+        item.x,
+        item.y,
+        spriteSize,
+        bounds,
+        activeObstacleLayout,
+        reservedPlantAreas,
+      )
+      reservedPlantAreas.push({ x: position.x, y: position.y, radius: spriteSize / 2 + 24 })
+      const display = this.add.container(position.x, position.y).setDepth(position.y)
       const textureKey = item.icon
         ?.split('/')
         .pop()
@@ -210,8 +231,8 @@ export class WorldScene extends Phaser.Scene {
         nodeId: item.node_id,
         name: item.name,
         rarity,
-        x: item.x,
-        y: item.y,
+        x: position.x,
+        y: position.y,
         display,
       }
       if (item.available === false) {
@@ -392,6 +413,86 @@ export class WorldScene extends Phaser.Scene {
       return [marker]
     })
     this.cameras.main.ignore([this.playerMapMarker, ...npcMarkers, ...portalMarkers, ...plantMarkers])
+  }
+
+  private resolveVisiblePlantPosition(
+    requestedX: number,
+    requestedY: number,
+    spriteSize: number,
+    bounds: WorldBounds,
+    obstacles: ObstacleLayoutItem[],
+    reservedAreas: ReservedPlantArea[],
+  ): { x: number; y: number } {
+    const candidates = [{ x: requestedX, y: requestedY }]
+    for (let radius = 56; radius <= 448; radius += 56) {
+      for (let index = 0; index < 16; index += 1) {
+        const angle = index * Math.PI / 8
+        candidates.push({
+          x: Math.round(requestedX + Math.cos(angle) * radius),
+          y: Math.round(requestedY + Math.sin(angle) * radius),
+        })
+      }
+    }
+    const resolved = candidates.find((candidate) => this.isPlantPositionVisible(
+      candidate.x,
+      candidate.y,
+      spriteSize,
+      bounds,
+      obstacles,
+      reservedAreas,
+    ))
+    if (resolved && (resolved.x !== requestedX || resolved.y !== requestedY)) {
+      console.warn(
+        `[WorldScene] Plant node at (${requestedX}, ${requestedY}) was moved to (${resolved.x}, ${resolved.y}) to avoid occlusion.`,
+      )
+    }
+    return resolved ?? { x: requestedX, y: requestedY }
+  }
+
+  private isPlantPositionVisible(
+    x: number,
+    y: number,
+    spriteSize: number,
+    bounds: WorldBounds,
+    obstacles: ObstacleLayoutItem[],
+    reservedAreas: ReservedPlantArea[],
+  ): boolean {
+    const horizontalRadius = spriteSize * 0.42
+    const plantBounds = {
+      left: x - horizontalRadius,
+      right: x + horizontalRadius,
+      top: y - spriteSize * 0.86,
+      bottom: y + spriteSize * 0.14,
+    }
+    const edgeMargin = 20
+    if (
+      plantBounds.left < bounds.min_x + edgeMargin
+      || plantBounds.right > bounds.max_x - edgeMargin
+      || plantBounds.top < bounds.min_y + edgeMargin
+      || plantBounds.bottom > bounds.max_y - edgeMargin
+    ) return false
+    if (reservedAreas.some((area) =>
+      Phaser.Math.Distance.Between(x, y, area.x, area.y) < area.radius + horizontalRadius,
+    )) return false
+
+    return !obstacles.some((obstacle) => {
+      if (y > obstacle.y) return false
+      const bodyHalfWidth = obstacle.body.shape === 'circle'
+        ? obstacle.body.radius
+        : obstacle.body.width / 2
+      const bodyHalfHeight = obstacle.body.shape === 'circle'
+        ? obstacle.body.radius
+        : obstacle.body.height / 2
+      const visualX = obstacle.x - (-obstacle.size / 2 + obstacle.body.offsetX + bodyHalfWidth)
+      const visualY = obstacle.y - (-obstacle.size / 2 + obstacle.body.offsetY + bodyHalfHeight)
+      const halfSize = obstacle.size / 2
+      return (
+        plantBounds.left < visualX + halfSize
+        && plantBounds.right > visualX - halfSize
+        && plantBounds.top < visualY + halfSize
+        && plantBounds.bottom > visualY - halfSize
+      )
+    })
   }
 
   private drawWorld(width: number, height: number, mapType: string): void {

@@ -98,11 +98,11 @@ SET resource_json = jsonb_set(
         FROM jsonb_array_elements(COALESCE(resource_json->'objects', '[]'::JSONB)) AS item
         WHERE item->>'type' <> 'collectible_plant'
     ), '[]'::JSONB) || jsonb_build_array(
-        jsonb_build_object('type','collectible_plant','node_id','village_dew_01','template_id',(SELECT id FROM plant_templates WHERE name='晨露草'),'x',180,'y',330),
-        jsonb_build_object('type','collectible_plant','node_id','village_berry_01','template_id',(SELECT id FROM plant_templates WHERE name='蜜糖莓'),'x',1000,'y',650),
-        jsonb_build_object('type','collectible_plant','node_id','village_sunbell_01','template_id',(SELECT id FROM plant_templates WHERE name='阳铃花'),'x',720,'y',360),
-        jsonb_build_object('type','collectible_plant','node_id','village_fire_01','template_id',(SELECT id FROM plant_templates WHERE name='火绒花'),'x',390,'y',690),
-        jsonb_build_object('type','collectible_plant','node_id','village_vine_01','template_id',(SELECT id FROM plant_templates WHERE name='风铃藤'),'x',1180,'y',910)
+        jsonb_build_object('type','collectible_plant','node_id','village_dew_01','template_id',(SELECT id FROM plant_templates WHERE name='晨露草'),'habitat','村口道路边缘','x',180,'y',330),
+        jsonb_build_object('type','collectible_plant','node_id','village_berry_01','template_id',(SELECT id FROM plant_templates WHERE name='蜜糖莓'),'habitat','杂货铺后方的灌木边','x',1120,'y',430),
+        jsonb_build_object('type','collectible_plant','node_id','village_sunbell_01','template_id',(SELECT id FROM plant_templates WHERE name='阳铃花'),'habitat','村长屋东侧向阳坡地','x',930,'y',400),
+        jsonb_build_object('type','collectible_plant','node_id','village_fire_01','template_id',(SELECT id FROM plant_templates WHERE name='火绒花'),'habitat','铁匠铺东侧干燥石缝','x',535,'y',745),
+        jsonb_build_object('type','collectible_plant','node_id','village_vine_01','template_id',(SELECT id FROM plant_templates WHERE name='风铃藤'),'habitat','村庄东缘篱笆旁','x',1320,'y',970)
     ), TRUE
 )
 WHERE map_name = '晨曦村';
@@ -116,11 +116,11 @@ SET resource_json = jsonb_set(
         FROM jsonb_array_elements(COALESCE(resource_json->'objects', '[]'::JSONB)) AS item
         WHERE item->>'type' <> 'collectible_plant'
     ), '[]'::JSONB) || jsonb_build_array(
-        jsonb_build_object('type','collectible_plant','node_id','forest_silver_01','template_id',(SELECT id FROM plant_templates WHERE name='银叶草'),'x',1680,'y',1580),
-        jsonb_build_object('type','collectible_plant','node_id','forest_mint_01','template_id',(SELECT id FROM plant_templates WHERE name='星砂薄荷'),'x',1260,'y',1340),
-        jsonb_build_object('type','collectible_plant','node_id','forest_lily_01','template_id',(SELECT id FROM plant_templates WHERE name='月光百合'),'x',620,'y',520),
-        jsonb_build_object('type','collectible_plant','node_id','forest_fern_01','template_id',(SELECT id FROM plant_templates WHERE name='雾绒蕨'),'x',360,'y',1320),
-        jsonb_build_object('type','collectible_plant','node_id','forest_dream_01','template_id',(SELECT id FROM plant_templates WHERE name='梦露花'),'x',980,'y',420)
+        jsonb_build_object('type','collectible_plant','node_id','forest_silver_01','template_id',(SELECT id FROM plant_templates WHERE name='银叶草'),'habitat','林间道路旁的树根地','x',1600,'y',1500),
+        jsonb_build_object('type','collectible_plant','node_id','forest_mint_01','template_id',(SELECT id FROM plant_templates WHERE name='星砂薄荷'),'habitat','溪流附近的湿润林地','x',1280,'y',1340),
+        jsonb_build_object('type','collectible_plant','node_id','forest_lily_01','template_id',(SELECT id FROM plant_templates WHERE name='月光百合'),'habitat','森林深处的月光空地','x',620,'y',520),
+        jsonb_build_object('type','collectible_plant','node_id','forest_fern_01','template_id',(SELECT id FROM plant_templates WHERE name='雾绒蕨'),'habitat','雾区边缘的古树下','x',430,'y',1330),
+        jsonb_build_object('type','collectible_plant','node_id','forest_dream_01','template_id',(SELECT id FROM plant_templates WHERE name='梦露花'),'habitat','遗迹附近的隐蔽空地','x',980,'y',420)
     ), TRUE
 )
 WHERE map_name = '微光森林';

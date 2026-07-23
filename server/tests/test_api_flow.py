@@ -136,6 +136,18 @@ def test_complete_demo_backend_flow() -> None:
             assert forest_data["map"]["map_name"] == "微光森林"
             assert forest_data["position_x"] == village_portal["spawn_x"]
             assert forest_data["position_y"] == village_portal["spawn_y"]
+            forest_plants = {
+                item["node_id"]: (item["habitat"], item["x"], item["y"])
+                for item in forest_data["map"]["resource"]["objects"]
+                if item["type"] == "collectible_plant"
+            }
+            assert forest_plants == {
+                "forest_silver_01": ("林间道路旁的树根地", 1600, 1500),
+                "forest_mint_01": ("溪流附近的湿润林地", 1280, 1340),
+                "forest_lily_01": ("森林深处的月光空地", 620, 520),
+                "forest_fern_01": ("雾区边缘的古树下", 430, 1330),
+                "forest_dream_01": ("遗迹附近的隐蔽空地", 980, 420),
+            }
 
             stale_location = client.post(
                 "/api/v1/player/location",
@@ -271,6 +283,18 @@ def test_plant_collection_and_spirit_gift_flow() -> None:
             nodes = map_plants.json()["data"]
             assert len({node["name"] for node in nodes}) >= 3
             assert all(node["available"] for node in nodes)
+            assert all(node.get("habitat") for node in nodes)
+            village_positions = {
+                node["name"]: (node["x"], node["y"])
+                for node in nodes
+            }
+            assert village_positions == {
+                "晨露草": (180, 330),
+                "蜜糖莓": (1120, 430),
+                "阳铃花": (930, 400),
+                "火绒花": (535, 745),
+                "风铃藤": (1320, 970),
+            }
 
             node = nodes[0]
             collected = client.post(
