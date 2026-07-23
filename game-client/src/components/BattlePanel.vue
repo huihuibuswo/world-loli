@@ -35,8 +35,14 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
       <div class="combatant enemy">
         <strong>{{ battle.enemy_state.name }}</strong><span>对手</span>
         <div class="hp-track"><i :style="{ width: `${Math.max(0, battle.enemy_state.hp / battle.enemy_state.max_hp * 100)}%` }" /></div>
-        <small>{{ battle.enemy_state.hp }} / {{ battle.enemy_state.max_hp }}</small>
+        <small>{{ battle.enemy_state.hp }} / {{ battle.enemy_state.max_hp }}<template v-if="battle.enemy_state.shield"> · 护盾 {{ battle.enemy_state.shield }}</template></small>
       </div>
+    </div>
+
+    <div v-if="battle.last_action?.battle_line || battle.last_action?.type === 'enemy_guard'" class="battle-action-line glass-panel" role="status">
+      <Shield v-if="battle.last_action?.type === 'enemy_guard'" :size="17" />
+      <Swords v-else :size="17" />
+      <span>{{ battle.last_action?.battle_line || `${battle.enemy_state.name}摆出了防守架势。` }}</span>
     </div>
 
     <div v-if="battle.status !== 'active'" class="battle-result glass-panel" role="status">

@@ -77,6 +77,27 @@ export interface NpcData {
   portrait: string | null
   dialogue: string[]
   actions: string[]
+  ai: {
+    dialogue_enabled: boolean
+    battle_enabled: boolean
+    fallback_replies: [string, string]
+  }
+}
+
+export interface NpcChatTurn {
+  request_id: string
+  player: string
+  npc: string
+  created_at: string
+}
+
+export interface NpcChatState {
+  npc_id: number
+  conversation_version: number
+  turns: NpcChatTurn[]
+  reply: string | null
+  suggested_replies: [string, string]
+  mode: 'ai' | 'fallback' | 'static'
 }
 
 export interface CardData {
@@ -180,13 +201,21 @@ export interface BattleData {
   current_turn: number
   energy: number
   player_state: { hp: number; max_hp: number }
-  enemy_state: { name: string; sprite: string; hp: number; max_hp: number }
+  enemy_state: { name: string; sprite: string; hp: number; max_hp: number; shield?: number }
   hand_cards: number[]
   draw_pile: number[]
   discard_cards: number[]
   buffs: unknown[]
   debuffs: unknown[]
-  last_action?: { type: string; damage?: number; card_id?: number }
+  last_action?: {
+    type: string
+    action_id?: string
+    damage?: number
+    blocked?: number
+    shield?: number
+    card_id?: number
+    battle_line?: string | null
+  }
   result?: string
   reward?: {
     first_victory?: boolean

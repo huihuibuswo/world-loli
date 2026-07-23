@@ -1,7 +1,17 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -216,6 +226,27 @@ class NpcTemplate(Base):
     battle_deck: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     reward: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     is_card_spirit: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class NpcAiConversation(Base):
+    __tablename__ = "npc_ai_conversations"
+    __table_args__ = (
+        UniqueConstraint("player_id", "npc_id", name="uq_npc_ai_conversations_player_npc"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    npc_id: Mapped[int] = mapped_column(ForeignKey("npc_templates.id", ondelete="CASCADE"))
+    summary: Mapped[str] = mapped_column(Text, default="")
+    recent_turns: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    last_interacted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class Quest(Base):

@@ -18,6 +18,7 @@ from app.models import (
     PlayerCard,
     PlayerCardSpirit,
 )
+from app.services.ai_profile import get_npc_ai_profile
 
 
 def battle_data(battle: ActiveBattle) -> dict[str, Any]:
@@ -28,6 +29,28 @@ def battle_data(battle: ActiveBattle) -> dict[str, Any]:
         "version": battle.version,
         **battle.state_json,
     }
+
+
+def enemy_action_candidates(enemy: NpcTemplate, state: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = [
+        {
+            "id": "basic_attack",
+            "description": "进行一次稳定的普通攻击",
+            "tags": ["damage"],
+        }
+    ]
+    config = enemy.battle_deck or {}
+    enemy_state = state.get("enemy_state") if isinstance(state.get("enemy_state"), dict) else {}
+    guard = max(0, min(int(config.get("guard", 0)), 1_000_000))
+    if guard > 0 and int(enemy_state.get("shield", 0)) <= 0:
+        candidates.append(
+            {
+                "id": "guard",
+                "description": "获得护盾，抵挡下一次受到的伤害",
+                "tags": ["defense"],
+            }
+        )
+    return candidates
 
 
 def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
@@ -97,6 +120,7 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
             "sprite": str((enemy.reward or {}).get("sprite", "npc-trainer")),
             "hp": max(1, int(enemy_config.get("hp", 30))),
             "max_hp": max(1, int(enemy_config.get("hp", 30))),
+            "shield": 0,
         },
         "hand_cards": [],
         "draw_pile": draw_pile,
@@ -236,11 +260,20 @@ def play_card(
         )
         if spirit is not None:
             damage = _damage_with_affection(damage, spirit.affection)
+    shield = max(0, min(int(state["enemy_state"].get("shield", 0)), 1_000_000))
+    blocked = min(shield, damage)
+    damage -= blocked
+    state["enemy_state"]["shield"] = shield - blocked
     state["energy"] -= template.cost
     state["hand_cards"].remove(card_id)
     state["discard_cards"].append(card_id)
     state["enemy_state"]["hp"] = max(0, state["enemy_state"]["hp"] - damage)
-    state["last_action"] = {"type": "play_card", "card_id": card_id, "damage": damage}
+    state["last_action"] = {
+        "type": "play_card",
+        "card_id": card_id,
+        "damage": damage,
+        "blocked": blocked,
+    }
     battle.state_json = state
     battle.version += 1
     if state["enemy_state"]["hp"] == 0:
@@ -249,20 +282,66 @@ def play_card(
     return battle
 
 
+def prepare_enemy_turn(
+    db: Session,
+    player: Player,
+    battle_id: int,
+    expected_version: int,
+) -> dict[str, Any]:
+    battle = get_owned_battle(db, player.id, battle_id)
+    _check_active_version(battle, expected_version)
+    enemy = db.get(NpcTemplate, battle.enemy_id)
+    if enemy is None:
+        abort(404, "敌人不存在")
+    state = deepcopy(battle.state_json)
+    profile = get_npc_ai_profile(enemy)
+    return {
+        "battle_id": battle.id,
+        "version": battle.version,
+        "enemy_id": enemy.id,
+        "enemy_name": enemy.name,
+        "battle_enabled": profile.battle_enabled,
+        "battle_style": profile.battle_style,
+        "state": state,
+        "candidates": enemy_action_candidates(enemy, state),
+    }
+
+
 def end_turn(
     db: Session,
     player: Player,
     battle_id: int,
     expected_version: int,
+    selected_action_id: str = "basic_attack",
+    battle_line: str | None = None,
 ) -> ActiveBattle:
     battle = get_owned_battle(db, player.id, battle_id, lock=True)
     _check_active_version(battle, expected_version)
     state = deepcopy(battle.state_json)
     enemy = db.get(NpcTemplate, battle.enemy_id)
+    if enemy is None:
+        abort(404, "敌人不存在")
+    candidate_ids = {item["id"] for item in enemy_action_candidates(enemy, state)}
+    action_id = selected_action_id if selected_action_id in candidate_ids else "basic_attack"
     enemy_attack = max(0, min(int((enemy.battle_deck or {}).get("attack", 5)), 1_000_000))
-    damage = max(1, enemy_attack - player.defense // 2)
-    state["player_state"]["hp"] = max(0, state["player_state"]["hp"] - damage)
-    state["last_action"] = {"type": "enemy_attack", "damage": damage}
+    if action_id == "guard":
+        shield = max(1, min(int((enemy.battle_deck or {}).get("guard", 1)), 1_000_000))
+        state["enemy_state"]["shield"] = shield
+        state["last_action"] = {
+            "type": "enemy_guard",
+            "action_id": action_id,
+            "shield": shield,
+            "battle_line": battle_line,
+        }
+    else:
+        damage = max(1, enemy_attack - player.defense // 2)
+        state["player_state"]["hp"] = max(0, state["player_state"]["hp"] - damage)
+        state["last_action"] = {
+            "type": "enemy_attack",
+            "action_id": "basic_attack",
+            "damage": damage,
+            "battle_line": battle_line,
+        }
     state["current_turn"] += 1
     state["energy"] = 3
     _draw_to_hand(state)

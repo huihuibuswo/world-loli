@@ -168,7 +168,16 @@ onBeforeUnmount(() => {
     </div>
 
     <BattlePanel v-if="game.battle" />
-    <DialogModal v-if="game.dialogNpc" :npc="game.dialogNpc" :loading="game.actionLoading" @close="game.closeDialog" @battle="beginBattle" />
+    <DialogModal
+      v-if="game.dialogNpc"
+      :npc="game.dialogNpc"
+      :chat="game.npcChat"
+      :loading="game.actionLoading"
+      :chat-loading="game.chatLoading"
+      :send-message="game.sendNpcChat"
+      @close="game.closeDialog"
+      @battle="beginBattle"
+    />
     <CollectionDrawer v-if="drawerOpen" @close="drawerOpen = false" />
     <div v-if="game.mapLoading" class="map-transition" role="status" aria-live="polite">
       <div class="loader" />

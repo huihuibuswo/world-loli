@@ -1,6 +1,7 @@
 from typing import Any, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
@@ -33,6 +34,26 @@ class MapEnterRequest(BaseModel):
 class NpcInteractionRequest(BaseModel):
     npc_id: int = Field(gt=0)
     action: str | None = Field(default=None, max_length=64)
+
+
+class NpcChatRequest(BaseModel):
+    request_id: UUID
+    message: str = Field(min_length=1, max_length=2000)
+    conversation_version: int = Field(default=0, ge=0)
+
+
+class AiDialogueOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reply: str = Field(min_length=1, max_length=2000)
+    suggested_replies: list[str] = Field(min_length=2, max_length=2)
+
+
+class AiBattleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
+    battle_line: str | None = Field(default=None, max_length=200)
 
 
 class SpiritAffectionRequest(BaseModel):

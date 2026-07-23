@@ -142,6 +142,39 @@ docker compose exec api pytest
 
 不要提交真实的 `.env`、数据库密码或 JWT 密钥。
 
+### AI NPC 配置
+
+AI 对话与战斗决策默认关闭。服务端通过 OpenAI-compatible API 接入模型：
+
+| 变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `AI_ENABLED` | AI 总开关 | `false` |
+| `AI_DIALOGUE_ENABLED` | NPC 动态对话开关 | `false` |
+| `AI_BATTLE_ENABLED` | 敌方战斗决策开关 | `false` |
+| `AI_BASE_URL` | OpenAI-compatible API 根地址 | `https://api.openai.com/v1` |
+| `AI_API_KEY` | 服务端模型密钥 | 空 |
+| `AI_MODEL` | 模型名称 | 空 |
+| `AI_DIALOGUE_TIMEOUT_SECONDS` | 对话超时秒数 | `8` |
+| `AI_BATTLE_TIMEOUT_SECONDS` | 战斗决策超时秒数 | `2` |
+| `AI_MAX_INPUT_CHARS` | 玩家单次输入上限 | `500` |
+| `AI_MEMORY_RECENT_TURNS` | 每个玩家与 NPC 保留的近期轮次 | `8` |
+| `AI_MEMORY_RETENTION_DAYS` | 对话记忆保留天数 | `90` |
+
+启用示例：
+
+```dotenv
+AI_ENABLED=true
+AI_DIALOGUE_ENABLED=true
+AI_BATTLE_ENABLED=true
+AI_BASE_URL=https://api.openai.com/v1
+AI_API_KEY=replace-with-server-side-key
+AI_MODEL=replace-with-compatible-model
+```
+
+API 密钥不得出现在客户端代码、日志或提交记录中。模型不可用、超时或输出非法时，
+游戏会自动回退到静态对白、固定快捷回复和普通攻击。完整设计见
+[`doc/AI对战与对话接入设计.md`](doc/AI对战与对话接入设计.md)。
+
 ## 数据库迁移
 
 迁移脚本位于 `server/database/`，并按三位数字前缀顺序执行。`docker compose up` 会在 API 启动前自动运行这些脚本。

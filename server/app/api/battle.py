@@ -12,7 +12,9 @@ from app.services.battle_service import (
     end_turn,
     get_owned_battle,
     play_card,
+    prepare_enemy_turn,
 )
+from app.services.battle_ai_service import choose_enemy_action
 
 
 router = APIRouter(prefix="/battle", tags=["battle"])
@@ -54,7 +56,16 @@ def finish_turn(
     player: Player = Depends(get_current_player),
     db: Session = Depends(get_db),
 ) -> dict:
-    battle = end_turn(db, player, battle_id, payload.expected_version)
+    context = prepare_enemy_turn(db, player, battle_id, payload.expected_version)
+    decision = choose_enemy_action(context)
+    battle = end_turn(
+        db,
+        player,
+        battle_id,
+        payload.expected_version,
+        str(decision["action_id"]),
+        decision.get("battle_line"),
+    )
     return ok(battle_data(battle), "回合已结束")
 
 

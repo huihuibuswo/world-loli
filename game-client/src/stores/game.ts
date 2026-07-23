@@ -9,6 +9,7 @@ import type {
   GiftResult,
   MapData,
   MapEnterResult,
+  NpcChatState,
   NpcData,
   PlantCollectResult,
   PlantData,
@@ -28,8 +29,10 @@ export const useGameStore = defineStore('game', () => {
   const lastGift = ref<GiftResult | null>(null)
   const battle = ref<BattleData | null>(null)
   const dialogNpc = ref<NpcData | null>(null)
+  const npcChat = ref<NpcChatState | null>(null)
   const loading = ref(false)
   const actionLoading = ref(false)
+  const chatLoading = ref(false)
   const mapLoading = ref(false)
   const error = ref('')
   const notice = ref('')
@@ -121,7 +124,20 @@ export const useGameStore = defineStore('game', () => {
     actionLoading.value = true
     error.value = ''
     try {
-      dialogNpc.value = await requestData<NpcData>(api.get(`/npc/${npcId}`))
+      const npc = await requestData<NpcData>(api.get(`/npc/${npcId}`))
+      try {
+        npcChat.value = await requestData<NpcChatState>(api.get(`/npc/${npcId}/chat`))
+      } catch {
+        npcChat.value = {
+          npc_id: npc.id,
+          conversation_version: 0,
+          turns: [],
+          reply: null,
+          suggested_replies: npc.ai?.fallback_replies ?? ['继续聊聊', '换个话题'],
+          mode: 'static',
+        }
+      }
+      dialogNpc.value = npc
     } catch (cause) {
       error.value = errorMessage(cause)
     } finally {
@@ -131,6 +147,35 @@ export const useGameStore = defineStore('game', () => {
 
   function closeDialog(): void {
     dialogNpc.value = null
+    npcChat.value = null
+  }
+
+  async function refreshNpcChat(): Promise<void> {
+    if (!dialogNpc.value) return
+    npcChat.value = await requestData<NpcChatState>(api.get(`/npc/${dialogNpc.value.id}/chat`))
+  }
+
+  async function sendNpcChat(message: string): Promise<void> {
+    if (!dialogNpc.value || !npcChat.value || chatLoading.value) return
+    chatLoading.value = true
+    error.value = ''
+    try {
+      npcChat.value = await requestData<NpcChatState>(
+        api.post(`/npc/${dialogNpc.value.id}/chat`, {
+          request_id: crypto.randomUUID(),
+          message,
+          conversation_version: npcChat.value.conversation_version,
+        }),
+      )
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      try {
+        await refreshNpcChat()
+      } catch { /* retain the last usable conversation state */ }
+      throw cause
+    } finally {
+      chatLoading.value = false
+    }
   }
 
   async function startBattle(enemyId: number): Promise<void> {
@@ -140,6 +185,7 @@ export const useGameStore = defineStore('game', () => {
       battle.value = await requestData<BattleData>(api.post('/battle/create', { enemy_id: enemyId }))
       sessionStorage.setItem('world_battle_id', String(battle.value.battle_id))
       dialogNpc.value = null
+      npcChat.value = null
     } catch (cause) {
       error.value = errorMessage(cause)
       throw cause
@@ -372,6 +418,8 @@ export const useGameStore = defineStore('game', () => {
     lastGift.value = null
     battle.value = null
     dialogNpc.value = null
+    npcChat.value = null
+    chatLoading.value = false
     mapLoading.value = false
     error.value = ''
   }
@@ -387,8 +435,10 @@ export const useGameStore = defineStore('game', () => {
     lastGift,
     battle,
     dialogNpc,
+    npcChat,
     loading,
     actionLoading,
+    chatLoading,
     mapLoading,
     error,
     notice,
@@ -397,6 +447,7 @@ export const useGameStore = defineStore('game', () => {
     bootstrap,
     openNpc,
     closeDialog,
+    sendNpcChat,
     startBattle,
     playCard,
     endTurn,

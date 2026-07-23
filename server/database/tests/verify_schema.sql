@@ -65,6 +65,35 @@ BEGIN
 END
 $verify$;
 
+DO $verify_ai$
+DECLARE
+    owner_a_player_id BIGINT;
+    owner_a_npc_id BIGINT;
+BEGIN
+    SELECT id INTO owner_a_player_id
+    FROM players WHERE name = 'schema_owner_a';
+
+    SELECT id INTO owner_a_npc_id
+    FROM npc_templates ORDER BY id LIMIT 1;
+
+    INSERT INTO npc_ai_conversations (player_id, npc_id, recent_turns)
+    VALUES (
+        owner_a_player_id,
+        owner_a_npc_id,
+        '[{"request_id":"schema-test","player":"你好","npc":"你好"}]'::JSONB
+    );
+
+    BEGIN
+        INSERT INTO npc_ai_conversations (player_id, npc_id)
+        VALUES (owner_a_player_id, owner_a_npc_id);
+        RAISE EXCEPTION 'duplicate player/NPC AI conversation was unexpectedly accepted';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RAISE NOTICE 'duplicate player/NPC AI conversation correctly rejected';
+    END;
+END
+$verify_ai$;
+
 ROLLBACK;
 
 SELECT COUNT(*) AS public_table_count

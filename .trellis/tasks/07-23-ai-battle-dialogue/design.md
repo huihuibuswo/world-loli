@@ -7,6 +7,7 @@
 - 首期支持 NPC；未来怪物通过相同的服务层战斗角色契约接入。
 - 对话支持自由文本、两条动态快捷回复和跨会话有限记忆。
 - 模型不可用时，现有静态对白和确定性敌方动作仍可完成游戏流程。
+- 交付可运行实现、自动化测试、配置说明和与实现一致的设计文档。
 
 ## 2. Non-Goals
 
@@ -252,6 +253,10 @@ actor_id + display_name + ai_profile + battle_state + legal_actions
 频率限制按玩家与 NPC 组合计算；首期可用进程内限流满足单实例 Demo，部署多实例前必须切换
 到共享限流存储。该限制应在文档和部署说明中明确，不能误称为全局强一致限流。
 
+MVP 内容安全基线包括 Unicode/控制字符规范化、服务端长度限制、可配置禁用词、
+提示词角色隔离、无工具调用、输出长度与 schema 校验。供应商若支持独立 moderation
+接口，可作为后续增强，但不得成为基础游戏流程的强依赖。
+
 ## 14. Observability And Privacy
 
 记录：请求 ID、功能类型、NPC/敌人 ID、模型名、延迟、结果模式、错误类别、token 用量和降级次数。
@@ -285,3 +290,30 @@ actor_id + display_name + ai_profile + battle_state + legal_actions
 - 兼容测试：所有 AI 开关关闭时，现有 `test_api_flow.py` 行为不变。
 - 前端检查：桌面和移动端输入、两条快捷回复、加载、错误、键盘焦点与文本不溢出。
 - 安全测试：提示词注入、超长输入、恶意 JSON、供应商返回额外字段和敏感信息诱导。
+
+## 17. Expected Implementation Surface
+
+后端预计涉及：
+
+- `server/app/core/config.py`、`server/.env.example`
+- `server/app/schemas.py`、`server/app/models.py`
+- `server/app/api/world.py`、`server/app/api/battle.py`
+- `server/app/services/ai_client.py`
+- `server/app/services/npc_ai_service.py`
+- `server/app/services/battle_ai_service.py`
+- `server/app/services/battle_service.py`
+- 新数据库迁移及 schema 验证
+- AI 单元/API 测试和现有流程回归
+
+前端预计涉及：
+
+- `game-client/src/api/types.ts`
+- `game-client/src/stores/game.ts`
+- `game-client/src/components/DialogModal.vue`
+- `game-client/src/components/BattlePanel.vue`
+- `game-client/src/styles.css`
+
+文档预计涉及：
+
+- `doc/AI对战与对话接入设计.md`
+- `README.md`

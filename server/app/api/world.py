@@ -6,8 +6,10 @@ from app.api.deps import get_current_player
 from app.core.responses import abort, ok
 from app.db import get_db
 from app.models import ActiveBattle, MapData, NpcTemplate, Player
-from app.schemas import MapEnterRequest, NpcInteractionRequest
+from app.schemas import MapEnterRequest, NpcChatRequest, NpcInteractionRequest
+from app.services.ai_profile import get_npc_ai_profile
 from app.services.battle_service import battle_data, create_battle
+from app.services.npc_ai_service import chat_with_npc, get_chat_state
 
 
 router = APIRouter(tags=["world"])
@@ -25,6 +27,7 @@ def _map_data(item: MapData) -> dict:
 
 def _npc_data(item: NpcTemplate) -> dict:
     reward = item.reward or {}
+    ai_profile = get_npc_ai_profile(item)
     dialogue = reward.get("dialogue")
     if not isinstance(dialogue, list) or not dialogue:
         dialogue = [item.story]
@@ -40,6 +43,11 @@ def _npc_data(item: NpcTemplate) -> dict:
         "portrait": reward.get("portrait"),
         "dialogue": [str(line) for line in dialogue if str(line).strip()],
         "actions": reward.get("actions", ["dialog", "battle"]),
+        "ai": {
+            "dialogue_enabled": ai_profile.dialogue_enabled,
+            "battle_enabled": ai_profile.battle_enabled,
+            "fallback_replies": list(ai_profile.fallback_replies),
+        },
     }
 
 
@@ -112,6 +120,31 @@ def get_npc(npc_id: int, db: Session = Depends(get_db)) -> dict:
     if item is None:
         abort(404, "NPC不存在")
     return ok(_npc_data(item))
+
+
+@router.get("/npc/{npc_id}/chat")
+def get_npc_chat(
+    npc_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    return ok(get_chat_state(db, player, item))
+
+
+@router.post("/npc/{npc_id}/chat")
+def post_npc_chat(
+    npc_id: int,
+    payload: NpcChatRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    return ok(chat_with_npc(db, player, item, payload), "NPC 已回应")
 
 
 @router.post("/npc/dialog")

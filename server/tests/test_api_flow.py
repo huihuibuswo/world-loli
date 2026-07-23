@@ -59,7 +59,10 @@ def _finish_battle(
     return current
 
 
-def test_complete_demo_backend_flow() -> None:
+def test_complete_demo_backend_flow(monkeypatch) -> None:
+    monkeypatch.setattr("app.core.config.settings.ai_enabled", False)
+    monkeypatch.setattr("app.core.config.settings.ai_dialogue_enabled", False)
+    monkeypatch.setattr("app.core.config.settings.ai_battle_enabled", False)
     suffix = uuid4().hex[:10]
     username_a = f"tester_{suffix}_a"
     username_b = f"tester_{suffix}_b"
@@ -179,6 +182,54 @@ def test_complete_demo_backend_flow() -> None:
                 assert npc["portrait"].startswith("/assets/generated/portraits/")
                 assert npc["battle_deck"]["hp"] > 0
 
+            chat_npc_id = next(iter(map_npcs.values()))["template_id"]
+            chat_state = client.get(
+                f"/api/v1/npc/{chat_npc_id}/chat",
+                headers=headers_a,
+            )
+            assert chat_state.status_code == 200
+            assert chat_state.json()["data"]["conversation_version"] == 0
+
+            chat_request_id = str(uuid4())
+            chat_response = client.post(
+                f"/api/v1/npc/{chat_npc_id}/chat",
+                json={
+                    "request_id": chat_request_id,
+                    "message": "今天适合去森林训练吗？",
+                    "conversation_version": 0,
+                },
+                headers=headers_a,
+            )
+            assert chat_response.status_code == 200, chat_response.text
+            chat_data = chat_response.json()["data"]
+            assert chat_data["conversation_version"] == 1
+            assert chat_data["mode"] == "fallback"
+            assert len(chat_data["suggested_replies"]) == 2
+            assert chat_data["turns"][-1]["request_id"] == chat_request_id
+
+            duplicate_chat = client.post(
+                f"/api/v1/npc/{chat_npc_id}/chat",
+                json={
+                    "request_id": chat_request_id,
+                    "message": "今天适合去森林训练吗？",
+                    "conversation_version": 0,
+                },
+                headers=headers_a,
+            )
+            assert duplicate_chat.status_code == 200
+            assert duplicate_chat.json()["data"]["conversation_version"] == 1
+
+            stale_chat = client.post(
+                f"/api/v1/npc/{chat_npc_id}/chat",
+                json={
+                    "request_id": str(uuid4()),
+                    "message": "这是一条基于旧版本的消息",
+                    "conversation_version": 0,
+                },
+                headers=headers_a,
+            )
+            assert stale_chat.status_code == 409
+
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200
             cards = cards_response.json()["data"]
@@ -215,6 +266,13 @@ def test_complete_demo_backend_flow() -> None:
 
             token_b, user_b = _register(client, username_b)
             user_ids.append(user_b)
+            isolated_chat = client.get(
+                f"/api/v1/npc/{chat_npc_id}/chat",
+                headers=_auth(token_b),
+            )
+            assert isolated_chat.status_code == 200
+            assert isolated_chat.json()["data"]["conversation_version"] == 0
+            assert isolated_chat.json()["data"]["turns"] == []
             forbidden_read = client.get(
                 f"/api/v1/battle/{first_battle['battle_id']}", headers=_auth(token_b)
             )
@@ -262,6 +320,67 @@ def test_complete_demo_backend_flow() -> None:
             if user_ids:
                 with SessionLocal() as db:
                     db.execute(delete(User).where(User.id.in_(user_ids)))
+                    db.commit()
+
+
+def test_ai_guard_action_is_server_authoritative(monkeypatch) -> None:
+    suffix = uuid4().hex[:10]
+    username = f"ai_guard_{suffix}"
+    user_id: int | None = None
+    monkeypatch.setattr(
+        "app.api.battle.choose_enemy_action",
+        lambda _: {"action_id": "guard", "battle_line": "先稳住阵脚。"},
+    )
+
+    with TestClient(app) as client:
+        try:
+            token, user_id = _register(client, username)
+            headers = _auth(token)
+            cards = client.get("/api/v1/cards", headers=headers).json()["data"]
+            card_by_id = {card["id"]: card for card in cards}
+            with SessionLocal() as db:
+                enemy_id = db.scalar(
+                    select(NpcTemplate.id).where(NpcTemplate.name == "训练教官")
+                )
+            assert enemy_id is not None
+
+            battle = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": enemy_id},
+                headers=headers,
+            ).json()["data"]
+            hp_before = battle["player_state"]["hp"]
+            guarded_response = client.post(
+                f"/api/v1/battle/{battle['battle_id']}/end-turn",
+                json={"expected_version": battle["version"]},
+                headers=headers,
+            )
+            assert guarded_response.status_code == 200, guarded_response.text
+            guarded = guarded_response.json()["data"]
+            assert guarded["player_state"]["hp"] == hp_before
+            assert guarded["enemy_state"]["shield"] > 0
+            assert guarded["last_action"]["action_id"] == "guard"
+            assert guarded["last_action"]["battle_line"] == "先稳住阵脚。"
+
+            playable_id = next(
+                card_id
+                for card_id in guarded["hand_cards"]
+                if card_by_id[card_id]["cost"] <= guarded["energy"]
+                and card_by_id[card_id]["effect"].get("damage", 0) > 0
+            )
+            played_response = client.post(
+                f"/api/v1/battle/{guarded['battle_id']}/play-card",
+                json={"card_id": playable_id, "expected_version": guarded["version"]},
+                headers=headers,
+            )
+            assert played_response.status_code == 200, played_response.text
+            played = played_response.json()["data"]
+            assert played["last_action"]["blocked"] > 0
+            assert played["enemy_state"]["shield"] < guarded["enemy_state"]["shield"]
+        finally:
+            if user_id is not None:
+                with SessionLocal() as db:
+                    db.execute(delete(User).where(User.id == user_id))
                     db.commit()
 
 
