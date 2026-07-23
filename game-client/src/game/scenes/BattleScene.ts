@@ -11,7 +11,7 @@ export class BattleScene extends Phaser.Scene {
     super('BattleScene')
   }
 
-  create(data: { enemyName?: string }): void {
+  create(data: { enemyName?: string; enemySprite?: string }): void {
     const { width, height } = this.scale
     const profile = this.registry.get('world-player') as PlayerProfile
     const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
@@ -23,7 +23,10 @@ export class BattleScene extends Phaser.Scene {
         color: '#fff1bd',
       })
       .setOrigin(0.5)
-    this.enemy = new CardSpirit(this, width * 0.72, height * 0.42, data.enemyName ?? '训练木偶', 'npc', 0xb45309)
+    const enemyTexture = data.enemySprite && this.textures.exists(data.enemySprite)
+      ? data.enemySprite
+      : 'npc-trainer'
+    this.enemy = new CardSpirit(this, width * 0.72, height * 0.42, data.enemyName ?? '对手', enemyTexture, 0xb45309)
     this.playerSpirit = new CardSpirit(this, width * 0.28, height * 0.58, profile.name, `player-${avatarGender}-combat`, 0x15803d)
     gameEvents.on('battle:action', this.onBattleAction)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

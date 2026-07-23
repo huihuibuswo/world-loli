@@ -108,17 +108,13 @@ if (__VLS_ctx.battle.status !== 'active') {
             'aria-label': "战斗奖励",
         });
         /** @type {__VLS_StyleScopedClasses['battle-rewards']} */ ;
-        if (__VLS_ctx.battle.reward?.gold) {
+        if (__VLS_ctx.battle.reward?.card) {
             __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
-            (__VLS_ctx.battle.reward.gold);
+            (__VLS_ctx.battle.reward.card.name);
+            (__VLS_ctx.battle.reward.card.count);
         }
-        if (__VLS_ctx.battle.reward?.spirit_exp) {
+        else {
             __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
-            (__VLS_ctx.battle.reward.spirit_exp);
-        }
-        if (__VLS_ctx.battle.reward?.spirit_affection) {
-            __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
-            (__VLS_ctx.battle.reward.spirit_affection);
         }
     }
     __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
@@ -174,7 +170,7 @@ else {
                         throw 0;
                     return (__VLS_ctx.game.playCard(card.id));
                     // @ts-ignore
-                    [game, game, game, game, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, hand,];
+                    [game, game, game, game, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, battle, hand,];
                 } },
             key: (`${card.id}-${index}`),
             ...{ class: "battle-card" },

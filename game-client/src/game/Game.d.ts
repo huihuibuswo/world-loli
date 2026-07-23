@@ -5,5 +5,6 @@ export declare class WorldGame {
     constructor(parent: HTMLElement, map: MapData, player: PlayerProfile);
     private readonly startBattle;
     private readonly startWorld;
+    changeMap(map: MapData, player: PlayerProfile): void;
     destroy(): void;
 }

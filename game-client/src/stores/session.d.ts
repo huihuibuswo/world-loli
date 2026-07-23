@@ -5,7 +5,7 @@ export declare const useSessionStore: import("pinia").StoreDefinition<"session",
     login: (username: string, password: string) => Promise<void>;
     register: (username: string, password: string, email: string, playerName: string, avatarGender: "female" | "male") => Promise<void>;
     logout: () => void;
-}, "authenticated" | "loading" | "error">, Pick<{
+}, "loading" | "error" | "authenticated">, Pick<{
     authenticated: import("vue").Ref<boolean, boolean>;
     loading: import("vue").Ref<boolean, boolean>;
     error: import("vue").Ref<string, string>;
@@ -19,4 +19,4 @@ export declare const useSessionStore: import("pinia").StoreDefinition<"session",
     login: (username: string, password: string) => Promise<void>;
     register: (username: string, password: string, email: string, playerName: string, avatarGender: "female" | "male") => Promise<void>;
     logout: () => void;
-}, "login" | "register" | "logout">>;
+}, "logout" | "login" | "register">>;

@@ -32,8 +32,18 @@ export interface MapObject {
     template_id?: number;
     template_name?: string;
     sprite?: string;
+    target_map_id?: number;
+    target_map_name?: string;
+    label?: string;
+    spawn_x?: number;
+    spawn_y?: number;
     x: number;
     y: number;
+}
+export interface MapEnterResult {
+    map: MapData;
+    position_x: number;
+    position_y: number;
 }
 export interface MapData {
     id: number;
@@ -63,6 +73,8 @@ export interface NpcData {
     reward: Record<string, unknown>;
     is_card_spirit: boolean;
     sprite: string;
+    portrait: string | null;
+    dialogue: string[];
     actions: string[];
 }
 export interface CardData {
@@ -129,6 +141,7 @@ export interface BattleData {
     };
     enemy_state: {
         name: string;
+        sprite: string;
         hp: number;
         max_hp: number;
     };
@@ -144,9 +157,12 @@ export interface BattleData {
     };
     result?: string;
     reward?: {
-        gold?: number;
-        spirit_exp?: number;
-        spirit_affection?: number;
+        first_victory?: boolean;
+        card?: {
+            template_id: number;
+            name: string;
+            count: number;
+        };
         [key: string]: unknown;
     };
 }

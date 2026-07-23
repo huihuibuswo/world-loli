@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_player
 from app.core.responses import abort, ok
 from app.db import get_db
-from app.models import MapData, NpcTemplate, Player
+from app.models import ActiveBattle, MapData, NpcTemplate, Player
 from app.schemas import MapEnterRequest, NpcInteractionRequest
 from app.services.battle_service import battle_data, create_battle
 
@@ -25,6 +25,9 @@ def _map_data(item: MapData) -> dict:
 
 def _npc_data(item: NpcTemplate) -> dict:
     reward = item.reward or {}
+    dialogue = reward.get("dialogue")
+    if not isinstance(dialogue, list) or not dialogue:
+        dialogue = [item.story]
     return {
         "id": item.id,
         "name": item.name,
@@ -33,7 +36,9 @@ def _npc_data(item: NpcTemplate) -> dict:
         "battle_deck": item.battle_deck,
         "reward": reward,
         "is_card_spirit": item.is_card_spirit,
-        "sprite": reward.get("sprite", "training-dummy"),
+        "sprite": reward.get("sprite", "npc-trainer"),
+        "portrait": reward.get("portrait"),
+        "dialogue": [str(line) for line in dialogue if str(line).strip()],
         "actions": reward.get("actions", ["dialog", "battle"]),
     }
 
@@ -63,12 +68,37 @@ def enter_map(
     item = db.get(MapData, payload.map_id)
     if item is None:
         abort(404, "地图不存在")
+    if player.current_map == item.id:
+        abort(409, "角色已经在该地图中")
     if player.level < item.level_limit:
         abort(403, "角色等级不足，无法进入该区域")
+    active_battle = db.scalar(
+        select(ActiveBattle.id).where(
+            ActiveBattle.player_id == player.id,
+            ActiveBattle.status == "active",
+        )
+    )
+    if active_battle is not None:
+        abort(409, "战斗中无法切换地图")
+
+    current_map = db.get(MapData, player.current_map) if player.current_map else None
+    portal = next(
+        (
+            obj
+            for obj in ((current_map.resource_json or {}).get("objects", []) if current_map else [])
+            if isinstance(obj, dict)
+            and obj.get("type") == "map_portal"
+            and obj.get("target_map_id") == item.id
+        ),
+        None,
+    )
+    if portal is None:
+        abort(403, "当前地图没有通往该区域的出口")
+
     spawn = (item.resource_json or {}).get("spawn", {})
     player.current_map = item.id
-    player.position_x = float(spawn.get("x", 0))
-    player.position_y = float(spawn.get("y", 0))
+    player.position_x = float(portal.get("spawn_x", spawn.get("x", 0)))
+    player.position_y = float(portal.get("spawn_y", spawn.get("y", 0)))
     db.commit()
     return ok(
         {"map": _map_data(item), "position_x": player.position_x, "position_y": player.position_y},
@@ -89,7 +119,10 @@ def npc_dialog(payload: NpcInteractionRequest, db: Session = Depends(get_db)) ->
     item = db.get(NpcTemplate, payload.npc_id)
     if item is None:
         abort(404, "NPC不存在")
-    return ok({"npc_id": item.id, "speaker": item.name, "text": item.story})
+    dialogue = (item.reward or {}).get("dialogue")
+    if not isinstance(dialogue, list) or not dialogue:
+        dialogue = [item.story]
+    return ok({"npc_id": item.id, "speaker": item.name, "lines": dialogue})
 
 
 @router.post("/npc/action")

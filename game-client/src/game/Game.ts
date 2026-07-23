@@ -25,13 +25,20 @@ export class WorldGame {
     gameEvents.on('scene:world', this.startWorld)
   }
 
-  private readonly startBattle = ({ enemyName }: { enemyName: string }): void => {
+  private readonly startBattle = ({ enemyName, enemySprite }: { enemyName: string; enemySprite: string }): void => {
     this.game.scene.stop('WorldScene')
-    this.game.scene.start('BattleScene', { enemyName })
+    this.game.scene.start('BattleScene', { enemyName, enemySprite })
   }
 
   private readonly startWorld = (): void => {
     this.game.scene.stop('BattleScene')
+    this.game.scene.start('WorldScene')
+  }
+
+  changeMap(map: MapData, player: PlayerProfile): void {
+    this.game.registry.set('world-map', map)
+    this.game.registry.set('world-player', player)
+    this.game.scene.stop('WorldScene')
     this.game.scene.start('WorldScene')
   }
 

@@ -24,7 +24,6 @@ export class PreloadScene extends Phaser.Scene {
             frameWidth: 256,
             frameHeight: 256,
         });
-        this.load.image('npc', `${root}/sprites/training-dummy.png`);
         this.load.image('obstacle', `${root}/sprites/forest-obstacle.png`);
         this.load.image('forest-stump', `${root}/sprites/forest-stump.png`);
         this.load.image('ancient-forest-tree', `${root}/sprites/ancient-forest-tree.png`);

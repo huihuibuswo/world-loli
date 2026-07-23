@@ -11,6 +11,7 @@ export const useGameStore = defineStore('game', () => {
     const dialogNpc = ref(null);
     const loading = ref(false);
     const actionLoading = ref(false);
+    const mapLoading = ref(false);
     const error = ref('');
     const notice = ref('');
     const cardById = computed(() => new Map(cards.value.map((card) => [card.id, card])));
@@ -167,17 +168,46 @@ export const useGameStore = defineStore('game', () => {
     async function savePosition(x, y) {
         if (!player.value?.current_map)
             return;
+        const mapId = player.value.current_map;
         try {
             await requestData(api.post('/player/location', {
-                map_id: player.value.current_map,
+                map_id: mapId,
                 position_x: Math.round(x),
                 position_y: Math.round(y),
             }));
+            if (player.value?.current_map !== mapId)
+                return;
             player.value.position_x = x;
             player.value.position_y = y;
         }
         catch (cause) {
+            if (player.value?.current_map !== mapId)
+                return;
             error.value = errorMessage(cause);
+        }
+    }
+    async function enterMap(mapId) {
+        if (!player.value || mapLoading.value || battle.value || dialogNpc.value)
+            return;
+        mapLoading.value = true;
+        error.value = '';
+        try {
+            const entered = await requestData(api.post('/map/enter', { map_id: mapId }));
+            map.value = entered.map;
+            player.value = {
+                ...player.value,
+                current_map: entered.map.id,
+                position_x: entered.position_x,
+                position_y: entered.position_y,
+            };
+            showNotice(`已进入${entered.map.map_name}`);
+        }
+        catch (cause) {
+            error.value = errorMessage(cause);
+            throw cause;
+        }
+        finally {
+            mapLoading.value = false;
         }
     }
     async function saveGame() {
@@ -232,6 +262,7 @@ export const useGameStore = defineStore('game', () => {
         spirits.value = [];
         battle.value = null;
         dialogNpc.value = null;
+        mapLoading.value = false;
         error.value = '';
     }
     return {
@@ -244,6 +275,7 @@ export const useGameStore = defineStore('game', () => {
         dialogNpc,
         loading,
         actionLoading,
+        mapLoading,
         error,
         notice,
         cardById,
@@ -256,6 +288,7 @@ export const useGameStore = defineStore('game', () => {
         endTurn,
         leaveBattle,
         savePosition,
+        enterMap,
         saveGame,
         interactWithSpirit,
         levelUpSpirit,

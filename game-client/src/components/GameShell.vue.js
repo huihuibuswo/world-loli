@@ -10,6 +10,8 @@ const __VLS_emit = defineEmits();
 const game = useGameStore();
 const canvasHost = ref(null);
 const nearNpc = ref(null);
+const nearPortal = ref(null);
+const transitionTarget = ref('');
 const drawerOpen = ref(false);
 let world = null;
 let saveTimer = null;
@@ -18,14 +20,44 @@ const isBattle = computed(() => Boolean(game.battle));
 const currentMapName = computed(() => game.map?.map_name || '晨曦村');
 watch(isBattle, (next) => {
     if (next && game.battle) {
-        gameEvents.emit('scene:battle', { enemyName: game.battle.enemy_state.name });
+        gameEvents.emit('scene:battle', {
+            enemyName: game.battle.enemy_state.name,
+            enemySprite: game.battle.enemy_state.sprite,
+        });
     }
     else {
         gameEvents.emit('scene:world', undefined);
     }
 });
+watch(() => Boolean(game.dialogNpc), (locked) => {
+    gameEvents.emit('world:input-lock', { locked });
+});
 const onNear = (npc) => { nearNpc.value = npc.id && npc.name ? { id: npc.id, name: npc.name } : null; };
+const onPortalNear = (portal) => {
+    nearPortal.value = portal.mapId && portal.name
+        ? { mapId: portal.mapId, name: portal.name, label: portal.label || `前往${portal.name}` }
+        : null;
+};
 const onInteract = ({ id }) => { void game.openNpc(id); };
+const onPortalInteract = async ({ mapId, name }) => {
+    if (game.mapLoading)
+        return;
+    if (saveTimer) {
+        window.clearTimeout(saveTimer);
+        saveTimer = null;
+    }
+    transitionTarget.value = name;
+    gameEvents.emit('world:input-lock', { locked: true });
+    try {
+        await game.enterMap(mapId);
+        if (game.map && game.player)
+            world?.changeMap(game.map, game.player);
+    }
+    catch { /* store presents the error */ }
+    finally {
+        gameEvents.emit('world:input-lock', { locked: false });
+    }
+};
 const onMoved = ({ x, y }) => {
     if (saveTimer)
         window.clearTimeout(saveTimer);
@@ -43,17 +75,26 @@ async function beginBattle(id) {
 onMounted(() => {
     if (canvasHost.value && game.map && game.player)
         world = new WorldGame(canvasHost.value, game.map, game.player);
+    gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) });
     gameEvents.on('npc:near', onNear);
     gameEvents.on('npc:interact', onInteract);
+    gameEvents.on('portal:near', onPortalNear);
+    gameEvents.on('portal:interact', onPortalInteract);
     gameEvents.on('player:moved', onMoved);
-    if (game.battle)
-        gameEvents.emit('scene:battle', { enemyName: game.battle.enemy_state.name });
+    if (game.battle) {
+        gameEvents.emit('scene:battle', {
+            enemyName: game.battle.enemy_state.name,
+            enemySprite: game.battle.enemy_state.sprite,
+        });
+    }
 });
 onBeforeUnmount(() => {
     if (saveTimer)
         window.clearTimeout(saveTimer);
     gameEvents.off('npc:near', onNear);
     gameEvents.off('npc:interact', onInteract);
+    gameEvents.off('portal:near', onPortalNear);
+    gameEvents.off('portal:interact', onPortalInteract);
     gameEvents.off('player:moved', onMoved);
     world?.destroy();
 });
@@ -228,7 +269,7 @@ if (!__VLS_ctx.isBattle) {
     (__VLS_ctx.currentMapName);
     __VLS_asFunctionalElement1(__VLS_intrinsics.small, __VLS_intrinsics.small)({});
 }
-if (!__VLS_ctx.isBattle && __VLS_ctx.nearNpc) {
+if (!__VLS_ctx.isBattle && !__VLS_ctx.game.dialogNpc && (__VLS_ctx.nearPortal || __VLS_ctx.nearNpc)) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
         ...{ class: "interaction-hint" },
         role: "status",
@@ -237,10 +278,11 @@ if (!__VLS_ctx.isBattle && __VLS_ctx.nearNpc) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
         ...{ onClick: (__VLS_ctx.interact) },
         type: "button",
+        disabled: (__VLS_ctx.game.mapLoading),
     });
     __VLS_asFunctionalElement1(__VLS_intrinsics.kbd, __VLS_intrinsics.kbd)({});
     __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({});
-    (__VLS_ctx.nearNpc.name);
+    (__VLS_ctx.nearPortal ? __VLS_ctx.nearPortal.label : `与 ${__VLS_ctx.nearNpc?.name} 交谈`);
 }
 if (!__VLS_ctx.isBattle) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
@@ -254,7 +296,7 @@ if (!__VLS_ctx.isBattle) {
                     throw 0;
                 return (__VLS_ctx.direction(0, -1));
                 // @ts-ignore
-                [isBattle, isBattle, isBattle, isBattle, nearNpc, nearNpc, interact, direction,];
+                [isBattle, isBattle, isBattle, isBattle, game, game, currentMapName, currentMapName, nearPortal, nearPortal, nearPortal, nearNpc, nearNpc, interact, direction,];
             } },
         ...{ onPointerup: (__VLS_ctx.stopDirection) },
         ...{ onPointerleave: (__VLS_ctx.stopDirection) },
@@ -337,6 +379,7 @@ if (!__VLS_ctx.isBattle) {
         ...{ class: "mobile-interact" },
         type: "button",
         'aria-label': "互动",
+        disabled: (__VLS_ctx.game.mapLoading),
     });
     /** @type {__VLS_StyleScopedClasses['mobile-interact']} */ ;
     let __VLS_45;
@@ -396,11 +439,25 @@ if (__VLS_ctx.drawerOpen) {
                 throw 0;
             return (__VLS_ctx.drawerOpen = false);
             // @ts-ignore
-            [game, game, game, game, game, drawerOpen, drawerOpen, interact, stopDirection, stopDirection, beginBattle,];
+            [game, game, game, game, game, game, drawerOpen, drawerOpen, interact, stopDirection, stopDirection, beginBattle,];
         },
     };
     var __VLS_66;
     var __VLS_67;
+}
+if (__VLS_ctx.game.mapLoading) {
+    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+        ...{ class: "map-transition" },
+        role: "status",
+        'aria-live': "polite",
+    });
+    /** @type {__VLS_StyleScopedClasses['map-transition']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.div)({
+        ...{ class: "loader" },
+    });
+    /** @type {__VLS_StyleScopedClasses['loader']} */ ;
+    __VLS_asFunctionalElement1(__VLS_intrinsics.strong, __VLS_intrinsics.strong)({});
+    (__VLS_ctx.transitionTarget);
 }
 if (__VLS_ctx.game.error) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
@@ -420,7 +477,7 @@ if (__VLS_ctx.game.notice) {
     (__VLS_ctx.game.notice);
 }
 // @ts-ignore
-[game, game, game, game,];
+[game, game, game, game, game, transitionTarget,];
 const __VLS_export = (await import('vue')).defineComponent({
     __typeEmits: {},
 });

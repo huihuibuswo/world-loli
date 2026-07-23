@@ -4,14 +4,36 @@ import { gameEvents } from '@/game/events'
 import { NPC } from '@/game/entities/NPC'
 import { Player } from '@/game/entities/Player'
 
+type MapPortal = {
+  x: number
+  y: number
+  targetMapId: number
+  targetMapName: string
+  label: string
+}
+
+type MapPlant = {
+  nodeId: string
+  name: string
+  rarity: 'common' | 'uncommon' | 'rare'
+  x: number
+  y: number
+  display: Phaser.GameObjects.Container
+  minimapMarker?: Phaser.GameObjects.Arc
+}
+
 export class WorldScene extends Phaser.Scene {
   private player!: Player
   private npcs: NPC[] = []
+  private portals: MapPortal[] = []
+  private plants: MapPlant[] = []
   private playerMapMarker!: Phaser.GameObjects.Arc
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>
   private interactKey!: Phaser.Input.Keyboard.Key
   private nearby: NPC | null = null
+  private nearbyPortal: MapPortal | null = null
+  private nearbyPlant: MapPlant | null = null
   private lastPositionEmit = 0
 
   constructor() {
@@ -27,7 +49,7 @@ export class WorldScene extends Phaser.Scene {
     this.physics.world.setBounds(bounds.min_x, bounds.min_y, width, height)
     this.cameras.main.setBounds(bounds.min_x, bounds.min_y, width, height)
 
-    this.drawWorld(width, height)
+    this.drawWorld(width, height, map.map_type)
     const obstacles = this.physics.add.staticGroup()
     const obstacleLayout: Array<{
       x: number
@@ -41,14 +63,14 @@ export class WorldScene extends Phaser.Scene {
       { x: 1050, y: 520, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
       { x: 1030, y: 1140, texture: 'village-signpost', size: 110, body: { shape: 'rect', width: 44, height: 22, offsetX: 33, offsetY: 84 } },
       { x: 1270, y: 350, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
-      // Each house has its own bottom footprint rectangle, measured from its facade,
-      // porch and foundation. Roofs and upper transparent areas never collide.
-      { x: 650, y: 430, texture: 'village-chief-house', size: 420, body: { shape: 'rect', width: 330, height: 110, offsetX: 45, offsetY: 314 } },
-      { x: 920, y: 710, texture: 'village-general-store', size: 330, body: { shape: 'rect', width: 240, height: 92, offsetX: 45, offsetY: 243 } },
-      { x: 300, y: 750, texture: 'village-smithy', size: 350, body: { shape: 'rect', width: 300, height: 110, offsetX: 26, offsetY: 250 } },
-      { x: 760, y: 1040, texture: 'village-inn', size: 320, body: { shape: 'rect', width: 240, height: 96, offsetX: 40, offsetY: 230 } },
-      { x: 270, y: 1080, texture: 'village-cottage-a', size: 280, body: { shape: 'rect', width: 220, height: 88, offsetX: 31, offsetY: 199 } },
-      { x: 1080, y: 950, texture: 'village-cottage-b', size: 300, body: { shape: 'rect', width: 250, height: 90, offsetX: 26, offsetY: 214 } },
+      // House textures contain transparent padding below the visible pixels. These offsets
+      // align each footprint with the actual alpha bounds instead of the 512px canvas edge.
+      { x: 650, y: 430, texture: 'village-chief-house', size: 420, body: { shape: 'rect', width: 330, height: 110, offsetX: 45, offsetY: 246 } },
+      { x: 920, y: 710, texture: 'village-general-store', size: 330, body: { shape: 'rect', width: 240, height: 92, offsetX: 45, offsetY: 181 } },
+      { x: 300, y: 750, texture: 'village-smithy', size: 350, body: { shape: 'rect', width: 300, height: 110, offsetX: 26, offsetY: 198 } },
+      { x: 760, y: 1040, texture: 'village-inn', size: 320, body: { shape: 'rect', width: 240, height: 96, offsetX: 40, offsetY: 190 } },
+      { x: 270, y: 1080, texture: 'village-cottage-a', size: 280, body: { shape: 'rect', width: 220, height: 88, offsetX: 31, offsetY: 145 } },
+      { x: 1080, y: 950, texture: 'village-cottage-b', size: 300, body: { shape: 'rect', width: 250, height: 90, offsetX: 26, offsetY: 148 } },
       { x: 1260, y: 820, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
       { x: 1400, y: 410, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
       { x: 1740, y: 680, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
@@ -63,7 +85,10 @@ export class WorldScene extends Phaser.Scene {
       { x: 220, y: 1580, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
     ]
     // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
-    obstacleLayout.forEach(({ x, y, texture, size, body: bodyConfig }) => {
+    const activeObstacleLayout = map.map_type === 'forest'
+      ? obstacleLayout.filter(({ texture }) => ['obstacle', 'forest-stump', 'ancient-forest-tree'].includes(texture))
+      : obstacleLayout
+    activeObstacleLayout.forEach(({ x, y, texture, size, body: bodyConfig }) => {
       const bodyHalfWidth = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.width / 2
       const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
       const bodyCenterOffsetX = -size / 2 + bodyConfig.offsetX + bodyHalfWidth
@@ -91,6 +116,114 @@ export class WorldScene extends Phaser.Scene {
       .filter((item) => item.type === 'npc' && item.template_id)
       .map((item) => new NPC(this, item.x, item.y, item.template_id!, item.template_name ?? '旅人', item.sprite))
     this.npcs.forEach((npc) => this.physics.add.collider(this.player, npc))
+    this.portals = (map.resource.objects ?? []).flatMap((item) => {
+      if (item.type !== 'map_portal' || !item.target_map_id || !item.target_map_name) return []
+      return [{
+        x: item.x,
+        y: item.y,
+        targetMapId: item.target_map_id,
+        targetMapName: item.target_map_name,
+        label: item.label || `前往${item.target_map_name}`,
+      }]
+    })
+    this.portals.forEach((portal) => {
+      this.add.circle(portal.x, portal.y, 54, 0x38bdf8, 0.16)
+        .setStrokeStyle(3, 0x7dd3fc, 0.82)
+        .setDepth(portal.y - 2)
+      this.add.image(portal.x, portal.y - 18, 'village-signpost')
+        .setDisplaySize(92, 92)
+        .setDepth(portal.y)
+      this.add.text(portal.x, portal.y + 46, portal.label, {
+        fontFamily: 'ui-rounded, sans-serif',
+        fontSize: '14px',
+        color: '#e0f2fe',
+        backgroundColor: 'rgba(3, 22, 32, 0.82)',
+        padding: { x: 9, y: 5 },
+      }).setOrigin(0.5).setDepth(portal.y + 1)
+    })
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    this.plants = (map.resource.objects ?? []).flatMap((item) => {
+      if (
+        item.type !== 'collectible_plant'
+        || !item.node_id
+        || !item.name
+      ) return []
+      const rarity: MapPlant['rarity'] = item.rarity === 'rare' || item.rarity === 'uncommon'
+        ? item.rarity
+        : 'common'
+      const display = this.add.container(item.x, item.y).setDepth(item.y)
+      const spriteSize = { common: 88, uncommon: 98, rare: 110 }[rarity]
+      const textureKey = item.icon
+        ?.split('/')
+        .pop()
+        ?.replace(/-cutout\.png$/, '')
+      const sprite = this.add.image(
+        0,
+        0,
+        textureKey && this.textures.exists(textureKey) ? textureKey : 'plant-morning-dew-grass',
+      ).setDisplaySize(spriteSize, spriteSize).setOrigin(0.5, 0.86)
+      const sparkleSpecs = [
+        { x: -29, y: -57, inner: 1.8, outer: 5.8, alpha: 0.92, duration: 760, delay: 0 },
+        { x: 24, y: -49, inner: 1.5, outer: 4.7, alpha: 0.78, duration: 980, delay: 170 },
+        { x: -9, y: -31, inner: 1.2, outer: 3.8, alpha: 0.72, duration: 830, delay: 390 },
+        { x: 33, y: -19, inner: 1.6, outer: 5.1, alpha: 0.86, duration: 1_070, delay: 90 },
+        { x: -35, y: -13, inner: 1.1, outer: 3.4, alpha: 0.68, duration: 910, delay: 510 },
+        { x: 8, y: -70, inner: 1.3, outer: 4.1, alpha: 0.82, duration: 690, delay: 280 },
+      ]
+      const sparkles = sparkleSpecs.map((spec, index) => {
+        const sparkle = this.add.star(
+          spec.x,
+          spec.y,
+          4,
+          spec.inner,
+          spec.outer,
+          index % 2 === 0 ? 0xbae6fd : 0xe0f2fe,
+          spec.alpha,
+        ).setAngle(45)
+
+        if (!prefersReducedMotion) {
+          this.tweens.add({
+            targets: sparkle,
+            alpha: { from: 0.18, to: spec.alpha },
+            scale: { from: 0.58, to: 1.16 },
+            duration: spec.duration,
+            delay: spec.delay,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1,
+          })
+        }
+
+        return sparkle
+      })
+      display.add([sprite, ...sparkles])
+      if (rarity === 'rare') {
+        display.add(this.add.text(0, 28, `${item.name} · 稀有`, {
+          fontFamily: 'ui-rounded, sans-serif',
+          fontSize: '13px',
+          color: '#fef3c7',
+          backgroundColor: 'rgba(39, 28, 4, 0.84)',
+          padding: { x: 7, y: 4 },
+        }).setOrigin(0.5))
+      }
+      const plant: MapPlant = {
+        nodeId: item.node_id,
+        name: item.name,
+        rarity,
+        x: item.x,
+        y: item.y,
+        display,
+      }
+      if (item.available === false) {
+        display.setVisible(false).setActive(false)
+        const delay = item.available_at ? Math.max(0, Date.parse(item.available_at) - Date.now()) : 0
+        this.time.delayedCall(delay, () => {
+          display.setVisible(true).setActive(true)
+          if (plant.minimapMarker && rarity === 'rare') plant.minimapMarker.setVisible(true)
+        })
+      }
+      return [plant]
+    })
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
     this.cameras.main.setZoom(1.08)
@@ -99,12 +232,19 @@ export class WorldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as Record<string, Phaser.Input.Keyboard.Key>
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E)
     this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+    gameEvents.emit('npc:near', { id: null, name: null })
+    gameEvents.emit('portal:near', { mapId: null, name: null, label: null })
+    gameEvents.emit('plant:near', { nodeId: null, name: null, rarity: null })
 
     gameEvents.on('input:direction', this.onVirtualDirection)
     gameEvents.on('input:interact', this.interact)
+    gameEvents.on('world:input-lock', this.onInputLock)
+    gameEvents.on('plant:collected', this.onPlantCollected)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       gameEvents.off('input:direction', this.onVirtualDirection)
       gameEvents.off('input:interact', this.interact)
+      gameEvents.off('world:input-lock', this.onInputLock)
+      gameEvents.off('plant:collected', this.onPlantCollected)
     })
     gameEvents.emit('world:ready', undefined)
   }
@@ -112,7 +252,14 @@ export class WorldScene extends Phaser.Scene {
   update(time: number): void {
     this.player.move(this.cursors, this.wasd)
     this.playerMapMarker.setPosition(this.player.x, this.player.y)
-    this.updateNearbyNpc()
+    this.plants.forEach((plant) => {
+      if (plant.rarity === 'uncommon' && plant.minimapMarker) {
+        plant.minimapMarker.setVisible(
+          Phaser.Math.Distance.Between(this.player.x, this.player.y, plant.x, plant.y) < 420,
+        )
+      }
+    })
+    this.updateNearbyInteractable()
     if (Phaser.Input.Keyboard.JustDown(this.interactKey)) this.interact()
     if (time - this.lastPositionEmit > 600 && this.player.body?.velocity.lengthSq()) {
       this.lastPositionEmit = time
@@ -124,12 +271,49 @@ export class WorldScene extends Phaser.Scene {
     this.player?.setVirtualDirection(x, y)
   }
 
-  private readonly interact = (): void => {
-    if (this.nearby) gameEvents.emit('npc:interact', { id: this.nearby.npcId })
+  private readonly onInputLock = ({ locked }: { locked: boolean }): void => {
+    if (!this.player) return
+    this.player.state = locked ? 'disabled' : 'idle'
+    this.player.setVelocity(0)
+    this.player.setVirtualDirection(0, 0)
   }
 
-  private updateNearbyNpc(): void {
+  private readonly interact = (): void => {
+    if (this.player.state === 'disabled') return
+    if (this.nearbyPlant) {
+      gameEvents.emit('plant:interact', {
+        nodeId: this.nearbyPlant.nodeId,
+        name: this.nearbyPlant.name,
+      })
+    } else if (this.nearbyPortal) {
+      gameEvents.emit('portal:interact', {
+        mapId: this.nearbyPortal.targetMapId,
+        name: this.nearbyPortal.targetMapName,
+      })
+    } else if (this.nearby) {
+      gameEvents.emit('npc:interact', { id: this.nearby.npcId })
+    }
+  }
+
+  private readonly onPlantCollected = ({ nodeId, availableAt }: { nodeId: string; availableAt: string }): void => {
+    const plant = this.plants.find((item) => item.nodeId === nodeId)
+    if (!plant) return
+    plant.display.setVisible(false).setActive(false)
+    plant.minimapMarker?.setVisible(false).setActive(false)
+    if (this.nearbyPlant === plant) {
+      this.nearbyPlant = null
+      gameEvents.emit('plant:near', { nodeId: null, name: null, rarity: null })
+    }
+    this.time.delayedCall(Math.max(0, Date.parse(availableAt) - Date.now()), () => {
+      plant.display.setVisible(true).setActive(true)
+      if (plant.minimapMarker && plant.rarity === 'rare') plant.minimapMarker.setVisible(true)
+    })
+  }
+
+  private updateNearbyInteractable(): void {
     let nearest: NPC | null = null
+    let nearestPortal: MapPortal | null = null
+    let nearestPlant: MapPlant | null = null
     let distance = this.player.interactionRange
     for (const npc of this.npcs) {
       const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y)
@@ -138,9 +322,43 @@ export class WorldScene extends Phaser.Scene {
         nearest = npc
       }
     }
+    for (const portal of this.portals) {
+      const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, portal.x, portal.y)
+      if (next < distance) {
+        distance = next
+        nearest = null
+        nearestPortal = portal
+      }
+    }
+    for (const plant of this.plants) {
+      if (!plant.display.active) continue
+      const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, plant.x, plant.y)
+      if (next < distance) {
+        distance = next
+        nearest = null
+        nearestPortal = null
+        nearestPlant = plant
+      }
+    }
     if (nearest !== this.nearby) {
       this.nearby = nearest
       gameEvents.emit('npc:near', { id: nearest?.npcId ?? null, name: nearest?.npcName ?? null })
+    }
+    if (nearestPortal !== this.nearbyPortal) {
+      this.nearbyPortal = nearestPortal
+      gameEvents.emit('portal:near', {
+        mapId: nearestPortal?.targetMapId ?? null,
+        name: nearestPortal?.targetMapName ?? null,
+        label: nearestPortal?.label ?? null,
+      })
+    }
+    if (nearestPlant !== this.nearbyPlant) {
+      this.nearbyPlant = nearestPlant
+      gameEvents.emit('plant:near', {
+        nodeId: nearestPlant?.nodeId ?? null,
+        name: nearestPlant?.name ?? null,
+        rarity: nearestPlant?.rarity ?? null,
+      })
     }
   }
 
@@ -162,11 +380,23 @@ export class WorldScene extends Phaser.Scene {
     const npcMarkers = this.npcs.map((npc) =>
       this.add.circle(npc.x, npc.y, 30, 0xf59e0b).setDepth(99_999),
     )
-    this.cameras.main.ignore([this.playerMapMarker, ...npcMarkers])
+    const portalMarkers = this.portals.map((portal) =>
+      this.add.circle(portal.x, portal.y, 34, 0x38bdf8).setDepth(99_999),
+    )
+    const plantMarkers = this.plants.flatMap((plant) => {
+      if (plant.rarity === 'common') return []
+      const color = plant.rarity === 'rare' ? 0xfbbf24 : 0x60a5fa
+      const marker = this.add.circle(plant.x, plant.y, 24, color).setDepth(99_999)
+      marker.setVisible(plant.rarity === 'rare')
+      plant.minimapMarker = marker
+      return [marker]
+    })
+    this.cameras.main.ignore([this.playerMapMarker, ...npcMarkers, ...portalMarkers, ...plantMarkers])
   }
 
-  private drawWorld(width: number, height: number): void {
-    this.add.tileSprite(0, 0, width, height, 'grass-ground').setOrigin(0).setDepth(-10)
+  private drawWorld(width: number, height: number, mapType: string): void {
+    const ground = this.add.tileSprite(0, 0, width, height, 'grass-ground').setOrigin(0).setDepth(-10)
+    if (mapType === 'forest') ground.setTint(0x8bbf8b)
     const path = this.add.tileSprite(0, 0, width, height, 'dirt-path').setOrigin(0).setDepth(-9)
     const routes = [
       new Phaser.Curves.Spline([
@@ -198,5 +428,8 @@ export class WorldScene extends Phaser.Scene {
       route.getSpacedPoints(120).forEach((point) => maskShape.fillCircle(point.x, point.y, 58)),
     )
     path.setMask(maskShape.createGeometryMask())
+    if (mapType === 'forest') {
+      this.add.rectangle(0, 0, width, height, 0x083d2b, 0.18).setOrigin(0).setDepth(-8)
+    }
   }
 }

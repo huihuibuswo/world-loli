@@ -11,14 +11,27 @@ export type GameEventMap = {
     'npc:interact': {
         id: number;
     };
+    'portal:near': {
+        mapId: number | null;
+        name: string | null;
+        label: string | null;
+    };
+    'portal:interact': {
+        mapId: number;
+        name: string;
+    };
     'input:direction': {
         x: number;
         y: number;
     };
     'input:interact': undefined;
+    'world:input-lock': {
+        locked: boolean;
+    };
     'scene:world': undefined;
     'scene:battle': {
         enemyName: string;
+        enemySprite: string;
     };
     'battle:action': {
         damage: number;

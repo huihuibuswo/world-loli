@@ -5,6 +5,7 @@ export declare class BattleScene extends Phaser.Scene {
     constructor();
     create(data: {
         enemyName?: string;
+        enemySprite?: string;
     }): void;
     private readonly onBattleAction;
 }

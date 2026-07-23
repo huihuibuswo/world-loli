@@ -31,8 +31,25 @@ export interface MapObject {
   template_id?: number
   template_name?: string
   sprite?: string
+  target_map_id?: number
+  target_map_name?: string
+  label?: string
+  spawn_x?: number
+  spawn_y?: number
+  node_id?: string
+  name?: string
+  rarity?: PlantRarity
+  available?: boolean
+  available_at?: string | null
+  icon?: string | null
   x: number
   y: number
+}
+
+export interface MapEnterResult {
+  map: MapData
+  position_x: number
+  position_y: number
 }
 
 export interface MapData {
@@ -56,6 +73,8 @@ export interface NpcData {
   reward: Record<string, unknown>
   is_card_spirit: boolean
   sprite: string
+  portrait: string | null
+  dialogue: string[]
   actions: string[]
 }
 
@@ -91,6 +110,59 @@ export interface SpiritData {
   interaction_available_at: string | null
 }
 
+export type PlantRarity = 'common' | 'uncommon' | 'rare'
+export type GiftPreference = 'favorite' | 'liked' | 'neutral' | 'disliked'
+
+export interface PlantData {
+  id: number
+  name: string
+  rarity: PlantRarity
+  base_affection: number
+  tags: string[]
+  description: string
+  icon: string | null
+  respawn_seconds: number
+  amount: number
+}
+
+export interface PlantNode extends Omit<PlantData, 'amount'> {
+  type: 'collectible_plant'
+  template_id: number
+  node_id: string
+  x: number
+  y: number
+  available: boolean
+  available_at: string | null
+}
+
+export interface GiftOption extends PlantData {
+  preference: GiftPreference
+}
+
+export interface GiftOptions {
+  remaining_gifts: number
+  plants: GiftOption[]
+}
+
+export interface PlantCollectResult {
+  map_id: number
+  node_id: string
+  available: false
+  available_at: string
+  plant: PlantData
+}
+
+export interface GiftResult {
+  spirit_id: number
+  plant_template_id: number
+  preference: GiftPreference
+  affection_gained: number
+  affection: number
+  remaining_amount: number
+  remaining_gifts: number
+  dialogue: string
+}
+
 export interface DeckData {
   id: number
   name: string
@@ -106,7 +178,7 @@ export interface BattleData {
   current_turn: number
   energy: number
   player_state: { hp: number; max_hp: number }
-  enemy_state: { name: string; hp: number; max_hp: number }
+  enemy_state: { name: string; sprite: string; hp: number; max_hp: number }
   hand_cards: number[]
   draw_pile: number[]
   discard_cards: number[]
@@ -114,5 +186,9 @@ export interface BattleData {
   debuffs: unknown[]
   last_action?: { type: string; damage?: number; card_id?: number }
   result?: string
-  reward?: { gold?: number; spirit_exp?: number; spirit_affection?: number; [key: string]: unknown }
+  reward?: {
+    first_victory?: boolean
+    card?: { template_id: number; name: string; count: number }
+    [key: string]: unknown
+  }
 }

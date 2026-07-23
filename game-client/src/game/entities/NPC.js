@@ -2,15 +2,15 @@ import Phaser from 'phaser';
 export class NPC extends Phaser.Physics.Arcade.Sprite {
     npcId;
     npcName;
-    constructor(scene, x, y, npcId, npcName, textureKey = 'npc') {
-        const texture = scene.textures.exists(textureKey) ? textureKey : 'npc';
+    constructor(scene, x, y, npcId, npcName, textureKey = 'npc-trainer') {
+        const texture = scene.textures.exists(textureKey) ? textureKey : 'npc-trainer';
         super(scene, x, y, texture);
         this.npcId = npcId;
         this.npcName = npcName;
         scene.add.existing(this);
         scene.physics.add.existing(this, true);
         this.setDepth(y);
-        const displaySize = texture === 'npc' ? 92 : 100;
+        const displaySize = 100;
         this.setDisplaySize(displaySize, displaySize);
         const body = this.body;
         body.updateFromGameObject();

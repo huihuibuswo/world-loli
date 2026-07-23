@@ -26,7 +26,6 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 256,
       frameHeight: 256,
     })
-    this.load.image('npc', `${root}/sprites/training-dummy.png`)
     this.load.image('obstacle', `${root}/sprites/forest-obstacle.png`)
     this.load.image('forest-stump', `${root}/sprites/forest-stump.png`)
     this.load.image('ancient-forest-tree', `${root}/sprites/ancient-forest-tree.png`)
@@ -42,6 +41,22 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('npc-suna', `${root}/sprites/npc-suna.png`)
     this.load.image('npc-forest-guide', `${root}/sprites/npc-forest-guide.png`)
     this.load.image('npc-trainer', `${root}/sprites/npc-trainer.png`)
+    const plantRoot = `${root}/sprites/plants`
+    const plantTextures = [
+      'plant-morning-dew-grass',
+      'plant-honey-berry',
+      'plant-sunbell-flower',
+      'plant-firefleece-flower',
+      'plant-windbell-vine',
+      'plant-silverleaf-grass',
+      'plant-star-mint',
+      'plant-moonlight-lily',
+      'plant-mistfern',
+      'plant-dreamdew-flower',
+    ] as const
+    plantTextures.forEach((key) => {
+      this.load.image(key, `${plantRoot}/${key}-cutout.png`)
+    })
     this.load.image('grass-ground', `${root}/textures/grass-ground.webp`)
     this.load.image('dirt-path', `${root}/textures/dirt-path.webp`)
     this.load.image('moon-arena', `${root}/backgrounds/moon-arena.webp`)

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowLeft, BookOpen, Heart, Layers3, Sparkles, TrendingUp, X } from 'lucide-vue-next'
+import { ArrowLeft, BookOpen, Gift, Heart, Layers3, Leaf, Sparkles, TrendingUp, X } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/game'
 import type { SpiritData } from '@/api/types'
 
 defineEmits<{ close: [] }>()
 const game = useGameStore()
-const tab = ref<'cards' | 'spirits' | 'deck'>('cards')
+const tab = ref<'cards' | 'spirits' | 'plants' | 'deck'>('cards')
 const selectedSpiritId = ref<number | null>(null)
 const selectedSpirit = computed(() => game.spirits.find((spirit) => spirit.id === selectedSpiritId.value) ?? null)
 const clock = ref(Date.now())
@@ -46,6 +46,19 @@ function affectionStage(affection: number): string {
 function skillName(skill: SpiritData['base_skill']): string {
   return typeof skill.name === 'string' ? skill.name : '尚未记录'
 }
+
+function rarityLabel(rarity: string): string {
+  return { common: '普通', uncommon: '少见', rare: '稀有' }[rarity] ?? rarity
+}
+
+function preferenceLabel(preference: string): string {
+  return { favorite: '最喜欢', liked: '喜欢', neutral: '普通', disliked: '不喜欢' }[preference] ?? preference
+}
+
+function openSpirit(spiritId: number): void {
+  selectedSpiritId.value = spiritId
+  void game.loadGiftOptions(spiritId)
+}
 </script>
 
 <template>
@@ -55,6 +68,7 @@ function skillName(skill: SpiritData['base_skill']): string {
       <nav class="drawer-tabs" aria-label="图鉴分类">
         <button :class="{ active: tab === 'cards' }" type="button" @click="tab = 'cards'"><Layers3 :size="17" />卡牌</button>
         <button :class="{ active: tab === 'spirits' }" type="button" @click="tab = 'spirits'"><Sparkles :size="17" />卡灵</button>
+        <button :class="{ active: tab === 'plants' }" type="button" @click="tab = 'plants'"><Leaf :size="17" />植物</button>
         <button :class="{ active: tab === 'deck' }" type="button" @click="tab = 'deck'"><BookOpen :size="17" />牌组</button>
       </nav>
       <section v-if="tab === 'spirits' && selectedSpirit" class="spirit-growth" role="tabpanel" aria-label="卡灵养成">
@@ -79,6 +93,19 @@ function skillName(skill: SpiritData['base_skill']): string {
           <button class="button ghost" type="button" :disabled="game.actionLoading || selectedSpirit.affection >= 100 || interactionCooldownSeconds > 0" @click="game.interactWithSpirit(selectedSpirit.id)"><Heart :size="17" />{{ interactionLabel }}</button>
           <small aria-live="polite">{{ interactionCooldownSeconds > 0 ? '交谈后需要稍作休息，倒计时结束即可再次互动。' : '每次交谈增加 1 点羁绊。' }}</small>
         </div>
+        <div class="growth-block gift-block">
+          <div class="growth-label"><span>赠送植物</span><strong>今日剩余 {{ game.giftOptions?.remaining_gifts ?? '—' }} 次</strong></div>
+          <p v-if="game.lastGift" class="gift-dialogue"><Gift :size="16" />{{ game.lastGift.dialogue }} <b>羁绊 +{{ game.lastGift.affection_gained }}</b></p>
+          <div v-if="game.giftOptions?.plants.length" class="gift-options">
+            <button v-for="plant in game.giftOptions.plants" :key="plant.id" type="button" :disabled="game.actionLoading || selectedSpirit.affection >= 100 || !game.giftOptions.remaining_gifts" @click="game.givePlantGift(selectedSpirit.id, plant.id)">
+              <span class="plant-symbol" :data-rarity="plant.rarity"><img v-if="plant.icon" :src="plant.icon" alt="" loading="lazy"><template v-else>{{ plant.name.slice(0, 1) }}</template></span>
+              <span><strong>{{ plant.name }} ×{{ plant.amount }}</strong><small>{{ preferenceLabel(plant.preference) }} · 基础 +{{ plant.base_affection }}</small></span>
+              <Gift :size="16" />
+            </button>
+          </div>
+          <small v-else-if="game.actionLoading">正在查看背包…</small>
+          <small v-else>背包里还没有植物，先去地图上采集吧。</small>
+        </div>
         <div class="growth-story"><p class="eyebrow">SPIRIT STORY</p><p>{{ selectedSpirit.story }}</p><dl><div><dt>基础技能</dt><dd>{{ skillName(selectedSpirit.base_skill) }}</dd></div><div><dt>觉醒技能</dt><dd>{{ skillName(selectedSpirit.awakening_skill) }}</dd></div></dl></div>
       </section>
       <div v-else class="collection-grid" role="tabpanel">
@@ -86,18 +113,24 @@ function skillName(skill: SpiritData['base_skill']): string {
           <img class="collection-art" :src="card.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'" alt="">
           <span class="rarity">{{ card.rarity }}</span><strong>{{ card.name }}</strong><small>{{ card.type }} · 费用 {{ card.cost }}</small><p>持有 ×{{ card.count }}</p>
         </article>
-        <button v-for="spirit in tab === 'spirits' ? game.spirits : []" :key="spirit.id" class="collection-item spirit" type="button" @click="selectedSpiritId = spirit.id">
+        <button v-for="spirit in tab === 'spirits' ? game.spirits : []" :key="spirit.id" class="collection-item spirit" type="button" @click="openSpirit(spirit.id)">
           <img class="collection-art" :src="spirit.avatar || '/assets/generated/portraits/luna.webp'" alt="">
           <span class="rarity">{{ spirit.rarity }}</span><strong>{{ spirit.name }}</strong><small>{{ spirit.race }} · Lv.{{ spirit.level }}</small><p>羁绊 {{ spirit.affection }}</p>
           <span class="spirit-open">查看养成</span>
         </button>
+        <article v-for="plant in tab === 'plants' ? game.plants : []" :key="plant.id" class="collection-item plant-item">
+          <div class="plant-art" :data-rarity="plant.rarity"><img v-if="plant.icon" :src="plant.icon" alt="" loading="lazy"><template v-else><Leaf :size="34" /><span>{{ plant.name.slice(0, 1) }}</span></template></div>
+          <span class="rarity">{{ rarityLabel(plant.rarity) }}</span><strong>{{ plant.name }}</strong>
+          <small>{{ plant.tags.join(' · ') }} · 基础羁绊 +{{ plant.base_affection }}</small>
+          <p>持有 ×{{ plant.amount }}</p><small>{{ plant.description }}</small>
+        </article>
         <template v-if="tab === 'deck'">
           <article v-for="deck in game.decks" :key="deck.id" class="deck-item">
             <div><span class="rarity">{{ deck.is_active ? '使用中' : '备用' }}</span><h3>{{ deck.name }}</h3></div><strong>{{ deck.cards.reduce((sum, card) => sum + card.amount, 0) }} 张</strong>
             <ul><li v-for="card in deck.cards" :key="card.card_id">{{ card.name }} <span>×{{ card.amount }}</span></li></ul>
           </article>
         </template>
-        <p v-if="(tab === 'cards' && !game.cards.length) || (tab === 'spirits' && !game.spirits.length) || (tab === 'deck' && !game.decks.length)" class="empty-state">这里还没有记录，继续冒险吧。</p>
+        <p v-if="(tab === 'cards' && !game.cards.length) || (tab === 'spirits' && !game.spirits.length) || (tab === 'plants' && !game.plants.length) || (tab === 'deck' && !game.decks.length)" class="empty-state">这里还没有记录，继续冒险吧。</p>
       </div>
     </aside>
   </div>

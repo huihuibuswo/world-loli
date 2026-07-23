@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 
 from app.db import SessionLocal
 from app.main import app
-from app.models import NpcTemplate, User
+from app.models import Inventory, NpcTemplate, Player, User
 
 
 def _auth(token: str) -> dict[str, str]:
@@ -25,6 +25,38 @@ def _register(client: TestClient, username: str, avatar_gender: str = "female") 
     assert response.status_code == 201, response.text
     data = response.json()["data"]
     return data["access_token"], data["user"]["id"]
+
+
+def _finish_battle(
+    client: TestClient,
+    headers: dict[str, str],
+    battle: dict,
+    card_by_id: dict[int, dict],
+) -> dict:
+    current = battle
+    while current["status"] == "active":
+        playable = [
+            card_by_id[card_id]
+            for card_id in set(current["hand_cards"])
+            if card_by_id[card_id]["cost"] <= current["energy"]
+        ]
+        if playable:
+            card = max(playable, key=lambda item: item["effect"].get("damage", 0))
+            response = client.post(
+                f"/api/v1/battle/{current['battle_id']}/play-card",
+                json={"card_id": card["id"], "expected_version": current["version"]},
+                headers=headers,
+            )
+        else:
+            response = client.post(
+                f"/api/v1/battle/{current['battle_id']}/end-turn",
+                json={"expected_version": current["version"]},
+                headers=headers,
+            )
+        assert response.status_code == 200, response.text
+        current = response.json()["data"]
+    assert current["status"] == "victory"
+    return current
 
 
 def test_complete_demo_backend_flow() -> None:
@@ -56,34 +88,90 @@ def test_complete_demo_backend_flow() -> None:
 
             profile = client.get("/api/v1/player/profile", headers=headers_a)
             assert profile.status_code == 200
-            assert profile.json()["data"]["current_map"] is not None
-            assert profile.json()["data"]["avatar_gender"] == "male"
+            profile_data = profile.json()["data"]
+            assert profile_data["current_map"] is not None
+            assert profile_data["avatar_gender"] == "male"
 
             map_response = client.get(
-                f"/api/v1/map/{profile.json()['data']['current_map']}",
-                headers=headers_a,
+                f"/api/v1/map/{profile_data['current_map']}", headers=headers_a
             )
             assert map_response.status_code == 200
             map_data = map_response.json()["data"]
             assert map_data["map_name"] == "晨曦村"
             map_npcs = {
-                item["template_name"]: item["sprite"]
+                item["template_name"]: item
                 for item in map_data["resource"]["objects"]
                 if item["type"] == "npc"
             }
-            assert map_npcs == {
-                "训练木偶": "training-dummy",
-                "训练教官": "npc-trainer",
-                "晨曦村村长": "npc-village-chief",
-                "铁匠少女苏娜": "npc-suna",
-                "杂货商": "npc-shopkeeper",
-                "森林向导": "npc-forest-guide",
+            assert set(map_npcs) == {
+                "训练教官",
+                "晨曦村村长",
+                "铁匠少女苏娜",
+                "杂货商",
+                "森林向导",
             }
+            assert "训练木偶" not in map_npcs
+
+            village_portal = next(
+                item
+                for item in map_data["resource"]["objects"]
+                if item["type"] == "map_portal"
+            )
+            assert village_portal["target_map_name"] == "微光森林"
+
+            same_map = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": profile_data["current_map"]},
+                headers=headers_a,
+            )
+            assert same_map.status_code == 409
+
+            enter_forest = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": village_portal["target_map_id"]},
+                headers=headers_a,
+            )
+            assert enter_forest.status_code == 200, enter_forest.text
+            forest_data = enter_forest.json()["data"]
+            assert forest_data["map"]["map_name"] == "微光森林"
+            assert forest_data["position_x"] == village_portal["spawn_x"]
+            assert forest_data["position_y"] == village_portal["spawn_y"]
+
+            stale_location = client.post(
+                "/api/v1/player/location",
+                json={"map_id": profile_data["current_map"], "position_x": 128, "position_y": 128},
+                headers=headers_a,
+            )
+            assert stale_location.status_code == 409
+
+            forest_portal = next(
+                item
+                for item in forest_data["map"]["resource"]["objects"]
+                if item["type"] == "map_portal"
+            )
+            assert forest_portal["target_map_name"] == "晨曦村"
+            return_village = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": forest_portal["target_map_id"]},
+                headers=headers_a,
+            )
+            assert return_village.status_code == 200, return_village.text
+            assert return_village.json()["data"]["map"]["map_name"] == "晨曦村"
+
+            for map_npc in map_npcs.values():
+                npc_response = client.get(f"/api/v1/npc/{map_npc['template_id']}")
+                assert npc_response.status_code == 200
+                npc = npc_response.json()["data"]
+                assert npc["actions"] == ["dialog", "battle"]
+                assert len(npc["dialogue"]) == 3
+                assert npc["portrait"].startswith("/assets/generated/portraits/")
+                assert npc["battle_deck"]["hp"] > 0
 
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200
             cards = cards_response.json()["data"]
             assert len(cards) == 2
+            card_by_id = {card["id"]: card for card in cards}
 
             decks_response = client.get("/api/v1/decks", headers=headers_a)
             assert decks_response.status_code == 200
@@ -94,7 +182,7 @@ def test_complete_demo_backend_flow() -> None:
 
             with SessionLocal() as db:
                 enemy_id = db.scalar(
-                    select(NpcTemplate.id).where(NpcTemplate.name == "训练木偶")
+                    select(NpcTemplate.id).where(NpcTemplate.name == "训练教官")
                 )
             assert enemy_id is not None
 
@@ -104,62 +192,36 @@ def test_complete_demo_backend_flow() -> None:
                 headers=headers_a,
             )
             assert battle_response.status_code == 201, battle_response.text
-            battle = battle_response.json()["data"]
-            battle_id = battle["battle_id"]
+            first_battle = battle_response.json()["data"]
+
+            battle_map_switch = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": village_portal["target_map_id"]},
+                headers=headers_a,
+            )
+            assert battle_map_switch.status_code == 409
 
             token_b, user_b = _register(client, username_b)
             user_ids.append(user_b)
             forbidden_read = client.get(
-                f"/api/v1/battle/{battle_id}", headers=_auth(token_b)
+                f"/api/v1/battle/{first_battle['battle_id']}", headers=_auth(token_b)
             )
             assert forbidden_read.status_code == 404
 
-            card_by_id = {card["id"]: card for card in cards}
-            playable = sorted(
-                (card_by_id[card_id] for card_id in set(battle["hand_cards"])),
-                key=lambda item: item["effect"].get("damage", 0),
-                reverse=True,
-            )
-            first_card = playable[0]
-            first_play = client.post(
-                f"/api/v1/battle/{battle_id}/play-card",
-                json={"card_id": first_card["id"], "expected_version": battle["version"]},
-                headers=headers_a,
-            )
-            assert first_play.status_code == 200, first_play.text
-            after_first = first_play.json()["data"]
-
-            stale = client.post(
-                f"/api/v1/battle/{battle_id}/play-card",
-                json={"card_id": playable[-1]["id"], "expected_version": battle["version"]},
-                headers=headers_a,
-            )
-            assert stale.status_code == 409
-
-            second_play = client.post(
-                f"/api/v1/battle/{battle_id}/play-card",
-                json={
-                    "card_id": playable[-1]["id"],
-                    "expected_version": after_first["version"],
+            first_victory = _finish_battle(client, headers_a, first_battle, card_by_id)
+            assert first_victory["enemy_state"]["sprite"] == "npc-trainer"
+            assert first_victory["reward"] == {
+                "first_victory": True,
+                "card": {
+                    "template_id": first_victory["reward"]["card"]["template_id"],
+                    "name": "破绽识破",
+                    "count": 1,
                 },
-                headers=headers_a,
-            )
-            assert second_play.status_code == 200, second_play.text
-            completed = second_play.json()["data"]
-            assert completed["status"] == "victory"
+            }
 
-            result = client.get(
-                f"/api/v1/battle/{battle_id}/result", headers=headers_a
-            )
-            assert result.status_code == 200
-            assert result.json()["data"]["reward"]["gold"] == 10
-
-            spirits = client.get("/api/v1/spirits", headers=headers_a)
-            assert spirits.status_code == 200
-            spirit_data = spirits.json()["data"]
-            assert [item["name"] for item in spirit_data] == ["狼娘·露娜"]
-            assert spirit_data[0]["exp"] == 60
-            assert spirit_data[0]["affection"] == 2
+            cards_after_first = client.get("/api/v1/cards", headers=headers_a).json()["data"]
+            reward_card = next(card for card in cards_after_first if card["name"] == "破绽识破")
+            assert reward_card["count"] == 1
 
             second_battle_response = client.post(
                 "/api/v1/battle/create",
@@ -167,73 +229,125 @@ def test_complete_demo_backend_flow() -> None:
                 headers=headers_a,
             )
             assert second_battle_response.status_code == 201, second_battle_response.text
-            second_battle = second_battle_response.json()["data"]
-            second_playable = sorted(
-                (card_by_id[card_id] for card_id in set(second_battle["hand_cards"])),
-                key=lambda item: item["effect"].get("damage", 0),
-                reverse=True,
+            second_victory = _finish_battle(
+                client,
+                headers_a,
+                second_battle_response.json()["data"],
+                card_by_id,
             )
-            second_first_play = client.post(
-                f"/api/v1/battle/{second_battle['battle_id']}/play-card",
-                json={
-                    "card_id": second_playable[0]["id"],
-                    "expected_version": second_battle["version"],
-                },
-                headers=headers_a,
-            )
-            assert second_first_play.status_code == 200, second_first_play.text
-            second_after_first = second_first_play.json()["data"]
-            assert second_after_first["last_action"]["damage"] == 16
-            second_completion = client.post(
-                f"/api/v1/battle/{second_battle['battle_id']}/play-card",
-                json={
-                    "card_id": second_playable[-1]["id"],
-                    "expected_version": second_after_first["version"],
-                },
-                headers=headers_a,
-            )
-            assert second_completion.status_code == 200, second_completion.text
-            assert second_completion.json()["data"]["status"] == "victory"
-            assert second_completion.json()["data"]["reward"]["spirit_exp"] == 60
+            assert second_victory["reward"] == {}
 
-            growth = client.get(
-                f"/api/v1/spirits/{spirit_data[0]['id']}/growth", headers=headers_a
+            cards_after_second = client.get("/api/v1/cards", headers=headers_a).json()["data"]
+            reward_card_after_second = next(
+                card for card in cards_after_second if card["name"] == "破绽识破"
             )
-            assert growth.status_code == 200
-            assert growth.json()["data"]["exp"] == 120
-            assert growth.json()["data"]["affection"] == 4
-
-            level_up = client.post(
-                f"/api/v1/spirits/{spirit_data[0]['id']}/level",
-                json={"levels": 1},
-                headers=headers_a,
-            )
-            assert level_up.status_code == 200, level_up.text
-            assert level_up.json()["data"]["level"] == 2
-            assert level_up.json()["data"]["exp"] == 20
-
-            affection = client.post(
-                f"/api/v1/spirits/{spirit_data[0]['id']}/affection",
-                json={"source": "dialog"},
-                headers=headers_a,
-            )
-            assert affection.status_code == 200
-            assert affection.json()["data"]["interaction_available_at"] is not None
-            refreshed_spirits = client.get("/api/v1/spirits", headers=headers_a)
-            assert refreshed_spirits.status_code == 200
-            assert refreshed_spirits.json()["data"][0]["interaction_available_at"] is not None
-            affection_spam = client.post(
-                f"/api/v1/spirits/{spirit_data[0]['id']}/affection",
-                json={"source": "dialog"},
-                headers=headers_a,
-            )
-            assert affection_spam.status_code == 429
+            assert reward_card_after_second["count"] == 1
 
             save = client.get("/api/v1/save", headers=headers_a)
             assert save.status_code == 200
-            assert save.json()["data"]["player"]["gold"] == 20
+            assert save.json()["data"]["player"]["gold"] == 0
         finally:
             if user_ids:
                 with SessionLocal() as db:
                     db.execute(delete(User).where(User.id.in_(user_ids)))
+                    db.commit()
+
+
+def test_plant_collection_and_spirit_gift_flow() -> None:
+    suffix = uuid4().hex[:10]
+    username = f"plant_{suffix}"
+    user_id: int | None = None
+
+    with TestClient(app) as client:
+        try:
+            token, user_id = _register(client, username)
+            headers = _auth(token)
+            profile = client.get("/api/v1/player/profile", headers=headers).json()["data"]
+
+            map_plants = client.get(
+                f"/api/v1/map/{profile['current_map']}/plants", headers=headers
+            )
+            assert map_plants.status_code == 200, map_plants.text
+            nodes = map_plants.json()["data"]
+            assert len({node["name"] for node in nodes}) >= 3
+            assert all(node["available"] for node in nodes)
+
+            node = nodes[0]
+            collected = client.post(
+                "/api/v1/plants/collect",
+                json={"map_id": profile["current_map"], "node_id": node["node_id"]},
+                headers=headers,
+            )
+            assert collected.status_code == 200, collected.text
+            assert collected.json()["data"]["plant"]["amount"] == 1
+
+            repeated = client.post(
+                "/api/v1/plants/collect",
+                json={"map_id": profile["current_map"], "node_id": node["node_id"]},
+                headers=headers,
+            )
+            assert repeated.status_code == 409
+            inventory = client.get("/api/v1/plants/inventory", headers=headers).json()["data"]
+            assert inventory == [
+                {
+                    **collected.json()["data"]["plant"],
+                }
+            ]
+
+            spirits = client.get("/api/v1/spirits", headers=headers).json()["data"]
+            assert [spirit["name"] for spirit in spirits] == ["狼娘·露娜"]
+            spirit = spirits[0]
+            options = client.get(
+                f"/api/v1/spirits/{spirit['id']}/gifts", headers=headers
+            )
+            assert options.status_code == 200, options.text
+            assert options.json()["data"]["remaining_gifts"] == 5
+            assert options.json()["data"]["plants"][0]["id"] == node["template_id"]
+
+            with SessionLocal() as db:
+                player_id = db.scalar(select(Player.id).where(Player.user_id == user_id))
+                plant_stack = db.scalar(
+                    select(Inventory).where(
+                        Inventory.player_id == player_id,
+                        Inventory.item_type == "plant",
+                        Inventory.item_id == node["template_id"],
+                    )
+                )
+                assert plant_stack is not None
+                plant_stack.amount = 6
+                db.commit()
+
+            affection = spirit["affection"]
+            for gift_number in range(5):
+                gifted = client.post(
+                    f"/api/v1/spirits/{spirit['id']}/gifts",
+                    json={"plant_template_id": node["template_id"]},
+                    headers=headers,
+                )
+                assert gifted.status_code == 200, gifted.text
+                gift = gifted.json()["data"]
+                assert gift["affection_gained"] >= 1
+                affection += gift["affection_gained"]
+                assert gift["affection"] == affection
+                assert gift["remaining_amount"] == 5 - gift_number
+                assert gift["remaining_gifts"] == 4 - gift_number
+
+            over_daily_limit = client.post(
+                f"/api/v1/spirits/{spirit['id']}/gifts",
+                json={"plant_template_id": node["template_id"]},
+                headers=headers,
+            )
+            assert over_daily_limit.status_code == 429
+            refreshed = client.get(
+                f"/api/v1/spirits/{spirit['id']}", headers=headers
+            ).json()["data"]
+            assert refreshed["affection"] == affection
+            remaining_inventory = client.get(
+                "/api/v1/plants/inventory", headers=headers
+            ).json()["data"]
+            assert remaining_inventory[0]["amount"] == 1
+        finally:
+            if user_id is not None:
+                with SessionLocal() as db:
+                    db.execute(delete(User).where(User.id == user_id))
                     db.commit()

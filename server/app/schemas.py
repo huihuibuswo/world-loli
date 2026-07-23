@@ -36,7 +36,16 @@ class NpcInteractionRequest(BaseModel):
 
 
 class SpiritAffectionRequest(BaseModel):
-    source: Literal["dialog", "battle", "gift", "quest"] = "dialog"
+    source: Literal["dialog", "battle", "quest"] = "dialog"
+
+
+class PlantCollectRequest(BaseModel):
+    map_id: int = Field(gt=0)
+    node_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class SpiritGiftRequest(BaseModel):
+    plant_template_id: int = Field(gt=0)
 
 
 class SpiritLevelRequest(BaseModel):

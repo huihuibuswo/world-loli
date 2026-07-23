@@ -14,7 +14,17 @@ from app.core.security import (
     verify_password,
 )
 from app.db import get_db
-from app.models import CardTemplate, Deck, DeckCard, MapData, Player, PlayerCard, User
+from app.models import (
+    CardSpiritTemplate,
+    CardTemplate,
+    Deck,
+    DeckCard,
+    MapData,
+    Player,
+    PlayerCard,
+    PlayerCardSpirit,
+    User,
+)
 from app.schemas import LoginRequest, RegisterRequest
 
 
@@ -46,6 +56,11 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
     )
     db.add(player)
     db.flush()
+    starter_spirit = db.scalar(
+        select(CardSpiritTemplate).where(CardSpiritTemplate.name == "狼娘·露娜")
+    )
+    if starter_spirit is not None:
+        db.add(PlayerCardSpirit(player_id=player.id, spirit_template_id=starter_spirit.id))
     starter_templates = db.scalars(select(CardTemplate).order_by(CardTemplate.id).limit(2)).all()
     starter_deck = Deck(player_id=player.id, name="初始套牌", is_active=True)
     db.add(starter_deck)

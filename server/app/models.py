@@ -145,6 +145,67 @@ class Inventory(Base):
     amount: Mapped[int] = mapped_column(Integer, default=1)
 
 
+class PlantTemplate(Base):
+    __tablename__ = "plant_templates"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
+    rarity: Mapped[str] = mapped_column(String(32))
+    base_affection: Mapped[int] = mapped_column(Integer)
+    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    description: Mapped[str] = mapped_column(Text, default="")
+    icon: Mapped[str | None] = mapped_column(Text)
+    respawn_seconds: Mapped[int] = mapped_column(Integer)
+
+
+class PlayerPlantNode(Base):
+    __tablename__ = "player_plant_nodes"
+
+    player_id: Mapped[int] = mapped_column(
+        ForeignKey("players.id", ondelete="CASCADE"), primary_key=True
+    )
+    map_id: Mapped[int] = mapped_column(
+        ForeignKey("map_data.id", ondelete="CASCADE"), primary_key=True
+    )
+    node_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    plant_template_id: Mapped[int] = mapped_column(
+        ForeignKey("plant_templates.id", ondelete="RESTRICT")
+    )
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SpiritGiftPreference(Base):
+    __tablename__ = "spirit_gift_preferences"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    spirit_template_id: Mapped[int] = mapped_column(
+        ForeignKey("card_spirit_templates.id", ondelete="CASCADE")
+    )
+    plant_template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("plant_templates.id", ondelete="CASCADE")
+    )
+    tag: Mapped[str | None] = mapped_column(String(32))
+    preference: Mapped[str] = mapped_column(String(16))
+    dialogue: Mapped[str | None] = mapped_column(Text)
+
+
+class SpiritGiftRecord(Base):
+    __tablename__ = "spirit_gift_records"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    player_card_spirit_id: Mapped[int] = mapped_column(
+        ForeignKey("player_card_spirits.id", ondelete="CASCADE")
+    )
+    plant_template_id: Mapped[int] = mapped_column(
+        ForeignKey("plant_templates.id", ondelete="RESTRICT")
+    )
+    affection_gained: Mapped[int] = mapped_column(Integer)
+    gifted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class NpcTemplate(Base):
     __tablename__ = "npc_templates"
 
@@ -186,6 +247,21 @@ class BattleRecord(Base):
     turn_count: Mapped[int] = mapped_column(Integer)
     reward_json: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NpcFirstVictoryReward(Base):
+    __tablename__ = "npc_first_victory_rewards"
+
+    player_id: Mapped[int] = mapped_column(
+        ForeignKey("players.id", ondelete="CASCADE"), primary_key=True
+    )
+    npc_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    card_template_id: Mapped[int] = mapped_column(
+        ForeignKey("card_templates.id", ondelete="RESTRICT")
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class ActiveBattle(Base):

@@ -3,10 +3,16 @@ export type GameEventMap = {
   'player:moved': { x: number; y: number }
   'npc:near': { id: number | null; name: string | null }
   'npc:interact': { id: number }
+  'portal:near': { mapId: number | null; name: string | null; label: string | null }
+  'portal:interact': { mapId: number; name: string }
+  'plant:near': { nodeId: string | null; name: string | null; rarity: string | null }
+  'plant:interact': { nodeId: string; name: string }
+  'plant:collected': { nodeId: string; availableAt: string }
   'input:direction': { x: number; y: number }
   'input:interact': undefined
+  'world:input-lock': { locked: boolean }
   'scene:world': undefined
-  'scene:battle': { enemyName: string }
+  'scene:battle': { enemyName: string; enemySprite: string }
   'battle:action': {
     damage: number
     target: 'enemy' | 'player'

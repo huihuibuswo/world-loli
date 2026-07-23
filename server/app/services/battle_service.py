@@ -2,17 +2,18 @@ from copy import deepcopy
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.responses import abort
 from app.models import (
     ActiveBattle,
     BattleRecord,
-    CardSpiritTemplate,
     CardTemplate,
     Deck,
     DeckCard,
     NpcTemplate,
+    NpcFirstVictoryReward,
     Player,
     PlayerCard,
     PlayerCardSpirit,
@@ -93,6 +94,7 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
         "player_state": {"hp": player.hp, "max_hp": player.hp},
         "enemy_state": {
             "name": enemy.name,
+            "sprite": str((enemy.reward or {}).get("sprite", "npc-trainer")),
             "hp": max(1, int(enemy_config.get("hp", 30))),
             "max_hp": max(1, int(enemy_config.get("hp", 30))),
         },
@@ -140,67 +142,46 @@ def _complete_battle(
     result: str,
 ) -> None:
     enemy = db.get(NpcTemplate, battle.enemy_id)
-    reward = deepcopy(enemy.reward or {}) if enemy and result == "victory" else {}
-    reward.pop("actions", None)
-    if result == "victory":
-        gold = max(0, min(int(reward.get("gold", 0)), 1_000_000))
-        player.gold += gold
-
-        spirit_template_id = reward.get("spirit_template_id")
-        spirit_template = (
-            db.get(CardSpiritTemplate, int(spirit_template_id)) if spirit_template_id else None
-        )
-        if spirit_template is not None:
-            owned = db.scalar(
-                select(PlayerCardSpirit).where(
-                    PlayerCardSpirit.player_id == player.id,
-                    PlayerCardSpirit.spirit_template_id == int(spirit_template_id),
+    reward: dict[str, Any] = {}
+    if enemy is not None and result == "victory":
+        template_id = (enemy.reward or {}).get("first_victory_card_template_id")
+        template = db.get(CardTemplate, int(template_id)) if template_id else None
+        if template is not None:
+            claimed_npc_id = db.scalar(
+                pg_insert(NpcFirstVictoryReward)
+                .values(
+                    player_id=player.id,
+                    npc_id=enemy.id,
+                    card_template_id=template.id,
                 )
+                .on_conflict_do_nothing(
+                    index_elements=[
+                        NpcFirstVictoryReward.player_id,
+                        NpcFirstVictoryReward.npc_id,
+                    ]
+                )
+                .returning(NpcFirstVictoryReward.npc_id)
             )
-            if owned is None:
-                db.add(
-                    PlayerCardSpirit(
-                        player_id=player.id, spirit_template_id=int(spirit_template_id)
+            if claimed_npc_id is not None:
+                owned_card = db.scalar(
+                    select(PlayerCard).where(
+                        PlayerCard.player_id == player.id,
+                        PlayerCard.card_template_id == template.id,
+                        PlayerCard.level == 1,
                     )
                 )
-
-        for template_id in reward.get("card_template_ids", []):
-            template = db.get(CardTemplate, int(template_id))
-            if template is None:
-                continue
-            owned_card = db.scalar(
-                select(PlayerCard).where(
-                    PlayerCard.player_id == player.id,
-                    PlayerCard.card_template_id == int(template_id),
-                    PlayerCard.level == 1,
-                )
-            )
-            if owned_card is None:
-                db.add(PlayerCard(player_id=player.id, card_template_id=int(template_id)))
-            else:
-                owned_card.count += 1
-
-        db.flush()
-        spirit_exp = max(0, min(int(reward.get("spirit_exp", 0)), 1_000_000))
-        spirit_affection = 2
-        participant_ids = [
-            int(item) for item in battle.state_json.get("spirit_template_ids", [])
-        ]
-        if participant_ids:
-            participants = db.scalars(
-                select(PlayerCardSpirit)
-                .where(
-                    PlayerCardSpirit.player_id == player.id,
-                    PlayerCardSpirit.spirit_template_id.in_(participant_ids),
-                )
-                .with_for_update()
-            ).all()
-            for spirit in participants:
-                spirit.exp += spirit_exp
-                spirit.affection = min(100, spirit.affection + spirit_affection)
-            if participants:
-                reward["spirit_exp"] = spirit_exp
-                reward["spirit_affection"] = spirit_affection
+                if owned_card is None:
+                    db.add(PlayerCard(player_id=player.id, card_template_id=template.id))
+                else:
+                    owned_card.count += 1
+                reward = {
+                    "first_victory": True,
+                    "card": {
+                        "template_id": template.id,
+                        "name": template.name,
+                        "count": 1,
+                    },
+                }
 
     battle.status = result
     state = deepcopy(battle.state_json)
