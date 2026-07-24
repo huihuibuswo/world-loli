@@ -15,14 +15,12 @@ from app.core.security import (
 )
 from app.db import get_db
 from app.models import (
-    CardSpiritTemplate,
     CardTemplate,
     Deck,
     DeckCard,
     MapData,
     Player,
     PlayerCard,
-    PlayerCardSpirit,
     User,
 )
 from app.schemas import LoginRequest, RegisterRequest
@@ -50,17 +48,13 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
         user_id=user.id,
         name=(payload.player_name or username).strip(),
         avatar_gender=payload.avatar_gender,
+        gold=300,
         current_map=first_map.id if first_map else None,
         position_x=float(spawn.get("x", 0)),
         position_y=float(spawn.get("y", 0)),
     )
     db.add(player)
     db.flush()
-    starter_spirit = db.scalar(
-        select(CardSpiritTemplate).where(CardSpiritTemplate.name == "狼娘·露娜")
-    )
-    if starter_spirit is not None:
-        db.add(PlayerCardSpirit(player_id=player.id, spirit_template_id=starter_spirit.id))
     starter_templates = db.scalars(select(CardTemplate).order_by(CardTemplate.id).limit(2)).all()
     starter_deck = Deck(player_id=player.id, name="初始套牌", is_active=True)
     db.add(starter_deck)

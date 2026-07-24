@@ -20,6 +20,7 @@ from app.models import (
     SpiritGiftRecord,
 )
 from app.schemas import PlantCollectRequest, SpiritGiftRequest
+from app.services.quest_progress_service import record_quest_objective
 
 
 router = APIRouter(tags=["plants"])
@@ -215,6 +216,7 @@ def collect_plant(
     else:
         state.plant_template_id = template.id
         state.available_at = available_at
+    record_quest_objective(db, player.id, "collect_plant")
     db.commit()
     return ok(
         {

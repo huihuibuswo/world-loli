@@ -6,10 +6,27 @@ from app.api.deps import get_current_player
 from app.core.responses import abort, ok
 from app.db import get_db
 from app.models import ActiveBattle, MapData, NpcTemplate, Player
-from app.schemas import MapEnterRequest, NpcChatRequest, NpcInteractionRequest
+from app.schemas import (
+    MapEnterRequest,
+    NpcChatRequest,
+    NpcGiftRequest,
+    NpcInteractionRequest,
+    NpcShopPurchaseRequest,
+    NpcTrainingUpgradeRequest,
+)
 from app.services.ai_profile import get_npc_ai_profile
 from app.services.battle_service import battle_data, create_battle
+from app.services.npc_affection_service import (
+    affection_data,
+    give_npc_gift,
+    npc_gift_options,
+)
 from app.services.npc_ai_service import chat_with_npc, get_chat_state
+from app.services.npc_service import (
+    npc_service_data,
+    purchase_shop_item,
+    upgrade_training_card,
+)
 
 
 router = APIRouter(tags=["world"])
@@ -43,6 +60,7 @@ def _npc_data(item: NpcTemplate) -> dict:
         "portrait": reward.get("portrait"),
         "dialogue": [str(line) for line in dialogue if str(line).strip()],
         "actions": reward.get("actions", ["dialog", "battle"]),
+        "service_type": reward.get("service_type"),
         "ai": {
             "dialogue_enabled": ai_profile.dialogue_enabled,
             "battle_enabled": ai_profile.battle_enabled,
@@ -145,6 +163,105 @@ def post_npc_chat(
     if item is None:
         abort(404, "NPC不存在")
     return ok(chat_with_npc(db, player, item, payload), "NPC 已回应")
+
+
+@router.get("/npc/{npc_id}/affection")
+def get_npc_affection(
+    npc_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    return ok(affection_data(db, player.id, item.id))
+
+
+@router.get("/npc/{npc_id}/gifts")
+def get_npc_gifts(
+    npc_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    return ok(npc_gift_options(db, player.id, item))
+
+
+@router.get("/npc/{npc_id}/service")
+def get_npc_service(
+    npc_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    return ok(npc_service_data(db, player, item))
+
+
+@router.post("/npc/{npc_id}/shop/purchase")
+def post_npc_shop_purchase(
+    npc_id: int,
+    payload: NpcShopPurchaseRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    result = purchase_shop_item(
+        db,
+        player.id,
+        item,
+        payload.shop_item_id,
+        payload.quantity,
+    )
+    db.commit()
+    return ok(result, "购买成功")
+
+
+@router.post("/npc/{npc_id}/training/upgrade")
+def post_npc_training_upgrade(
+    npc_id: int,
+    payload: NpcTrainingUpgradeRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    result = upgrade_training_card(
+        db,
+        player.id,
+        item,
+        payload.card_id,
+        payload.levels,
+    )
+    db.commit()
+    return ok(result, "卡牌训练完成")
+
+
+@router.post("/npc/{npc_id}/gifts")
+def post_npc_gift(
+    npc_id: int,
+    payload: NpcGiftRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    item = db.get(NpcTemplate, npc_id)
+    if item is None:
+        abort(404, "NPC不存在")
+    result = give_npc_gift(
+        db,
+        player.id,
+        item,
+        plant_template_id=payload.plant_template_id,
+        item_template_id=payload.item_template_id,
+    )
+    db.commit()
+    return ok(result, "礼物已送出")
 
 
 @router.post("/npc/dialog")

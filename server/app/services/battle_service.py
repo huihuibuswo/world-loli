@@ -1,8 +1,8 @@
+from collections import Counter
 from copy import deepcopy
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.responses import abort
@@ -13,44 +13,94 @@ from app.models import (
     Deck,
     DeckCard,
     NpcTemplate,
-    NpcFirstVictoryReward,
     Player,
     PlayerCard,
     PlayerCardSpirit,
 )
 from app.services.ai_profile import get_npc_ai_profile
+from app.services.card_spirit_service import grant_monster_fragments
+from app.services.npc_affection_service import apply_affection
+from app.services.quest_progress_service import record_quest_objective
+
+
+MAX_EFFECT_VALUE = 1_000_000
+MAX_ENEMY_DECK_SIZE = 60
+SUPPORTED_EFFECTS = {"damage", "shield"}
 
 
 def battle_data(battle: ActiveBattle) -> dict[str, Any]:
+    state = deepcopy(battle.state_json)
+    enemy_hand = state.pop("enemy_hand_cards", [])
+    enemy_draw = state.pop("enemy_draw_pile", [])
+    enemy_discard = state.pop("enemy_discard_cards", [])
+    state["enemy_hand_count"] = len(enemy_hand) if isinstance(enemy_hand, list) else 0
+    state["enemy_draw_count"] = len(enemy_draw) if isinstance(enemy_draw, list) else 0
+    state["enemy_discard_count"] = len(enemy_discard) if isinstance(enemy_discard, list) else 0
     return {
         "battle_id": battle.id,
         "enemy_id": battle.enemy_id,
         "status": battle.status,
         "version": battle.version,
-        **battle.state_json,
+        **state,
     }
 
 
-def enemy_action_candidates(enemy: NpcTemplate, state: dict[str, Any]) -> list[dict[str, Any]]:
-    candidates: list[dict[str, Any]] = [
-        {
-            "id": "basic_attack",
-            "description": "进行一次稳定的普通攻击",
-            "tags": ["damage"],
-        }
-    ]
+def _bounded_int(value: Any, *, minimum: int = 0, maximum: int = MAX_EFFECT_VALUE) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return minimum
+    return max(minimum, min(parsed, maximum))
+
+
+def _validated_enemy_deck(
+    db: Session,
+    enemy: NpcTemplate,
+) -> tuple[dict[str, Any], list[int], dict[int, CardTemplate]]:
     config = enemy.battle_deck or {}
-    enemy_state = state.get("enemy_state") if isinstance(state.get("enemy_state"), dict) else {}
-    guard = max(0, min(int(config.get("guard", 0)), 1_000_000))
-    if guard > 0 and int(enemy_state.get("shield", 0)) <= 0:
-        candidates.append(
-            {
-                "id": "guard",
-                "description": "获得护盾，抵挡下一次受到的伤害",
-                "tags": ["defense"],
-            }
-        )
-    return candidates
+    rows = config.get("cards")
+    if not isinstance(rows, list) or not rows:
+        abort(500, f"{enemy.name} 的敌方卡组未配置")
+
+    expanded: list[int] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            abort(500, f"{enemy.name} 的敌方卡组格式无效")
+        template_id = row.get("card_template_id")
+        amount = row.get("amount")
+        if (
+            isinstance(template_id, bool)
+            or not isinstance(template_id, int)
+            or template_id <= 0
+            or isinstance(amount, bool)
+            or not isinstance(amount, int)
+            or amount <= 0
+            or amount > 20
+        ):
+            abort(500, f"{enemy.name} 的敌方卡组数量或卡牌引用无效")
+        expanded.extend([template_id] * amount)
+    if len(expanded) > MAX_ENEMY_DECK_SIZE:
+        abort(500, f"{enemy.name} 的敌方卡组超过 {MAX_ENEMY_DECK_SIZE} 张上限")
+
+    templates = {
+        template.id: template
+        for template in db.scalars(
+            select(CardTemplate).where(CardTemplate.id.in_(set(expanded)))
+        ).all()
+    }
+    if set(templates) != set(expanded):
+        abort(500, f"{enemy.name} 的敌方卡组引用了不存在的卡牌")
+    if not any(template.source_spirit_id for template in templates.values()):
+        abort(500, f"{enemy.name} 的敌方卡组缺少角色签名卡")
+    for template in templates.values():
+        effect = template.effect_json or {}
+        if not isinstance(effect, dict) or not effect or set(effect) - SUPPORTED_EFFECTS:
+            abort(500, f"{enemy.name} 的卡牌「{template.name}」包含未支持的效果")
+        if not any(_bounded_int(effect.get(key)) > 0 for key in SUPPORTED_EFFECTS):
+            abort(500, f"{enemy.name} 的卡牌「{template.name}」没有可执行效果")
+        if template.cost < 0 or template.cost > MAX_EFFECT_VALUE:
+            abort(500, f"{enemy.name} 的卡牌「{template.name}」费用无效")
+    return config, expanded, templates
 
 
 def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
@@ -66,8 +116,49 @@ def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
         hand.append(draw.pop(0))
 
 
+def _draw_enemy_to_hand(state: dict[str, Any]) -> None:
+    hand = state["enemy_hand_cards"]
+    draw = state["enemy_draw_pile"]
+    discard = state["enemy_discard_cards"]
+    hand_size = _bounded_int(state.get("enemy_hand_size", 5), minimum=1, maximum=20)
+    while len(hand) < hand_size:
+        if not draw:
+            if not discard:
+                break
+            draw.extend(discard)
+            discard.clear()
+        hand.append(draw.pop(0))
+
+
+def _ensure_enemy_deck_state(
+    db: Session,
+    enemy: NpcTemplate,
+    state: dict[str, Any],
+) -> dict[int, CardTemplate]:
+    config, expanded, templates = _validated_enemy_deck(db, enemy)
+    runtime_keys = ("enemy_hand_cards", "enemy_draw_pile", "enemy_discard_cards")
+    if not all(isinstance(state.get(key), list) for key in runtime_keys):
+        state["enemy_hand_cards"] = []
+        state["enemy_draw_pile"] = list(expanded)
+        state["enemy_discard_cards"] = []
+    else:
+        runtime_cards = [card_id for key in runtime_keys for card_id in state[key]]
+        if Counter(runtime_cards) != Counter(expanded):
+            abort(500, f"{enemy.name} 的敌方卡组运行状态无效")
+
+    state["enemy_max_energy"] = _bounded_int(config.get("energy", 3), minimum=1, maximum=20)
+    state["enemy_hand_size"] = _bounded_int(config.get("hand_size", 5), minimum=1, maximum=20)
+    state["enemy_energy"] = _bounded_int(
+        state.get("enemy_energy", state["enemy_max_energy"]),
+        maximum=state["enemy_max_energy"],
+    )
+    state.setdefault("player_state", {}).setdefault("shield", 0)
+    state.setdefault("enemy_state", {}).setdefault("shield", 0)
+    _draw_enemy_to_hand(state)
+    return templates
+
+
 def _damage_with_affection(damage: int, affection: int) -> int:
-    """Apply the documented affection tiers without changing card configuration."""
     if affection <= 0 or damage <= 0:
         return damage
     if affection <= 20:
@@ -79,6 +170,32 @@ def _damage_with_affection(damage: int, affection: int) -> int:
     else:
         percent = 30
     return damage + max(1, damage * percent // 100)
+
+
+def _apply_card_effect(
+    state: dict[str, Any],
+    template: CardTemplate,
+    *,
+    actor: str,
+    damage: int | None = None,
+    shield: int | None = None,
+    player_defense: int = 0,
+) -> dict[str, int]:
+    effect = template.effect_json or {}
+    resolved_damage = _bounded_int(effect.get("damage", 0)) if damage is None else damage
+    resolved_shield = _bounded_int(effect.get("shield", 0)) if shield is None else shield
+    source = state["player_state"] if actor == "player" else state["enemy_state"]
+    target = state["enemy_state"] if actor == "player" else state["player_state"]
+    if actor == "enemy" and resolved_damage > 0:
+        resolved_damage = max(1, resolved_damage - max(0, player_defense) // 2)
+    target_shield = _bounded_int(target.get("shield", 0))
+    blocked = min(target_shield, resolved_damage)
+    dealt = resolved_damage - blocked
+    target["shield"] = target_shield - blocked
+    target["hp"] = max(0, _bounded_int(target.get("hp", 0)) - dealt)
+    if resolved_shield > 0:
+        source["shield"] = _bounded_int(source.get("shield", 0)) + resolved_shield
+    return {"damage": dealt, "blocked": blocked, "shield": resolved_shield}
 
 
 def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
@@ -93,6 +210,7 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
     enemy = db.get(NpcTemplate, enemy_id)
     if enemy is None:
         abort(404, "敌人不存在")
+    enemy_config, enemy_deck, _ = _validated_enemy_deck(db, enemy)
     active_deck = db.scalar(
         select(Deck).where(Deck.player_id == player.id, Deck.is_active.is_(True))
     )
@@ -110,21 +228,29 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
     if not draw_pile:
         abort(409, "启用套牌中没有卡牌")
 
-    enemy_config = enemy.battle_deck or {}
+    enemy_hp = _bounded_int(enemy_config.get("hp", 30), minimum=1)
     state: dict[str, Any] = {
         "current_turn": 1,
         "energy": 3,
-        "player_state": {"hp": player.hp, "max_hp": player.hp},
+        "player_state": {"hp": player.hp, "max_hp": player.hp, "shield": 0},
         "enemy_state": {
             "name": enemy.name,
             "sprite": str((enemy.reward or {}).get("sprite", "npc-trainer")),
-            "hp": max(1, int(enemy_config.get("hp", 30))),
-            "max_hp": max(1, int(enemy_config.get("hp", 30))),
+            "hp": enemy_hp,
+            "max_hp": enemy_hp,
             "shield": 0,
         },
         "hand_cards": [],
         "draw_pile": draw_pile,
         "discard_cards": [],
+        "enemy_energy": _bounded_int(enemy_config.get("energy", 3), minimum=1, maximum=20),
+        "enemy_max_energy": _bounded_int(
+            enemy_config.get("energy", 3), minimum=1, maximum=20
+        ),
+        "enemy_hand_size": _bounded_int(enemy_config.get("hand_size", 5), minimum=1, maximum=20),
+        "enemy_hand_cards": [],
+        "enemy_draw_pile": enemy_deck,
+        "enemy_discard_cards": [],
         "buffs": [],
         "debuffs": [],
         "spirit_template_ids": sorted(
@@ -132,6 +258,7 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
         ),
     }
     _draw_to_hand(state)
+    _draw_enemy_to_hand(state)
     battle = ActiveBattle(player_id=player.id, enemy_id=enemy.id, state_json=state)
     db.add(battle)
     db.commit()
@@ -167,50 +294,49 @@ def _complete_battle(
 ) -> None:
     enemy = db.get(NpcTemplate, battle.enemy_id)
     reward: dict[str, Any] = {}
-    if enemy is not None and result == "victory":
-        template_id = (enemy.reward or {}).get("first_victory_card_template_id")
-        template = db.get(CardTemplate, int(template_id)) if template_id else None
-        if template is not None:
-            claimed_npc_id = db.scalar(
-                pg_insert(NpcFirstVictoryReward)
-                .values(
-                    player_id=player.id,
-                    npc_id=enemy.id,
-                    card_template_id=template.id,
-                )
-                .on_conflict_do_nothing(
-                    index_elements=[
-                        NpcFirstVictoryReward.player_id,
-                        NpcFirstVictoryReward.npc_id,
-                    ]
-                )
-                .returning(NpcFirstVictoryReward.npc_id)
-            )
-            if claimed_npc_id is not None:
-                owned_card = db.scalar(
-                    select(PlayerCard).where(
-                        PlayerCard.player_id == player.id,
-                        PlayerCard.card_template_id == template.id,
-                        PlayerCard.level == 1,
-                    )
-                )
-                if owned_card is None:
-                    db.add(PlayerCard(player_id=player.id, card_template_id=template.id))
-                else:
-                    owned_card.count += 1
-                reward = {
-                    "first_victory": True,
-                    "card": {
-                        "template_id": template.id,
-                        "name": template.name,
-                        "count": 1,
-                    },
-                }
+    is_monster = enemy is not None and (enemy.battle_deck or {}).get("monster_rank") is not None
+    affection_result = (
+        apply_affection(db, player.id, enemy, "battle")
+        if enemy is not None and not is_monster
+        else None
+    )
+    if affection_result is not None:
+        first_card = next(
+            (
+                item
+                for item in affection_result["rewards"]
+                if item["type"] == "card" and item["milestone_level"] == 1
+            ),
+            None,
+        )
+        if first_card is not None:
+            reward = {
+                "first_battle": True,
+                "card": {
+                    "template_id": first_card["template_id"],
+                    "name": first_card["name"],
+                    "count": first_card["count"],
+                },
+            }
+            if result == "victory":
+                reward["first_victory"] = True
+    if result == "victory" and enemy is not None:
+        record_quest_objective(
+            db,
+            player.id,
+            "battle_npc",
+            target_name_field="npc_name",
+            target_name=enemy.name,
+        )
+        fragment_reward = grant_monster_fragments(db, player.id, enemy)
+        if fragment_reward is not None:
+            reward["fragment"] = fragment_reward
 
     battle.status = result
     state = deepcopy(battle.state_json)
     state["result"] = result
     state["reward"] = reward
+    state["affection_result"] = affection_result
     battle.state_json = state
     db.add(
         BattleRecord(
@@ -248,9 +374,14 @@ def play_card(
         abort(409, "能量不足")
 
     effect = template.effect_json or {}
-    base_damage = max(0, min(int(effect.get("damage", 0)), 1_000_000))
-    per_level = max(0, min(int((template.upgrade_json or {}).get("damage_per_level", 0)), 100_000))
-    damage = base_damage + (card.level - 1) * per_level
+    damage = _bounded_int(effect.get("damage", 0))
+    shield = _bounded_int(effect.get("shield", 0))
+    damage += (card.level - 1) * _bounded_int(
+        (template.upgrade_json or {}).get("damage_per_level", 0), maximum=100_000
+    )
+    shield += (card.level - 1) * _bounded_int(
+        (template.upgrade_json or {}).get("shield_per_level", 0), maximum=100_000
+    )
     if template.source_spirit_id:
         spirit = db.scalar(
             select(PlayerCardSpirit).where(
@@ -260,19 +391,22 @@ def play_card(
         )
         if spirit is not None:
             damage = _damage_with_affection(damage, spirit.affection)
-    shield = max(0, min(int(state["enemy_state"].get("shield", 0)), 1_000_000))
-    blocked = min(shield, damage)
-    damage -= blocked
-    state["enemy_state"]["shield"] = shield - blocked
+    resolved = _apply_card_effect(
+        state,
+        template,
+        actor="player",
+        damage=damage,
+        shield=shield,
+    )
     state["energy"] -= template.cost
     state["hand_cards"].remove(card_id)
     state["discard_cards"].append(card_id)
-    state["enemy_state"]["hp"] = max(0, state["enemy_state"]["hp"] - damage)
     state["last_action"] = {
         "type": "play_card",
         "card_id": card_id,
-        "damage": damage,
-        "blocked": blocked,
+        "card_template_id": template.id,
+        "card_name": template.name,
+        **resolved,
     }
     battle.state_json = state
     battle.version += 1
@@ -280,6 +414,69 @@ def play_card(
         _complete_battle(db, battle, player, "victory")
     db.commit()
     return battle
+
+
+def _enemy_candidates(
+    state: dict[str, Any],
+    templates: dict[int, CardTemplate],
+) -> list[dict[str, Any]]:
+    counts = Counter(state["enemy_hand_cards"])
+    energy = state["enemy_energy"]
+    candidates = []
+    for template_id in sorted(counts):
+        template = templates[template_id]
+        if template.cost > energy:
+            continue
+        effect = template.effect_json or {}
+        candidates.append(
+            {
+                "card_template_id": template.id,
+                "name": template.name,
+                "cost": template.cost,
+                "type": template.type,
+                "tags": [key for key in ("damage", "shield") if _bounded_int(effect.get(key)) > 0],
+                "available_copies": counts[template.id],
+            }
+        )
+    return candidates
+
+
+def deterministic_enemy_sequence(
+    hand_cards: list[int],
+    energy: int,
+    templates: dict[int, CardTemplate],
+) -> list[int]:
+    remaining = list(hand_cards)
+    sequence: list[int] = []
+    available_energy = energy
+    while True:
+        playable = [templates[card_id] for card_id in remaining if templates[card_id].cost <= available_energy]
+        if not playable:
+            return sequence
+        chosen = min(playable, key=lambda template: (-template.cost, template.id))
+        sequence.append(chosen.id)
+        remaining.remove(chosen.id)
+        available_energy -= chosen.cost
+
+
+def _valid_enemy_sequence(
+    sequence: list[int],
+    hand_cards: list[int],
+    energy: int,
+    templates: dict[int, CardTemplate],
+) -> bool:
+    remaining = Counter(hand_cards)
+    available_energy = energy
+    for template_id in sequence:
+        template = templates.get(template_id)
+        if template is None or remaining[template_id] <= 0 or template.cost > available_energy:
+            return False
+        remaining[template_id] -= 1
+        available_energy -= template.cost
+    return not any(
+        count > 0 and templates[template_id].cost <= available_energy
+        for template_id, count in remaining.items()
+    )
 
 
 def prepare_enemy_turn(
@@ -294,7 +491,12 @@ def prepare_enemy_turn(
     if enemy is None:
         abort(404, "敌人不存在")
     state = deepcopy(battle.state_json)
+    templates = _ensure_enemy_deck_state(db, enemy, state)
+    state["enemy_energy"] = state["enemy_max_energy"]
     profile = get_npc_ai_profile(enemy)
+    fallback = deterministic_enemy_sequence(
+        state["enemy_hand_cards"], state["enemy_energy"], templates
+    )
     return {
         "battle_id": battle.id,
         "version": battle.version,
@@ -303,7 +505,8 @@ def prepare_enemy_turn(
         "battle_enabled": profile.battle_enabled,
         "battle_style": profile.battle_style,
         "state": state,
-        "candidates": enemy_action_candidates(enemy, state),
+        "candidates": _enemy_candidates(state, templates),
+        "fallback_card_template_ids": fallback,
     }
 
 
@@ -312,7 +515,7 @@ def end_turn(
     player: Player,
     battle_id: int,
     expected_version: int,
-    selected_action_id: str = "basic_attack",
+    selected_card_template_ids: list[int] | None = None,
     battle_line: str | None = None,
 ) -> ActiveBattle:
     battle = get_owned_battle(db, player.id, battle_id, lock=True)
@@ -321,33 +524,65 @@ def end_turn(
     enemy = db.get(NpcTemplate, battle.enemy_id)
     if enemy is None:
         abort(404, "敌人不存在")
-    candidate_ids = {item["id"] for item in enemy_action_candidates(enemy, state)}
-    action_id = selected_action_id if selected_action_id in candidate_ids else "basic_attack"
-    enemy_attack = max(0, min(int((enemy.battle_deck or {}).get("attack", 5)), 1_000_000))
-    if action_id == "guard":
-        shield = max(1, min(int((enemy.battle_deck or {}).get("guard", 1)), 1_000_000))
-        state["enemy_state"]["shield"] = shield
-        state["last_action"] = {
-            "type": "enemy_guard",
-            "action_id": action_id,
-            "shield": shield,
-            "battle_line": battle_line,
-        }
-    else:
-        damage = max(1, enemy_attack - player.defense // 2)
-        state["player_state"]["hp"] = max(0, state["player_state"]["hp"] - damage)
-        state["last_action"] = {
-            "type": "enemy_attack",
-            "action_id": "basic_attack",
-            "damage": damage,
-            "battle_line": battle_line,
-        }
-    state["current_turn"] += 1
-    state["energy"] = 3
-    _draw_to_hand(state)
-    battle.state_json = state
-    battle.version += 1
+    templates = _ensure_enemy_deck_state(db, enemy, state)
+    state["enemy_energy"] = state["enemy_max_energy"]
+    requested = selected_card_template_ids or []
+    requested_valid = _valid_enemy_sequence(
+        requested,
+        state["enemy_hand_cards"],
+        state["enemy_energy"],
+        templates,
+    )
+    sequence = requested if requested_valid else deterministic_enemy_sequence(
+        state["enemy_hand_cards"], state["enemy_energy"], templates
+    )
+    if not requested_valid:
+        battle_line = None
+
+    actions: list[dict[str, Any]] = []
+    for template_id in sequence:
+        template = templates[template_id]
+        if template_id not in state["enemy_hand_cards"] or template.cost > state["enemy_energy"]:
+            break
+        state["enemy_energy"] -= template.cost
+        state["enemy_hand_cards"].remove(template_id)
+        state["enemy_discard_cards"].append(template_id)
+        resolved = _apply_card_effect(
+            state,
+            template,
+            actor="enemy",
+            player_defense=player.defense,
+        )
+        actions.append(
+            {
+                "card_template_id": template.id,
+                "name": template.name,
+                "type": template.type,
+                "cost": template.cost,
+                **resolved,
+            }
+        )
+        if state["player_state"]["hp"] == 0:
+            break
+
+    state["last_action"] = {
+        "type": "enemy_cards",
+        "cards": actions,
+        "damage": sum(item["damage"] for item in actions),
+        "blocked": sum(item["blocked"] for item in actions),
+        "shield": sum(item["shield"] for item in actions),
+        "battle_line": battle_line,
+    }
     if state["player_state"]["hp"] == 0:
+        battle.state_json = state
+        battle.version += 1
         _complete_battle(db, battle, player, "defeat")
+    else:
+        state["current_turn"] += 1
+        state["energy"] = 3
+        _draw_to_hand(state)
+        _draw_enemy_to_hand(state)
+        battle.state_json = state
+        battle.version += 1
     db.commit()
     return battle

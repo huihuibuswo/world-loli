@@ -87,6 +87,28 @@ class PlayerCardSpirit(Base):
     acquired_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class PlayerCardSpiritFragment(Base):
+    __tablename__ = "player_card_spirit_fragments"
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id",
+            "spirit_template_id",
+            name="uq_player_card_spirit_fragments_player_template",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    spirit_template_id: Mapped[int] = mapped_column(
+        ForeignKey("card_spirit_templates.id", ondelete="RESTRICT")
+    )
+    amount: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class CardTemplate(Base):
     __tablename__ = "card_templates"
 
@@ -166,6 +188,20 @@ class PlantTemplate(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     icon: Mapped[str | None] = mapped_column(Text)
     respawn_seconds: Mapped[int] = mapped_column(Integer)
+
+
+class ItemTemplate(Base):
+    __tablename__ = "item_templates"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
+    category: Mapped[str] = mapped_column(String(32))
+    rarity: Mapped[str] = mapped_column(String(32))
+    base_affection: Mapped[int] = mapped_column(Integer, default=1)
+    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    description: Mapped[str] = mapped_column(Text, default="")
+    icon: Mapped[str | None] = mapped_column(Text)
+    stack_limit: Mapped[int] = mapped_column(Integer, default=99)
 
 
 class PlayerPlantNode(Base):
@@ -249,6 +285,70 @@ class NpcAiConversation(Base):
     )
 
 
+class PlayerNpcAffection(Base):
+    __tablename__ = "player_npc_affection"
+
+    player_id: Mapped[int] = mapped_column(
+        ForeignKey("players.id", ondelete="CASCADE"), primary_key=True
+    )
+    npc_id: Mapped[int] = mapped_column(
+        ForeignKey("npc_templates.id", ondelete="CASCADE"), primary_key=True
+    )
+    points: Mapped[int] = mapped_column(Integer, default=0)
+    conversation_count: Mapped[int] = mapped_column(Integer, default=0)
+    battle_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PlayerNpcAffectionReward(Base):
+    __tablename__ = "player_npc_affection_rewards"
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id",
+            "npc_id",
+            "milestone_level",
+            name="uq_player_npc_affection_rewards_milestone",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    npc_id: Mapped[int] = mapped_column(ForeignKey("npc_templates.id", ondelete="CASCADE"))
+    milestone_level: Mapped[int] = mapped_column(Integer)
+    reward_type: Mapped[str] = mapped_column(String(24))
+    card_template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("card_templates.id", ondelete="RESTRICT")
+    )
+    spirit_template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("card_spirit_templates.id", ondelete="RESTRICT")
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class NpcGiftRecord(Base):
+    __tablename__ = "npc_gift_records"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    npc_id: Mapped[int] = mapped_column(ForeignKey("npc_templates.id", ondelete="CASCADE"))
+    plant_template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("plant_templates.id", ondelete="RESTRICT")
+    )
+    item_template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("item_templates.id", ondelete="RESTRICT")
+    )
+    preference: Mapped[str] = mapped_column(String(16))
+    affection_gained: Mapped[int] = mapped_column(Integer)
+    gifted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Quest(Base):
     __tablename__ = "quests"
 
@@ -257,6 +357,41 @@ class Quest(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     type: Mapped[str] = mapped_column(String(32))
     reward_json: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    issuer_npc_id: Mapped[int | None] = mapped_column(
+        ForeignKey("npc_templates.id", ondelete="SET NULL")
+    )
+
+
+class NpcShopItem(Base):
+    __tablename__ = "npc_shop_items"
+    __table_args__ = (
+        UniqueConstraint("npc_id", "item_template_id", name="uq_npc_shop_item"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    npc_id: Mapped[int] = mapped_column(ForeignKey("npc_templates.id", ondelete="CASCADE"))
+    item_template_id: Mapped[int] = mapped_column(
+        ForeignKey("item_templates.id", ondelete="RESTRICT")
+    )
+    price: Mapped[int] = mapped_column(Integer)
+    stock_limit: Mapped[int] = mapped_column(Integer, default=5)
+    unlock_level: Mapped[int] = mapped_column(Integer, default=1)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class NpcPurchaseRecord(Base):
+    __tablename__ = "npc_purchase_records"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    shop_item_id: Mapped[int] = mapped_column(
+        ForeignKey("npc_shop_items.id", ondelete="CASCADE")
+    )
+    quantity: Mapped[int] = mapped_column(Integer)
+    unit_price: Mapped[int] = mapped_column(Integer)
+    purchased_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class PlayerQuest(Base):

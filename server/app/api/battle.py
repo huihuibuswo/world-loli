@@ -14,7 +14,7 @@ from app.services.battle_service import (
     play_card,
     prepare_enemy_turn,
 )
-from app.services.battle_ai_service import choose_enemy_action
+from app.services.battle_ai_service import choose_enemy_cards
 
 
 router = APIRouter(prefix="/battle", tags=["battle"])
@@ -57,13 +57,13 @@ def finish_turn(
     db: Session = Depends(get_db),
 ) -> dict:
     context = prepare_enemy_turn(db, player, battle_id, payload.expected_version)
-    decision = choose_enemy_action(context)
+    decision = choose_enemy_cards(context)
     battle = end_turn(
         db,
         player,
         battle_id,
         payload.expected_version,
-        str(decision["action_id"]),
+        list(decision["card_template_ids"]),
         decision.get("battle_line"),
     )
     return ok(battle_data(battle), "回合已结束")
@@ -83,5 +83,6 @@ def get_result(
             "battle_id": battle.id,
             "result": battle.status,
             "reward": battle.state_json.get("reward", {}),
+            "affection_result": battle.state_json.get("affection_result"),
         }
     )

@@ -36,6 +36,12 @@ type ObstacleLayoutItem = {
 
 type ReservedPlantArea = { x: number; y: number; radius: number }
 
+const PLANT_SPARKLE_COLORS: Record<MapPlant['rarity'], readonly [number, number]> = {
+  common: [0xbae6fd, 0xe0f2fe],
+  uncommon: [0x93c5fd, 0xa78bfa],
+  rare: [0xfde68a, 0xf59e0b],
+}
+
 export class WorldScene extends Phaser.Scene {
   private player!: Player
   private npcs: NPC[] = []
@@ -191,6 +197,7 @@ export class WorldScene extends Phaser.Scene {
         { x: -35, y: -13, inner: 1.1, outer: 3.4, alpha: 0.68, duration: 910, delay: 510 },
         { x: 8, y: -70, inner: 1.3, outer: 4.1, alpha: 0.82, duration: 690, delay: 280 },
       ]
+      const sparkleColors = PLANT_SPARKLE_COLORS[rarity]
       const sparkles = sparkleSpecs.map((spec, index) => {
         const sparkle = this.add.star(
           spec.x,
@@ -198,7 +205,7 @@ export class WorldScene extends Phaser.Scene {
           4,
           spec.inner,
           spec.outer,
-          index % 2 === 0 ? 0xbae6fd : 0xe0f2fe,
+          sparkleColors[index % sparkleColors.length],
           spec.alpha,
         ).setAngle(45)
 
@@ -218,15 +225,6 @@ export class WorldScene extends Phaser.Scene {
         return sparkle
       })
       display.add([sprite, ...sparkles])
-      if (rarity === 'rare') {
-        display.add(this.add.text(0, 28, `${item.name} · 稀有`, {
-          fontFamily: 'ui-rounded, sans-serif',
-          fontSize: '13px',
-          color: '#fef3c7',
-          backgroundColor: 'rgba(39, 28, 4, 0.84)',
-          padding: { x: 7, y: 4 },
-        }).setOrigin(0.5))
-      }
       const plant: MapPlant = {
         nodeId: item.node_id,
         name: item.name,

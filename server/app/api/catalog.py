@@ -16,6 +16,8 @@ from app.models import (
     PlayerCardSpirit,
 )
 from app.schemas import CardUpgradeRequest, SpiritAffectionRequest, SpiritLevelRequest
+from app.services.card_service import upgrade_player_card
+from app.services.card_spirit_service import compose_spirit, list_spirit_fragments
 
 
 router = APIRouter(tags=["collection"])
@@ -113,6 +115,25 @@ def list_spirits(
     return ok(
         [_spirit_data(spirit, template, record) for spirit, template, record in rows]
     )
+
+
+@router.get("/spirit-fragments")
+def get_spirit_fragments(
+    player: Player = Depends(get_current_player), db: Session = Depends(get_db)
+) -> dict:
+    return ok(list_spirit_fragments(db, player.id))
+
+
+@router.post("/spirit-fragments/{spirit_template_id}/compose")
+def compose_card_spirit(
+    spirit_template_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    result = compose_spirit(db, player.id, spirit_template_id)
+    db.commit()
+    message = "卡灵合成成功" if result["composed"] else "已拥有该卡灵"
+    return ok(result, message)
 
 
 @router.get("/spirits/{spirit_id}")
@@ -230,12 +251,7 @@ def upgrade_card(
     player: Player = Depends(get_current_player),
     db: Session = Depends(get_db),
 ) -> dict:
-    card, template = _owned_card(db, player.id, card_id)
-    cost = sum(level * 100 for level in range(card.level, card.level + payload.levels))
-    if player.gold < cost:
-        abort(409, "金币不足")
-    player.gold -= cost
-    card.level += payload.levels
+    card, template, _, _ = upgrade_player_card(db, player.id, card_id, payload.levels)
     db.commit()
     return ok(_card_data(card, template), "卡牌已升级")
 

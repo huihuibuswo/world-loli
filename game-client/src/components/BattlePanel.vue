@@ -7,11 +7,12 @@ import { useGameStore } from '@/stores/game'
 const game = useGameStore()
 const battle = computed(() => game.battle!)
 const hand = computed(() => battle.value.hand_cards.map((id) => game.cardById.get(id)).filter(Boolean))
+const enemyCards = computed(() => battle.value.last_action?.cards ?? [])
 
 watch(() => battle.value?.version, (nextVersion, previousVersion) => {
   const action = battle.value?.last_action
   if (action?.damage !== undefined && previousVersion !== undefined && nextVersion !== previousVersion) {
-    const target = action.type === 'enemy_attack' ? 'player' : 'enemy'
+    const target = action.type === 'enemy_cards' ? 'player' : 'enemy'
     const targetState = target === 'enemy' ? battle.value.enemy_state : battle.value.player_state
     gameEvents.emit('battle:action', {
       damage: action.damage,
@@ -29,29 +30,46 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
       <div class="combatant">
         <strong>{{ game.player?.name }}</strong><span>Lv.{{ game.player?.level }}</span>
         <div class="hp-track"><i :style="{ width: `${Math.max(0, battle.player_state.hp / battle.player_state.max_hp * 100)}%` }" /></div>
-        <small>{{ battle.player_state.hp }} / {{ battle.player_state.max_hp }}</small>
+        <small>{{ battle.player_state.hp }} / {{ battle.player_state.max_hp }}<template v-if="battle.player_state.shield"> · 护盾 {{ battle.player_state.shield }}</template></small>
       </div>
       <div class="turn-badge"><Swords :size="18" /><span>第 {{ battle.current_turn }} 回合</span></div>
       <div class="combatant enemy">
         <strong>{{ battle.enemy_state.name }}</strong><span>对手</span>
         <div class="hp-track"><i :style="{ width: `${Math.max(0, battle.enemy_state.hp / battle.enemy_state.max_hp * 100)}%` }" /></div>
         <small>{{ battle.enemy_state.hp }} / {{ battle.enemy_state.max_hp }}<template v-if="battle.enemy_state.shield"> · 护盾 {{ battle.enemy_state.shield }}</template></small>
+        <small class="enemy-deck-state">能量 {{ battle.enemy_energy ?? 0 }} · 手牌 {{ battle.enemy_hand_count ?? 0 }} · 牌堆 {{ battle.enemy_draw_count ?? 0 }} · 弃牌 {{ battle.enemy_discard_count ?? 0 }}</small>
       </div>
     </div>
 
-    <div v-if="battle.last_action?.battle_line || battle.last_action?.type === 'enemy_guard'" class="battle-action-line glass-panel" role="status">
-      <Shield v-if="battle.last_action?.type === 'enemy_guard'" :size="17" />
+    <div v-if="battle.last_action?.battle_line || enemyCards.length" class="battle-action-line glass-panel" role="status">
+      <Shield v-if="enemyCards.length && enemyCards.every((card) => card.damage === 0)" :size="17" />
       <Swords v-else :size="17" />
-      <span>{{ battle.last_action?.battle_line || `${battle.enemy_state.name}摆出了防守架势。` }}</span>
+      <span>{{ battle.last_action?.battle_line || `${battle.enemy_state.name} 使用了 ${enemyCards.map((card) => card.name).join('、')}` }}</span>
     </div>
 
     <div v-if="battle.status !== 'active'" class="battle-result glass-panel" role="status">
       <p class="eyebrow">BATTLE COMPLETE</p>
       <h2>{{ battle.status === 'victory' ? '胜利' : '战斗结束' }}</h2>
       <p>{{ battle.status === 'victory' ? '林间的回响化作新的力量。' : '休整之后，再次启程。' }}</p>
-      <div v-if="battle.status === 'victory'" class="battle-rewards" aria-label="战斗奖励">
-        <span v-if="battle.reward?.card">首胜赠礼：{{ battle.reward.card.name }} ×{{ battle.reward.card.count }}</span>
-        <span v-else>本次切磋没有额外奖励</span>
+      <div class="battle-rewards" aria-label="战斗结算">
+        <span v-if="battle.affection_result?.points_gained">
+          好感 +{{ battle.affection_result.points_gained }} · Lv.{{ battle.affection_result.new_level }}
+        </span>
+        <span
+          v-for="reward in battle.affection_result?.rewards ?? []"
+          :key="`${reward.type}-${reward.milestone_level}`"
+        >
+          {{ reward.milestone_level === 1 ? '初次对战赠礼' : `好感 Lv.${reward.milestone_level} 奖励` }}：{{ reward.name }} ×{{ reward.count }}
+        </span>
+        <span v-if="!battle.affection_result?.points_gained && !battle.affection_result?.rewards.length && battle.reward?.card">
+          初次对战赠礼：{{ battle.reward.card.name }} ×{{ battle.reward.card.count }}
+        </span>
+        <span v-if="battle.reward?.fragment">
+          {{ battle.reward.fragment.name }}碎片 +{{ battle.reward.fragment.fragment_delta }} · {{ battle.reward.fragment.fragment_count }}/{{ battle.reward.fragment.fragment_target }}
+        </span>
+        <span v-if="!battle.affection_result?.points_gained && !battle.affection_result?.rewards.length && !battle.reward?.card && !battle.reward?.fragment">
+          本次切磋没有额外奖励
+        </span>
       </div>
       <button class="button primary" type="button" @click="game.leaveBattle"><RotateCcw :size="18" />返回世界</button>
     </div>
@@ -60,11 +78,11 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
       <div class="energy-pill" aria-label="当前能量"><Droplets :size="19" /><strong>{{ battle.energy }}</strong><span>能量</span></div>
       <div class="card-hand" aria-label="手牌">
         <button v-for="(card, index) in hand" :key="`${card!.id}-${index}`" class="battle-card" type="button"
-          :disabled="game.actionLoading || card!.cost > battle.energy" @click="game.playCard(card!.id)">
+          :disabled="game.actionLoading || card!.cost > battle.energy" :aria-label="`使用${card!.name}`" @click="game.playCard(card!.id)">
           <span class="card-cost">{{ card!.cost }}</span>
           <img class="card-art" :src="card!.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'" alt="">
           <span class="card-sigil"><Shield v-if="card!.type === 'defense'" :size="30" /><Swords v-else :size="30" /></span>
-          <strong>{{ card!.name }}</strong><small>{{ card!.effect.damage ? `造成 ${card!.effect.damage} 点伤害` : '施放卡牌效果' }}</small>
+          <strong>{{ card!.name }}</strong><small>{{ card!.effect.damage ? `造成 ${card!.effect.damage} 点伤害` : card!.effect.shield ? `获得 ${card!.effect.shield} 点护盾` : '施放卡牌效果' }}</small>
         </button>
       </div>
       <button class="button end-turn" type="button" :disabled="game.actionLoading" @click="game.endTurn">结束回合<ArrowRight :size="18" /></button>

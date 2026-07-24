@@ -17,6 +17,7 @@ from app.core.responses import abort
 from app.models import NpcAiConversation, NpcTemplate, Player
 from app.schemas import AiDialogueOutput, NpcChatRequest
 from app.services.ai_client import AiProviderError, get_ai_client
+from app.services.npc_affection_service import affection_data, apply_affection
 from app.services.ai_profile import NpcAiProfile, get_npc_ai_profile
 
 
@@ -138,6 +139,8 @@ def _public_turn(turn: dict[str, Any]) -> dict[str, str]:
 
 
 def _state_data(
+    db: Session,
+    player: Player,
     npc: NpcTemplate,
     profile: NpcAiProfile,
     conversation: NpcAiConversation | None,
@@ -145,6 +148,7 @@ def _state_data(
     reply: str | None = None,
     suggested_replies: list[str] | None = None,
     mode: str = "static",
+    affection_change: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     turns = _turns(conversation.recent_turns) if conversation else []
     return {
@@ -154,12 +158,14 @@ def _state_data(
         "reply": reply,
         "suggested_replies": suggested_replies or list(profile.fallback_replies),
         "mode": mode,
+        "affection": affection_data(db, player.id, npc.id),
+        "affection_change": affection_change,
     }
 
 
 def get_chat_state(db: Session, player: Player, npc: NpcTemplate) -> dict[str, Any]:
     profile = get_npc_ai_profile(npc)
-    return _state_data(npc, profile, _active_conversation(db, player.id, npc.id))
+    return _state_data(db, player, npc, profile, _active_conversation(db, player.id, npc.id))
 
 
 def _messages(
@@ -270,12 +276,12 @@ def _save_turn(
     reply: str,
     suggestions: list[str],
     mode: str,
-) -> tuple[NpcAiConversation, dict[str, Any]]:
+) -> tuple[NpcAiConversation, dict[str, Any], dict[str, Any] | None]:
     request_id = str(payload.request_id)
     conversation = _active_conversation(db, player.id, npc.id, lock=True)
     duplicate = _duplicate_turn(conversation, request_id)
     if duplicate is not None and conversation is not None:
-        return conversation, duplicate
+        return conversation, duplicate, None
     actual_version = conversation.version if conversation else 0
     if actual_version != payload.conversation_version:
         abort(409, "对话已在其他位置更新，请刷新后重试")
@@ -307,13 +313,14 @@ def _save_turn(
         conversation.recent_turns = turns[overflow:]
         conversation.version += 1
         conversation.last_interacted_at = datetime.now(timezone.utc)
+    affection_change = apply_affection(db, player.id, npc, "chat")
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         abort(409, "对话已在其他位置创建，请刷新后重试")
     db.refresh(conversation)
-    return conversation, turn
+    return conversation, turn, affection_change
 
 
 def chat_with_npc(
@@ -331,6 +338,8 @@ def chat_with_npc(
     duplicate = _duplicate_turn(snapshot, request_id)
     if duplicate is not None:
         return _state_data(
+            db,
+            player,
             npc,
             profile,
             snapshot,
@@ -343,7 +352,7 @@ def chat_with_npc(
         abort(409, "对话已在其他位置更新，请刷新后重试")
     _check_rate_limit(player.id, npc.id)
     reply, suggestions, mode = _generate_reply(npc, player, profile, snapshot, message)
-    conversation, saved_turn = _save_turn(
+    conversation, saved_turn, affection_change = _save_turn(
         db,
         player,
         npc,
@@ -354,10 +363,13 @@ def chat_with_npc(
         mode,
     )
     return _state_data(
+        db,
+        player,
         npc,
         profile,
         conversation,
         reply=str(saved_turn.get("npc", reply)),
         suggested_replies=list(saved_turn.get("suggested_replies") or suggestions),
         mode=str(saved_turn.get("mode", mode)),
+        affection_change=affection_change,
     )

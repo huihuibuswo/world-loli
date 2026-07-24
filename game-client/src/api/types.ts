@@ -77,6 +77,7 @@ export interface NpcData {
   portrait: string | null
   dialogue: string[]
   actions: string[]
+  service_type: 'shop' | 'quest' | 'guide' | 'training' | null
   ai: {
     dialogue_enabled: boolean
     battle_enabled: boolean
@@ -98,6 +99,41 @@ export interface NpcChatState {
   reply: string | null
   suggested_replies: [string, string]
   mode: 'ai' | 'fallback' | 'static'
+  affection: NpcAffection
+  affection_change: NpcAffectionChange | null
+}
+
+export interface NpcAffectionReward {
+  milestone_level: number
+  type: 'card' | 'card_spirit'
+  template_id: number
+  name: string
+  count: number
+}
+
+export interface NpcAffection {
+  npc_id: number
+  points: number
+  level: number
+  max_points: number
+  current_level_points: number
+  next_level_points: number | null
+  points_to_next: number
+  level_progress: number
+  conversation_count: number
+  battle_count: number
+  claimed_milestones: number[]
+}
+
+export interface NpcAffectionChange {
+  points_before: number
+  points_after: number
+  points_gained: number
+  old_level: number
+  new_level: number
+  leveled_up: boolean
+  rewards: NpcAffectionReward[]
+  affection: NpcAffection
 }
 
 export interface CardData {
@@ -108,7 +144,7 @@ export interface CardData {
   cost: number
   rarity: string
   source_spirit_id: number | null
-  effect: { damage?: number; [key: string]: unknown }
+  effect: { damage?: number; shield?: number; [key: string]: unknown }
   upgrade: Record<string, unknown>
   level: number
   count: number
@@ -130,6 +166,28 @@ export interface SpiritData {
   affection: number
   awaken_level: number
   interaction_available_at: string | null
+}
+
+export interface SpiritFragmentData {
+  template_id: number
+  name: string
+  race: string
+  rarity: string
+  type: string
+  story: string
+  avatar: string | null
+  fragment_count: number
+  fragment_target: number
+  can_compose: boolean
+  owned_spirit_id: number | null
+}
+
+export interface SpiritComposeResult {
+  spirit_id: number
+  template_id: number
+  fragment_count: number
+  fragment_target: number
+  composed: boolean
 }
 
 export type PlantRarity = 'common' | 'uncommon' | 'rare'
@@ -167,6 +225,26 @@ export interface GiftOptions {
   plants: GiftOption[]
 }
 
+export interface ItemData {
+  id: number
+  name: string
+  category: string
+  rarity: string
+  base_affection: number
+  tags: string[]
+  description: string
+  icon: string | null
+  amount: number
+}
+
+export interface NpcGiftItem extends ItemData {
+  preference: GiftPreference
+}
+
+export interface NpcGiftOptions extends GiftOptions {
+  items: NpcGiftItem[]
+}
+
 export interface PlantCollectResult {
   map_id: number
   node_id: string
@@ -186,6 +264,123 @@ export interface GiftResult {
   dialogue: string
 }
 
+export interface NpcGiftResult {
+  npc_id: number
+  gift_type: 'plant' | 'item'
+  plant_template_id: number | null
+  item_template_id: number | null
+  preference: GiftPreference
+  remaining_amount: number
+  remaining_gifts: number
+  dialogue: string
+  affection_change: NpcAffectionChange
+  affection: NpcAffection
+  rewards: NpcAffectionReward[]
+}
+
+export interface NpcShopItem extends ItemData {
+  shop_item_id: number
+  base_price: number
+  price: number
+  stock_limit: number
+  remaining_stock: number
+  unlock_level: number
+  unlocked: boolean
+}
+
+export interface NpcShopService {
+  kind: 'shop'
+  title: string
+  description: string
+  gold: number
+  affection_level: number
+  discount_percent: number
+  items: NpcShopItem[]
+}
+
+export interface NpcQuestData {
+  id: number
+  title: string
+  description: string
+  type: string
+  reward: { gold?: number; [key: string]: unknown }
+  status: 'not_started' | 'active' | 'completed'
+  progress: Record<string, unknown>
+}
+
+export interface NpcQuestService {
+  kind: 'quest'
+  title: string
+  description: string
+  quests: NpcQuestData[]
+}
+
+export interface NpcGuidePlant {
+  id: number
+  name: string
+  rarity: PlantRarity | 'unknown'
+  tags: string[]
+  description: string
+  habitats: string[]
+  respawn_seconds: number | null
+  discovered: boolean
+  known: boolean
+}
+
+export interface NpcGuideService {
+  kind: 'guide'
+  title: string
+  description: string
+  affection_level: number
+  plants: NpcGuidePlant[]
+}
+
+export interface NpcTrainingCard extends CardData {
+  upgrade_cost: number
+  can_upgrade: boolean
+  next_effect: { damage: number; shield: number }
+}
+
+export interface NpcTrainingService {
+  kind: 'training'
+  title: string
+  description: string
+  gold: number
+  cards: NpcTrainingCard[]
+}
+
+export interface NpcNoService {
+  kind: 'none'
+  title: string
+  description: string
+}
+
+export type NpcServiceData =
+  | NpcShopService
+  | NpcQuestService
+  | NpcGuideService
+  | NpcTrainingService
+  | NpcNoService
+
+export interface NpcShopPurchaseResult {
+  npc_id: number
+  shop_item_id: number
+  item: ItemData
+  quantity: number
+  unit_price: number
+  total_price: number
+  gold: number
+  remaining_stock: number
+}
+
+export interface NpcTrainingUpgradeResult {
+  npc_id: number
+  card: CardData
+  levels: number
+  total_cost: number
+  gold: number
+}
+
 export interface DeckData {
   id: number
   name: string
@@ -200,26 +395,51 @@ export interface BattleData {
   version: number
   current_turn: number
   energy: number
-  player_state: { hp: number; max_hp: number }
+  player_state: { hp: number; max_hp: number; shield?: number }
   enemy_state: { name: string; sprite: string; hp: number; max_hp: number; shield?: number }
   hand_cards: number[]
   draw_pile: number[]
   discard_cards: number[]
   buffs: unknown[]
   debuffs: unknown[]
+  enemy_energy: number
+  enemy_max_energy: number
+  enemy_hand_count: number
+  enemy_draw_count: number
+  enemy_discard_count: number
   last_action?: {
     type: string
-    action_id?: string
     damage?: number
     blocked?: number
     shield?: number
     card_id?: number
+    card_template_id?: number
+    card_name?: string
     battle_line?: string | null
+    cards?: Array<{
+      card_template_id: number
+      name: string
+      type: string
+      cost: number
+      damage: number
+      blocked: number
+      shield: number
+    }>
   }
   result?: string
   reward?: {
+    first_battle?: boolean
     first_victory?: boolean
     card?: { template_id: number; name: string; count: number }
+    fragment?: {
+      template_id: number
+      name: string
+      fragment_delta: number
+      fragment_count: number
+      fragment_target: number
+      can_compose: boolean
+    }
     [key: string]: unknown
   }
+  affection_result?: NpcAffectionChange | null
 }

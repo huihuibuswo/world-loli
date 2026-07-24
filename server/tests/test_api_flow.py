@@ -5,7 +5,14 @@ from sqlalchemy import delete, select
 
 from app.db import SessionLocal
 from app.main import app
-from app.models import Inventory, NpcTemplate, Player, User
+from app.models import (
+    CardSpiritTemplate,
+    Inventory,
+    NpcTemplate,
+    Player,
+    PlayerCardSpirit,
+    User,
+)
 
 
 def _auth(token: str) -> dict[str, str]:
@@ -177,7 +184,8 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
                 npc_response = client.get(f"/api/v1/npc/{map_npc['template_id']}")
                 assert npc_response.status_code == 200
                 npc = npc_response.json()["data"]
-                assert npc["actions"] == ["dialog", "battle"]
+                assert npc["actions"][:2] == ["dialog", "battle"]
+                assert npc["service_type"] in {"shop", "quest", "guide", "training"}
                 assert len(npc["dialogue"]) == 3
                 assert npc["portrait"].startswith("/assets/generated/portraits/")
                 assert npc["battle_deck"]["hp"] > 0
@@ -281,6 +289,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             first_victory = _finish_battle(client, headers_a, first_battle, card_by_id)
             assert first_victory["enemy_state"]["sprite"] == "npc-trainer"
             assert first_victory["reward"] == {
+                "first_battle": True,
                 "first_victory": True,
                 "card": {
                     "template_id": first_victory["reward"]["card"]["template_id"],
@@ -288,6 +297,8 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
                     "count": 1,
                 },
             }
+            assert first_victory["affection_result"]["new_level"] >= 1
+            assert first_victory["affection_result"]["rewards"][0]["milestone_level"] == 1
 
             cards_after_first = client.get("/api/v1/cards", headers=headers_a).json()["data"]
             reward_card = next(card for card in cards_after_first if card["name"] == "破绽识破")
@@ -306,6 +317,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
                 card_by_id,
             )
             assert second_victory["reward"] == {}
+            assert second_victory["affection_result"]["points_gained"] == 5
 
             cards_after_second = client.get("/api/v1/cards", headers=headers_a).json()["data"]
             reward_card_after_second = next(
@@ -315,7 +327,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
 
             save = client.get("/api/v1/save", headers=headers_a)
             assert save.status_code == 200
-            assert save.json()["data"]["player"]["gold"] == 0
+            assert save.json()["data"]["player"]["gold"] == 300
         finally:
             if user_ids:
                 with SessionLocal() as db:
@@ -327,10 +339,15 @@ def test_ai_guard_action_is_server_authoritative(monkeypatch) -> None:
     suffix = uuid4().hex[:10]
     username = f"ai_guard_{suffix}"
     user_id: int | None = None
-    monkeypatch.setattr(
-        "app.api.battle.choose_enemy_action",
-        lambda _: {"action_id": "guard", "battle_line": "先稳住阵脚。"},
-    )
+    def choose_guard_sequence(context: dict) -> dict:
+        guard = next(item for item in context["candidates"] if item["type"] == "defense")
+        attack = next(item for item in context["candidates"] if item["cost"] == 2)
+        return {
+            "card_template_ids": [guard["card_template_id"], attack["card_template_id"]],
+            "battle_line": "先稳住阵脚。",
+        }
+
+    monkeypatch.setattr("app.api.battle.choose_enemy_cards", choose_guard_sequence)
 
     with TestClient(app) as client:
         try:
@@ -357,9 +374,10 @@ def test_ai_guard_action_is_server_authoritative(monkeypatch) -> None:
             )
             assert guarded_response.status_code == 200, guarded_response.text
             guarded = guarded_response.json()["data"]
-            assert guarded["player_state"]["hp"] == hp_before
+            assert guarded["player_state"]["hp"] < hp_before
             assert guarded["enemy_state"]["shield"] > 0
-            assert guarded["last_action"]["action_id"] == "guard"
+            assert guarded["last_action"]["type"] == "enemy_cards"
+            assert any(card["type"] == "defense" for card in guarded["last_action"]["cards"])
             assert guarded["last_action"]["battle_line"] == "先稳住阵脚。"
 
             playable_id = next(
@@ -393,6 +411,19 @@ def test_plant_collection_and_spirit_gift_flow() -> None:
         try:
             token, user_id = _register(client, username)
             headers = _auth(token)
+            with SessionLocal() as db:
+                player_id = db.scalar(select(Player.id).where(Player.user_id == user_id))
+                spirit_template_id = db.scalar(
+                    select(CardSpiritTemplate.id).where(CardSpiritTemplate.name == "狼娘·露娜")
+                )
+                assert player_id is not None and spirit_template_id is not None
+                db.add(
+                    PlayerCardSpirit(
+                        player_id=player_id,
+                        spirit_template_id=spirit_template_id,
+                    )
+                )
+                db.commit()
             profile = client.get("/api/v1/player/profile", headers=headers).json()["data"]
 
             map_plants = client.get(

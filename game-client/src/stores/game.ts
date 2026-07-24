@@ -9,13 +9,21 @@ import type {
   GiftResult,
   MapData,
   MapEnterResult,
+  NpcAffection,
   NpcChatState,
   NpcData,
+  NpcGiftOptions,
+  NpcGiftResult,
+  NpcServiceData,
+  NpcShopPurchaseResult,
+  NpcTrainingUpgradeResult,
   PlantCollectResult,
   PlantData,
   PlantNode,
   PlayerProfile,
   SpiritData,
+  SpiritFragmentData,
+  SpiritComposeResult,
 } from '@/api/types'
 
 export const useGameStore = defineStore('game', () => {
@@ -24,12 +32,17 @@ export const useGameStore = defineStore('game', () => {
   const cards = ref<CardData[]>([])
   const decks = ref<DeckData[]>([])
   const spirits = ref<SpiritData[]>([])
+  const spiritFragments = ref<SpiritFragmentData[]>([])
   const plants = ref<PlantData[]>([])
   const giftOptions = ref<GiftOptions | null>(null)
   const lastGift = ref<GiftResult | null>(null)
   const battle = ref<BattleData | null>(null)
   const dialogNpc = ref<NpcData | null>(null)
   const npcChat = ref<NpcChatState | null>(null)
+  const npcAffection = ref<NpcAffection | null>(null)
+  const npcGiftOptions = ref<NpcGiftOptions | null>(null)
+  const npcLastGift = ref<NpcGiftResult | null>(null)
+  const npcService = ref<NpcServiceData | null>(null)
   const loading = ref(false)
   const actionLoading = ref(false)
   const chatLoading = ref(false)
@@ -62,16 +75,34 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  function emptyNpcAffection(npcId: number): NpcAffection {
+    return {
+      npc_id: npcId,
+      points: 0,
+      level: 1,
+      max_points: 100,
+      current_level_points: 0,
+      next_level_points: 20,
+      points_to_next: 20,
+      level_progress: 0,
+      conversation_count: 0,
+      battle_count: 0,
+      claimed_milestones: [],
+    }
+  }
+
   async function refreshCollections(): Promise<void> {
-    const [nextCards, nextDecks, nextSpirits, nextPlants] = await Promise.all([
+    const [nextCards, nextDecks, nextSpirits, nextFragments, nextPlants] = await Promise.all([
       requestData<CardData[]>(api.get('/cards')),
       requestData<DeckData[]>(api.get('/decks')),
       requestData<SpiritData[]>(api.get('/spirits')),
+      requestData<SpiritFragmentData[]>(api.get('/spirit-fragments')),
       requestData<PlantData[]>(api.get('/plants/inventory')),
     ])
     cards.value = nextCards
     decks.value = nextDecks
     spirits.value = nextSpirits
+    spiritFragments.value = nextFragments
     plants.value = nextPlants
   }
 
@@ -126,7 +157,13 @@ export const useGameStore = defineStore('game', () => {
     try {
       const npc = await requestData<NpcData>(api.get(`/npc/${npcId}`))
       try {
+        npcAffection.value = await requestData<NpcAffection>(api.get(`/npc/${npcId}/affection`))
+      } catch {
+        npcAffection.value = emptyNpcAffection(npc.id)
+      }
+      try {
         npcChat.value = await requestData<NpcChatState>(api.get(`/npc/${npcId}/chat`))
+        npcAffection.value = npcChat.value.affection
       } catch {
         npcChat.value = {
           npc_id: npc.id,
@@ -135,8 +172,21 @@ export const useGameStore = defineStore('game', () => {
           reply: null,
           suggested_replies: npc.ai?.fallback_replies ?? ['继续聊聊', '换个话题'],
           mode: 'static',
+          affection: npcAffection.value ?? emptyNpcAffection(npc.id),
+          affection_change: null,
         }
       }
+      try {
+        npcGiftOptions.value = await requestData<NpcGiftOptions>(api.get(`/npc/${npcId}/gifts`))
+      } catch {
+        npcGiftOptions.value = { remaining_gifts: 0, plants: [], items: [] }
+      }
+      try {
+        npcService.value = await requestData<NpcServiceData>(api.get(`/npc/${npcId}/service`))
+      } catch {
+        npcService.value = { kind: 'none', title: '暂无职业服务', description: '' }
+      }
+      npcLastGift.value = null
       dialogNpc.value = npc
     } catch (cause) {
       error.value = errorMessage(cause)
@@ -148,11 +198,90 @@ export const useGameStore = defineStore('game', () => {
   function closeDialog(): void {
     dialogNpc.value = null
     npcChat.value = null
+    npcAffection.value = null
+    npcGiftOptions.value = null
+    npcLastGift.value = null
+    npcService.value = null
   }
 
   async function refreshNpcChat(): Promise<void> {
     if (!dialogNpc.value) return
     npcChat.value = await requestData<NpcChatState>(api.get(`/npc/${dialogNpc.value.id}/chat`))
+    npcAffection.value = npcChat.value.affection
+  }
+
+  async function refreshNpcService(): Promise<void> {
+    if (!dialogNpc.value) return
+    npcService.value = await requestData<NpcServiceData>(
+      api.get(`/npc/${dialogNpc.value.id}/service`),
+    )
+  }
+
+  async function purchaseNpcItem(shopItemId: number): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      const result = await requestData<NpcShopPurchaseResult>(
+        api.post(`/npc/${dialogNpc.value.id}/shop/purchase`, {
+          shop_item_id: shopItemId,
+          quantity: 1,
+        }),
+      )
+      if (player.value) player.value.gold = result.gold
+      await Promise.all([
+        refreshNpcService(),
+        requestData<NpcGiftOptions>(api.get(`/npc/${dialogNpc.value.id}/gifts`)).then((value) => {
+          npcGiftOptions.value = value
+        }),
+      ])
+      showNotice(`购得 ${result.item.name} ×${result.quantity}`)
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function upgradeNpcCard(cardId: number): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      const result = await requestData<NpcTrainingUpgradeResult>(
+        api.post(`/npc/${dialogNpc.value.id}/training/upgrade`, {
+          card_id: cardId,
+          levels: 1,
+        }),
+      )
+      const index = cards.value.findIndex((card) => card.id === result.card.id)
+      if (index >= 0) cards.value[index] = result.card
+      if (player.value) player.value.gold = result.gold
+      await refreshNpcService()
+      showNotice(`${result.card.name} 提升至 Lv.${result.card.level}`)
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function acceptNpcQuest(questId: number): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      await requestData(api.post(`/quests/${questId}/accept`))
+      await refreshNpcService()
+      showNotice('任务已领取')
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
   }
 
   async function sendNpcChat(message: string): Promise<void> {
@@ -160,13 +289,19 @@ export const useGameStore = defineStore('game', () => {
     chatLoading.value = true
     error.value = ''
     try {
-      npcChat.value = await requestData<NpcChatState>(
+      const nextChat = await requestData<NpcChatState>(
         api.post(`/npc/${dialogNpc.value.id}/chat`, {
           request_id: crypto.randomUUID(),
           message,
           conversation_version: npcChat.value.conversation_version,
         }),
       )
+      npcChat.value = nextChat
+      npcAffection.value = nextChat.affection
+      npcLastGift.value = null
+      if (nextChat.affection_change?.points_gained) {
+        showNotice(`与 ${dialogNpc.value.name} 的好感 +${nextChat.affection_change.points_gained}`)
+      }
     } catch (cause) {
       error.value = errorMessage(cause)
       try {
@@ -186,6 +321,10 @@ export const useGameStore = defineStore('game', () => {
       sessionStorage.setItem('world_battle_id', String(battle.value.battle_id))
       dialogNpc.value = null
       npcChat.value = null
+      npcAffection.value = null
+      npcGiftOptions.value = null
+      npcLastGift.value = null
+      npcService.value = null
     } catch (cause) {
       error.value = errorMessage(cause)
       throw cause
@@ -224,6 +363,7 @@ export const useGameStore = defineStore('game', () => {
           expected_version: battle.value.version,
         }),
       )
+      if (battle.value.status !== 'active') await refreshCollections()
     } catch (cause) {
       error.value = errorMessage(cause)
       await refreshBattle()
@@ -337,6 +477,22 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function composeSpirit(spiritTemplateId: number): Promise<void> {
+    actionLoading.value = true
+    error.value = ''
+    try {
+      const result = await requestData<SpiritComposeResult>(
+        api.post(`/spirit-fragments/${spiritTemplateId}/compose`),
+      )
+      await refreshCollections()
+      showNotice(result.composed ? '卡灵合成成功' : '已经拥有该卡灵')
+    } catch (cause) {
+      error.value = errorMessage(cause)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
   async function collectPlant(nodeId: string): Promise<PlantCollectResult | null> {
     if (!map.value || actionLoading.value) return null
     actionLoading.value = true
@@ -407,18 +563,64 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function giveNpcGift(giftType: 'plant' | 'item', templateId: number): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      const result = await requestData<NpcGiftResult>(
+        api.post(`/npc/${dialogNpc.value.id}/gifts`, giftType === 'plant'
+          ? { plant_template_id: templateId }
+          : { item_template_id: templateId }),
+      )
+      npcLastGift.value = result
+      npcAffection.value = result.affection
+      if (npcChat.value) npcChat.value.affection = result.affection
+      if (giftType === 'plant') {
+        const inventory = plants.value.find((item) => item.id === templateId)
+        if (inventory) inventory.amount = result.remaining_amount
+        plants.value = plants.value.filter((item) => item.amount > 0)
+      }
+      if (npcGiftOptions.value) {
+        npcGiftOptions.value.remaining_gifts = result.remaining_gifts
+        const options = giftType === 'plant'
+          ? npcGiftOptions.value.plants
+          : npcGiftOptions.value.items
+        const option = options.find((item) => item.id === templateId)
+        if (option) option.amount = result.remaining_amount
+        if (giftType === 'plant') {
+          npcGiftOptions.value.plants = npcGiftOptions.value.plants.filter((item) => item.amount > 0)
+        } else {
+          npcGiftOptions.value.items = npcGiftOptions.value.items.filter((item) => item.amount > 0)
+        }
+      }
+      await refreshNpcService()
+      showNotice(`与 ${dialogNpc.value.name} 的好感 +${result.affection_change.points_gained}`)
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
   function reset(): void {
     player.value = null
     map.value = null
     cards.value = []
     decks.value = []
     spirits.value = []
+    spiritFragments.value = []
     plants.value = []
     giftOptions.value = null
     lastGift.value = null
     battle.value = null
     dialogNpc.value = null
     npcChat.value = null
+    npcAffection.value = null
+    npcGiftOptions.value = null
+    npcLastGift.value = null
+    npcService.value = null
     chatLoading.value = false
     mapLoading.value = false
     error.value = ''
@@ -430,12 +632,17 @@ export const useGameStore = defineStore('game', () => {
     cards,
     decks,
     spirits,
+    spiritFragments,
     plants,
     giftOptions,
     lastGift,
     battle,
     dialogNpc,
     npcChat,
+    npcAffection,
+    npcGiftOptions,
+    npcLastGift,
+    npcService,
     loading,
     actionLoading,
     chatLoading,
@@ -448,6 +655,10 @@ export const useGameStore = defineStore('game', () => {
     openNpc,
     closeDialog,
     sendNpcChat,
+    refreshNpcService,
+    purchaseNpcItem,
+    upgradeNpcCard,
+    acceptNpcQuest,
     startBattle,
     playCard,
     endTurn,
@@ -457,9 +668,11 @@ export const useGameStore = defineStore('game', () => {
     saveGame,
     interactWithSpirit,
     levelUpSpirit,
+    composeSpirit,
     collectPlant,
     loadGiftOptions,
     givePlantGift,
+    giveNpcGift,
     reset,
   }
 })

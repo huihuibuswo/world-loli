@@ -1,7 +1,7 @@
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -52,7 +52,7 @@ class AiDialogueOutput(BaseModel):
 class AiBattleOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    action_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9_-]+$")
+    card_template_ids: list[int] = Field(default_factory=list, max_length=20)
     battle_line: str | None = Field(default=None, max_length=200)
 
 
@@ -67,6 +67,27 @@ class PlantCollectRequest(BaseModel):
 
 class SpiritGiftRequest(BaseModel):
     plant_template_id: int = Field(gt=0)
+
+
+class NpcGiftRequest(BaseModel):
+    plant_template_id: int | None = Field(default=None, gt=0)
+    item_template_id: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def validate_gift_kind(self):
+        if (self.plant_template_id is None) == (self.item_template_id is None):
+            raise ValueError("植物或杂货礼物必须且只能选择一种")
+        return self
+
+
+class NpcShopPurchaseRequest(BaseModel):
+    shop_item_id: int = Field(gt=0)
+    quantity: int = Field(default=1, ge=1, le=99)
+
+
+class NpcTrainingUpgradeRequest(BaseModel):
+    card_id: int = Field(gt=0)
+    levels: int = Field(default=1, ge=1, le=10)
 
 
 class SpiritLevelRequest(BaseModel):

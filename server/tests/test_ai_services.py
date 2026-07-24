@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.models import NpcTemplate, Player
 from app.services.ai_client import AiCompletion, AiProviderError, OpenAiCompatibleClient
 from app.services.ai_profile import get_npc_ai_profile
-from app.services.battle_ai_service import choose_enemy_action
+from app.services.battle_ai_service import choose_enemy_cards
 from app.services.npc_ai_service import _append_summary, _generate_reply, normalize_player_message
 
 
@@ -87,13 +87,15 @@ def test_openai_compatible_client_rejects_non_object_json(
         )
 
 
-def test_battle_ai_accepts_only_server_candidate(
+def test_battle_ai_accepts_only_maximal_server_card_sequence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _configure_ai(monkeypatch)
     monkeypatch.setattr(
         "app.services.battle_ai_service.get_ai_client",
-        lambda: FakeAiClient({"action_id": "guard", "battle_line": "先稳住阵脚。"}),
+        lambda: FakeAiClient(
+            {"card_template_ids": [9, 8], "battle_line": "先稳住阵脚。"}
+        ),
     )
     context = {
         "enemy_id": 7,
@@ -104,24 +106,47 @@ def test_battle_ai_accepts_only_server_candidate(
             "current_turn": 2,
             "player_state": {"hp": 80, "max_hp": 100},
             "enemy_state": {"hp": 12, "max_hp": 30, "shield": 0},
+            "enemy_energy": 3,
         },
         "candidates": [
-            {"id": "basic_attack", "description": "攻击", "tags": ["damage"]},
-            {"id": "guard", "description": "防御", "tags": ["defense"]},
+            {
+                "card_template_id": 8,
+                "name": "破绽识破",
+                "cost": 2,
+                "type": "attack",
+                "available_copies": 1,
+            },
+            {
+                "card_template_id": 9,
+                "name": "防御姿态",
+                "cost": 1,
+                "type": "defense",
+                "available_copies": 1,
+            },
         ],
+        "fallback_card_template_ids": [8, 9],
     }
 
-    assert choose_enemy_action(context) == {
-        "action_id": "guard",
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [9, 8],
         "battle_line": "先稳住阵脚。",
     }
 
     monkeypatch.setattr(
         "app.services.battle_ai_service.get_ai_client",
-        lambda: FakeAiClient({"action_id": "invent_reward", "battle_line": "送你奖励。"}),
+        lambda: FakeAiClient({"card_template_ids": [999], "battle_line": "送你奖励。"}),
     )
-    assert choose_enemy_action(context) == {
-        "action_id": "basic_attack",
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [8, 9],
+        "battle_line": None,
+    }
+
+    monkeypatch.setattr(
+        "app.services.battle_ai_service.get_ai_client",
+        lambda: FakeAiClient({"card_template_ids": [8], "battle_line": "还没出完。"}),
+    )
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [8, 9],
         "battle_line": None,
     }
 
@@ -129,8 +154,8 @@ def test_battle_ai_accepts_only_server_candidate(
         "app.services.battle_ai_service.get_ai_client",
         lambda: FailingAiClient(),
     )
-    assert choose_enemy_action(context) == {
-        "action_id": "basic_attack",
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [8, 9],
         "battle_line": None,
     }
 

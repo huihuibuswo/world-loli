@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, BookOpen, Gift, Heart, Layers3, Leaf, Sparkles, TrendingUp, X } from 'lucide-vue-next'
+import CardDetailModal from '@/components/CardDetailModal.vue'
 import { useGameStore } from '@/stores/game'
-import type { SpiritData } from '@/api/types'
+import type { CardData, SpiritData } from '@/api/types'
 
 defineEmits<{ close: [] }>()
 const game = useGameStore()
 const tab = ref<'cards' | 'spirits' | 'plants' | 'deck'>('cards')
 const selectedSpiritId = ref<number | null>(null)
+const selectedCard = ref<CardData | null>(null)
 const selectedSpirit = computed(() => game.spirits.find((spirit) => spirit.id === selectedSpiritId.value) ?? null)
+const unownedFragments = computed(() => game.spiritFragments.filter((fragment) => fragment.owned_spirit_id === null))
 const clock = ref(Date.now())
 let clockTimer: number | null = null
 
@@ -26,7 +29,10 @@ const interactionLabel = computed(() => {
   return '陪伴交谈'
 })
 
-watch(tab, () => { selectedSpiritId.value = null })
+watch(tab, () => {
+  selectedSpiritId.value = null
+  selectedCard.value = null
+})
 
 onMounted(() => {
   clockTimer = window.setInterval(() => { clock.value = Date.now() }, 1000)
@@ -109,15 +115,27 @@ function openSpirit(spiritId: number): void {
         <div class="growth-story"><p class="eyebrow">SPIRIT STORY</p><p>{{ selectedSpirit.story }}</p><dl><div><dt>基础技能</dt><dd>{{ skillName(selectedSpirit.base_skill) }}</dd></div><div><dt>觉醒技能</dt><dd>{{ skillName(selectedSpirit.awakening_skill) }}</dd></div></dl></div>
       </section>
       <div v-else class="collection-grid" role="tabpanel">
-        <article v-for="card in tab === 'cards' ? game.cards : []" :key="card.id" class="collection-item">
+        <button v-for="card in tab === 'cards' ? game.cards : []" :key="card.id" class="collection-item card" type="button" @click="selectedCard = card">
           <img class="collection-art" :src="card.source_spirit_id ? '/assets/generated/portraits/luna.webp' : '/assets/generated/cards/basic-attack.webp'" alt="">
           <span class="rarity">{{ card.rarity }}</span><strong>{{ card.name }}</strong><small>{{ card.type }} · 费用 {{ card.cost }}</small><p>持有 ×{{ card.count }}</p>
-        </article>
+          <span class="spirit-open">查看详情</span>
+        </button>
         <button v-for="spirit in tab === 'spirits' ? game.spirits : []" :key="spirit.id" class="collection-item spirit" type="button" @click="openSpirit(spirit.id)">
           <img class="collection-art" :src="spirit.avatar || '/assets/generated/portraits/luna.webp'" alt="">
           <span class="rarity">{{ spirit.rarity }}</span><strong>{{ spirit.name }}</strong><small>{{ spirit.race }} · Lv.{{ spirit.level }}</small><p>羁绊 {{ spirit.affection }}</p>
           <span class="spirit-open">查看养成</span>
         </button>
+        <article v-for="fragment in tab === 'spirits' ? unownedFragments : []" :key="`fragment-${fragment.template_id}`" class="collection-item spirit-fragment">
+          <img class="collection-art" :src="fragment.avatar || '/assets/generated/portraits/luna.webp'" alt="">
+          <span class="rarity">{{ rarityLabel(fragment.rarity) }}</span><strong>{{ fragment.name }}</strong><small>{{ fragment.race }} · 尚未获得</small>
+          <div class="fragment-progress">
+            <div><span>卡灵碎片</span><strong>{{ fragment.fragment_count }} / {{ fragment.fragment_target }}</strong></div>
+            <div class="fragment-track" role="progressbar" aria-label="卡灵碎片进度" aria-valuemin="0" :aria-valuemax="fragment.fragment_target" :aria-valuenow="fragment.fragment_count"><i :style="{ width: `${Math.min(100, fragment.fragment_count / fragment.fragment_target * 100)}%` }" /></div>
+          </div>
+          <button class="button primary fragment-compose" type="button" :disabled="game.actionLoading || !fragment.can_compose" @click="game.composeSpirit(fragment.template_id)">
+            <Sparkles :size="16" />{{ fragment.can_compose ? '合成卡灵' : `还需 ${fragment.fragment_target - fragment.fragment_count} 枚` }}
+          </button>
+        </article>
         <article v-for="plant in tab === 'plants' ? game.plants : []" :key="plant.id" class="collection-item plant-item">
           <div class="plant-art" :data-rarity="plant.rarity"><img v-if="plant.icon" :src="plant.icon" alt="" loading="lazy"><template v-else><Leaf :size="34" /><span>{{ plant.name.slice(0, 1) }}</span></template></div>
           <span class="rarity">{{ rarityLabel(plant.rarity) }}</span><strong>{{ plant.name }}</strong>
@@ -130,8 +148,9 @@ function openSpirit(spiritId: number): void {
             <ul><li v-for="card in deck.cards" :key="card.card_id">{{ card.name }} <span>×{{ card.amount }}</span></li></ul>
           </article>
         </template>
-        <p v-if="(tab === 'cards' && !game.cards.length) || (tab === 'spirits' && !game.spirits.length) || (tab === 'plants' && !game.plants.length) || (tab === 'deck' && !game.decks.length)" class="empty-state">这里还没有记录，继续冒险吧。</p>
+        <p v-if="(tab === 'cards' && !game.cards.length) || (tab === 'spirits' && !game.spirits.length && !unownedFragments.length) || (tab === 'plants' && !game.plants.length) || (tab === 'deck' && !game.decks.length)" class="empty-state">这里还没有记录，继续冒险吧。</p>
       </div>
     </aside>
+    <CardDetailModal v-if="selectedCard" :card="selectedCard" @close="selectedCard = null" />
   </div>
 </template>

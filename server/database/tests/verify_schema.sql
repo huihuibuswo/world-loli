@@ -94,6 +94,95 @@ BEGIN
 END
 $verify_ai$;
 
+DO $verify_npc_affection$
+DECLARE
+    owner_a_player_id BIGINT;
+    owner_a_npc_id BIGINT;
+    owner_a_card_id BIGINT;
+    owner_a_plant_id BIGINT;
+BEGIN
+    SELECT id INTO owner_a_player_id
+    FROM players WHERE name = 'schema_owner_a';
+
+    SELECT id, (reward->>'first_victory_card_template_id')::BIGINT
+    INTO owner_a_npc_id, owner_a_card_id
+    FROM npc_templates
+    WHERE reward ? 'first_victory_card_template_id'
+    ORDER BY id
+    LIMIT 1;
+
+    SELECT id INTO owner_a_plant_id
+    FROM plant_templates ORDER BY id LIMIT 1;
+
+    INSERT INTO player_npc_affection (player_id, npc_id, points)
+    VALUES (owner_a_player_id, owner_a_npc_id, 1);
+
+    INSERT INTO player_npc_affection_rewards (
+        player_id, npc_id, milestone_level, reward_type, card_template_id
+    )
+    VALUES (owner_a_player_id, owner_a_npc_id, 1, 'card', owner_a_card_id);
+
+    BEGIN
+        INSERT INTO player_npc_affection_rewards (
+            player_id, npc_id, milestone_level, reward_type, card_template_id
+        )
+        VALUES (owner_a_player_id, owner_a_npc_id, 1, 'card', owner_a_card_id);
+        RAISE EXCEPTION 'duplicate NPC affection milestone was unexpectedly accepted';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RAISE NOTICE 'duplicate NPC affection milestone correctly rejected';
+    END;
+
+    INSERT INTO npc_gift_records (
+        player_id, npc_id, plant_template_id, preference, affection_gained
+    )
+    VALUES (owner_a_player_id, owner_a_npc_id, owner_a_plant_id, 'liked', 2);
+END
+$verify_npc_affection$;
+
+DO $verify_spirit_fragments$
+DECLARE
+    owner_a_player_id BIGINT;
+    owner_a_spirit_template_id BIGINT;
+BEGIN
+    SELECT id INTO owner_a_player_id
+    FROM players WHERE name = 'schema_owner_a';
+
+    SELECT id INTO owner_a_spirit_template_id
+    FROM card_spirit_templates ORDER BY id LIMIT 1;
+
+    INSERT INTO player_card_spirit_fragments (player_id, spirit_template_id, amount)
+    VALUES (owner_a_player_id, owner_a_spirit_template_id, 29);
+
+    BEGIN
+        INSERT INTO player_card_spirit_fragments (player_id, spirit_template_id, amount)
+        VALUES (owner_a_player_id, owner_a_spirit_template_id, 1);
+        RAISE EXCEPTION 'duplicate player/spirit fragment progress was unexpectedly accepted';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RAISE NOTICE 'duplicate player/spirit fragment progress correctly rejected';
+    END;
+
+    BEGIN
+        INSERT INTO player_card_spirit_fragments (player_id, spirit_template_id, amount)
+        VALUES (owner_a_player_id, owner_a_spirit_template_id, -1);
+        RAISE EXCEPTION 'negative spirit fragment amount was unexpectedly accepted';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'negative spirit fragment amount correctly rejected';
+    END;
+
+    IF EXISTS (
+        SELECT 1
+        FROM npc_templates
+        WHERE name IN ('晨曦村村长', '杂货商', '铁匠少女苏娜', '森林向导', '训练教官')
+          AND jsonb_array_length(COALESCE(battle_deck->'cards', '[]'::JSONB)) < 1
+    ) THEN
+        RAISE EXCEPTION 'one or more battle NPC decks are missing cards';
+    END IF;
+END
+$verify_spirit_fragments$;
+
 ROLLBACK;
 
 SELECT COUNT(*) AS public_table_count
