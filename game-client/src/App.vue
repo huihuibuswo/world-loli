@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, watch } from 'vue'
+import AppDialog from '@/components/AppDialog.vue'
 import AuthPanel from '@/components/AuthPanel.vue'
 import { useSessionStore } from '@/stores/session'
 import { useGameStore } from '@/stores/game'
@@ -49,4 +50,5 @@ watch(() => session.authenticated, (authenticated) => {
       <button class="button ghost" type="button" @click="logout">返回登录</button>
     </section>
   </main>
+  <AppDialog />
 </template>

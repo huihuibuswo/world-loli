@@ -6,7 +6,15 @@ from sqlalchemy import delete, select
 from app.core.config import settings
 from app.db import SessionLocal
 from app.main import app
-from app.models import NpcTemplate, PlayerQuest, Quest, User
+from app.models import (
+    NpcTemplate,
+    PlayerCardSpiritFragment,
+    PlayerQuest,
+    PlayerStoryProgress,
+    Quest,
+    User,
+)
+from app.services.opening_story_service import mark_opening_battle_complete
 
 
 def _register(client: TestClient, username: str) -> tuple[dict[str, str], int, int]:
@@ -145,22 +153,97 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             assert entered.status_code == 200, entered.text
 
             cards = client.get("/api/v1/cards", headers=headers).json()["data"]
+            assert {card["name"]: card["count"] for card in cards} == {
+                "基础攻击": 6,
+                "防御姿态": 6,
+            }
             card_by_id = {card["id"]: card for card in cards}
+
+            abandoned = client.post(
+                "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers
+            )
+            assert abandoned.status_code == 201, abandoned.text
+            abandoned_data = abandoned.json()["data"]
+            surrendered = client.post(
+                f"/api/v1/battle/{abandoned_data['battle_id']}/surrender",
+                json={"expected_version": abandoned_data["version"]},
+                headers=headers,
+            )
+            assert surrendered.status_code == 200, surrendered.text
+            surrendered_data = surrendered.json()["data"]
+            assert surrendered_data["status"] == "defeat"
+            assert surrendered_data["defeat_reason"] == "surrender"
+            assert surrendered_data["reward"] == {}
+            assert client.get("/api/v1/opening", headers=headers).json()["data"]["stage"] == "forest_signal"
+            assert client.get("/api/v1/spirits", headers=headers).json()["data"] == []
+
             created = client.post(
                 "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers
             )
             assert created.status_code == 201, created.text
             victory = _finish_battle(client, headers, created.json()["data"], card_by_id)
             assert victory["status"] == "victory"
-            assert victory["reward"]["fragment"] == {
-                "template_id": victory["reward"]["fragment"]["template_id"],
-                "name": "狼娘·露娜",
-                "fragment_delta": 3,
-                "fragment_count": 3,
-                "fragment_target": 30,
-                "can_compose": False,
+            assert "fragment" not in victory["reward"]
+            opening_reward = victory["reward"]["opening"]
+            assert opening_reward["stage"] == "return_village"
+            assert opening_reward["event"] == "luna_contract"
+            assert len(opening_reward["dialogue"]) == 5
+            assert opening_reward["contract_reward"]["spirit"]["name"] == "狼娘·露娜"
+            assert opening_reward["contract_reward"]["spirit"]["created"] is True
+            assert opening_reward["contract_reward"]["card"] == {
+                "id": opening_reward["contract_reward"]["card"]["id"],
+                "template_id": opening_reward["contract_reward"]["card"]["template_id"],
+                "name": "月牙撕裂",
+                "count": 2,
+                "deck_amount": 2,
+                "added_to_active_deck": True,
             }
-            assert victory["reward"]["opening"]["stage"] == "return_village"
+
+            cards_after = client.get("/api/v1/cards", headers=headers).json()["data"]
+            assert {card["name"]: card["count"] for card in cards_after} == {
+                "基础攻击": 6,
+                "防御姿态": 6,
+                "月牙撕裂": 2,
+            }
+            deck_after = client.get("/api/v1/decks", headers=headers).json()["data"][0]
+            assert {card["name"]: card["amount"] for card in deck_after["cards"]} == {
+                "基础攻击": 6,
+                "防御姿态": 6,
+                "月牙撕裂": 2,
+            }
+            assert [
+                spirit["name"]
+                for spirit in client.get("/api/v1/spirits", headers=headers).json()["data"]
+            ] == ["狼娘·露娜"]
+            assert client.get("/api/v1/spirit-fragments", headers=headers).json()["data"] == []
+
+            with SessionLocal() as db:
+                luna = db.get(NpcTemplate, luna_id)
+                assert luna is not None
+                repeated_reward = mark_opening_battle_complete(db, player_id, luna, "victory")
+                db.commit()
+                assert repeated_reward is not None
+                assert repeated_reward["contract_reward"]["spirit"]["created"] is False
+                assert (
+                    repeated_reward["contract_reward"]["card"]["added_to_active_deck"]
+                    is False
+                )
+                progress = db.scalar(
+                    select(PlayerStoryProgress).where(
+                        PlayerStoryProgress.player_id == player_id,
+                        PlayerStoryProgress.story_key == "opening_moon_scar",
+                    )
+                )
+                assert progress is not None
+                assert progress.data_json["luna_contract_completed"] is True
+                assert db.scalar(
+                    select(PlayerCardSpiritFragment).where(
+                        PlayerCardSpiritFragment.player_id == player_id
+                    )
+                ) is None
+
+            repeated_cards = client.get("/api/v1/cards", headers=headers).json()["data"]
+            assert next(card for card in repeated_cards if card["name"] == "月牙撕裂")["count"] == 2
 
             wrong_map = client.post("/api/v1/opening/complete", headers=headers)
             assert wrong_map.status_code == 409

@@ -26,6 +26,14 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 256,
       frameHeight: 256,
     })
+    this.load.spritesheet('player-female-defense', `${root}/sprites/adventurer-female-defense-sheet.png`, {
+      frameWidth: 313,
+      frameHeight: 313,
+    })
+    this.load.spritesheet('player-male-defense', `${root}/sprites/adventurer-male-defense-sheet.png`, {
+      frameWidth: 256,
+      frameHeight: 256,
+    })
     this.load.image('obstacle', `${root}/sprites/forest-obstacle.png`)
     this.load.image('forest-stump', `${root}/sprites/forest-stump.png`)
     this.load.image('ancient-forest-tree', `${root}/sprites/ancient-forest-tree.png`)
@@ -41,7 +49,21 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('npc-suna', `${root}/sprites/npc-suna.png`)
     this.load.image('npc-forest-guide', `${root}/sprites/npc-forest-guide.png`)
     this.load.image('npc-trainer', `${root}/sprites/npc-trainer.png`)
-    this.load.image('npc-luna', `${root}/portraits/luna.webp`)
+    this.load.image('npc-luna', `${root}/sprites/npc-luna.png`)
+    const enemyCombatTextures = [
+      'npc-village-chief',
+      'npc-shopkeeper',
+      'npc-suna',
+      'npc-forest-guide',
+      'npc-trainer',
+      'npc-luna',
+    ] as const
+    enemyCombatTextures.forEach((key) => {
+      this.load.spritesheet(`${key}-combat`, `${root}/sprites/${key}-combat-sheet.png`, {
+        frameWidth: 256,
+        frameHeight: 256,
+      })
+    })
     const plantRoot = `${root}/sprites/plants`
     const plantTextures = [
       'plant-morning-dew-grass',
@@ -82,6 +104,40 @@ export class PreloadScene extends Phaser.Scene {
         this.anims.create({
           key: `${combatTexture}-${name}`,
           frames: this.anims.generateFrameNumbers(combatTexture, { frames }),
+          frameRate,
+          repeat: 0,
+        })
+      })
+      const defenseTexture = `player-${gender}-defense`
+      if (this.textures.exists(defenseTexture)) {
+        this.anims.create({
+          key: `${combatTexture}-defense`,
+          frames: this.anims.generateFrameNumbers(defenseTexture, { frames: [0, 1, 2, 3] }),
+          frameRate: 8,
+          repeat: 0,
+        })
+      }
+    }
+    for (const texture of [
+      'npc-village-chief-combat',
+      'npc-shopkeeper-combat',
+      'npc-suna-combat',
+      'npc-forest-guide-combat',
+      'npc-trainer-combat',
+      'npc-luna-combat',
+    ]) {
+      if (!this.textures.exists(texture)) continue
+      const actions = [
+        { name: 'attack', start: 0, frameRate: 10 },
+        { name: 'defense', start: 4, frameRate: 8 },
+        { name: 'hit', start: 8, frameRate: 10 },
+        { name: 'death', start: 12, frameRate: 8 },
+        { name: 'victory', start: 16, frameRate: 7 },
+      ]
+      actions.forEach(({ name, start, frameRate }) => {
+        this.anims.create({
+          key: `${texture}-${name}`,
+          frames: this.anims.generateFrameNumbers(texture, { start, end: start + 3 }),
           frameRate,
           repeat: 0,
         })

@@ -344,6 +344,38 @@ export interface OpeningStory {
   completed_now?: boolean
   gold_reward?: number
   main_quest?: string
+  contract_reward?: LunaContractReward
+}
+
+export interface StoryDialogueLine {
+  speaker: string
+  text: string
+}
+
+export interface LunaContractReward {
+  spirit: {
+    id: number
+    template_id: number
+    name: string
+    created: boolean
+  }
+  card: {
+    id: number
+    template_id: number
+    name: string
+    count: number
+    deck_amount: number
+    added_to_active_deck: boolean
+  }
+}
+
+export interface OpeningBattleReward {
+  story_key: string
+  stage: OpeningStage
+  event?: 'luna_contract'
+  message?: string
+  dialogue?: StoryDialogueLine[]
+  contract_reward?: LunaContractReward
 }
 
 export interface NpcQuestService {
@@ -482,6 +514,7 @@ export interface BattleData {
       fragment_target: number
       can_compose: boolean
     }
+    opening?: OpeningBattleReward
     [key: string]: unknown
   }
   affection_result?: NpcAffectionChange | null

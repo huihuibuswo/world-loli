@@ -30,8 +30,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 STARTER_DECK = {
     "基础攻击": 6,
-    "防御姿态": 4,
-    "月牙撕裂": 2,
+    "防御姿态": 6,
 }
 
 

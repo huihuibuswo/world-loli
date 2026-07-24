@@ -172,7 +172,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 <template>
   <div class="gal-dialog-backdrop">
     <section ref="dialogRoot" class="gal-dialog" role="dialog" aria-modal="true" :aria-labelledby="`npc-${npc.id}`" tabindex="-1">
-      <aside v-if="conversationComplete" class="gal-response-panel" aria-label="玩家回应">
+      <div class="gal-dialog-frame">
+        <aside v-if="conversationComplete" class="gal-response-panel" aria-label="玩家回应">
         <header>
           <div>
             <p class="eyebrow">与 {{ npc.name }} 互动</p>
@@ -313,9 +314,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
           <p v-else class="empty-state">{{ service?.description || '当前没有可用服务。' }}</p>
         </div>
-      </aside>
+        </aside>
 
-      <div class="gal-dialog-frame">
         <div class="gal-portrait-stage">
           <img :src="portraitSrc" :alt="`${npc.name}的角色立绘`" @error="useFallbackPortrait">
         </div>

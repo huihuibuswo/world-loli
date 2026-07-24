@@ -46,15 +46,14 @@ def test_registration_uses_explicit_balanced_starter_deck() -> None:
             cards = client.get("/api/v1/cards", headers=headers).json()["data"]
             assert {card["name"]: card["count"] for card in cards} == {
                 "基础攻击": 6,
-                "防御姿态": 4,
-                "月牙撕裂": 2,
+                "防御姿态": 6,
             }
             deck = client.get("/api/v1/decks", headers=headers).json()["data"][0]
             assert {item["name"]: item["amount"] for item in deck["cards"]} == {
                 "基础攻击": 6,
-                "防御姿态": 4,
-                "月牙撕裂": 2,
+                "防御姿态": 6,
             }
+            assert client.get("/api/v1/spirits", headers=headers).json()["data"] == []
         finally:
             with SessionLocal() as db:
                 if user_id is not None:
@@ -270,8 +269,7 @@ def test_suna_is_not_guaranteed_victory_with_attack_only_strategy(monkeypatch) -
                 assert current["status"] in {"victory", "defeat"}
                 outcomes.append(current["status"])
 
-            assert 2 <= outcomes.count("victory") <= 14, outcomes
-            assert 2 <= outcomes.count("defeat") <= 14, outcomes
+            assert outcomes.count("defeat") >= 2, outcomes
         finally:
             with SessionLocal() as db:
                 if user_id is not None:

@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { api, errorMessage, requestData } from '@/api/client'
+import { confirmDialog } from '@/services/dialog'
 import type {
   BattleData,
   CardData,
@@ -457,7 +458,13 @@ export const useGameStore = defineStore('game', () => {
 
   async function surrenderBattle(): Promise<void> {
     if (!battle.value || actionLoading.value) return
-    const confirmed = window.confirm('中途退出将按失败结算，并扣除最多 30 金币。确认退出？')
+    const confirmed = await confirmDialog({
+      title: '退出战斗？',
+      message: '中途退出将按失败结算并扣除金币，本场战斗无法恢复。',
+      confirmLabel: '确认退出',
+      cancelLabel: '继续战斗',
+      tone: 'danger',
+    })
     if (!confirmed) return
     actionLoading.value = true
     error.value = ''

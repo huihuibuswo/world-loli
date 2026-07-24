@@ -376,12 +376,13 @@ def _complete_battle(
             target_name_field="npc_name",
             target_name=enemy.name,
         )
-        fragment_reward = grant_monster_fragments(db, player.id, enemy)
-        if fragment_reward is not None:
-            reward["fragment"] = fragment_reward
         opening_reward = mark_opening_battle_complete(db, player.id, enemy, result)
         if opening_reward is not None:
             reward["opening"] = opening_reward
+        else:
+            fragment_reward = grant_monster_fragments(db, player.id, enemy)
+            if fragment_reward is not None:
+                reward["fragment"] = fragment_reward
     elif result == "defeat":
         gold_before = max(0, int(player.gold))
         gold_lost = min(gold_before, DEFEAT_GOLD_PENALTY)

@@ -241,7 +241,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200
             cards = cards_response.json()["data"]
-            assert len(cards) == 3
+            assert len(cards) == 2
             card_by_id = {card["id"]: card for card in cards}
 
             decks_response = client.get("/api/v1/decks", headers=headers_a)
@@ -249,7 +249,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             decks = decks_response.json()["data"]
             assert len(decks) == 1
             assert decks[0]["is_active"] is True
-            assert len(decks[0]["cards"]) == 3
+            assert len(decks[0]["cards"]) == 2
             assert sum(item["amount"] for item in decks[0]["cards"]) == 12
 
             with SessionLocal() as db:

@@ -1,3 +1,18 @@
+export type BattleVisualStep = {
+  actor: 'player' | 'enemy'
+  kind: 'attack' | 'defense'
+  damage: number
+  blocked: number
+  shield: number
+  targetDefeated: boolean
+}
+
+export type BattleVisualSequence = {
+  version: number
+  steps: BattleVisualStep[]
+  result: 'active' | 'victory' | 'defeat' | 'abandoned'
+}
+
 export type GameEventMap = {
   'world:ready': undefined
   'player:moved': { x: number; y: number }
@@ -13,12 +28,8 @@ export type GameEventMap = {
   'world:input-lock': { locked: boolean }
   'scene:world': undefined
   'scene:battle': { enemyName: string; enemySprite: string }
-  'battle:action': {
-    damage: number
-    target: 'enemy' | 'player'
-    targetDefeated: boolean
-    result: 'active' | 'victory' | 'defeat' | 'abandoned'
-  }
+  'battle:action': BattleVisualSequence
+  'battle:visual-complete': { version: number }
 }
 
 type Handler<T> = (payload: T) => void
