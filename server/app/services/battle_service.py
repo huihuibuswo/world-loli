@@ -1,5 +1,9 @@
 from collections import Counter
 from copy import deepcopy
+from hashlib import sha256
+from math import isfinite
+from random import Random
+from secrets import randbits
 from typing import Any
 
 from sqlalchemy import select
@@ -20,11 +24,16 @@ from app.models import (
 from app.services.ai_profile import get_npc_ai_profile
 from app.services.card_spirit_service import grant_monster_fragments
 from app.services.npc_affection_service import apply_affection
+from app.services.opening_story_service import (
+    mark_opening_battle_complete,
+    validate_story_battle,
+)
 from app.services.quest_progress_service import record_quest_objective
 
 
 MAX_EFFECT_VALUE = 1_000_000
 MAX_ENEMY_DECK_SIZE = 60
+DEFEAT_GOLD_PENALTY = 30
 SUPPORTED_EFFECTS = {"damage", "shield"}
 
 
@@ -33,6 +42,9 @@ def battle_data(battle: ActiveBattle) -> dict[str, Any]:
     enemy_hand = state.pop("enemy_hand_cards", [])
     enemy_draw = state.pop("enemy_draw_pile", [])
     enemy_discard = state.pop("enemy_discard_cards", [])
+    state.pop("battle_seed", None)
+    state.pop("player_shuffle_count", None)
+    state.pop("enemy_shuffle_count", None)
     state["enemy_hand_count"] = len(enemy_hand) if isinstance(enemy_hand, list) else 0
     state["enemy_draw_count"] = len(enemy_draw) if isinstance(enemy_draw, list) else 0
     state["enemy_discard_count"] = len(enemy_discard) if isinstance(enemy_discard, list) else 0
@@ -51,6 +63,16 @@ def _bounded_int(value: Any, *, minimum: int = 0, maximum: int = MAX_EFFECT_VALU
     except (TypeError, ValueError):
         return minimum
     return max(minimum, min(parsed, maximum))
+
+
+def _bounded_weight(value: Any, default: float = 1.0) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return default
+    if not isfinite(parsed):
+        return default
+    return max(0.0, min(parsed, 10.0))
 
 
 def _validated_enemy_deck(
@@ -103,6 +125,21 @@ def _validated_enemy_deck(
     return config, expanded, templates
 
 
+def _shuffle_pile(state: dict[str, Any], pile_key: str, side: str) -> None:
+    seed = state.get("battle_seed")
+    pile = state[pile_key]
+    if isinstance(seed, bool) or not isinstance(seed, int) or not isinstance(pile, list):
+        return
+    counter_key = f"{side}_shuffle_count"
+    shuffle_count = _bounded_int(state.get(counter_key, 0), maximum=MAX_EFFECT_VALUE)
+    derived_seed = int.from_bytes(
+        sha256(f"{seed}:{side}:{shuffle_count}".encode("ascii")).digest()[:8],
+        "big",
+    )
+    Random(derived_seed).shuffle(pile)
+    state[counter_key] = shuffle_count + 1
+
+
 def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
     hand = state["hand_cards"]
     draw = state["draw_pile"]
@@ -113,6 +150,7 @@ def _draw_to_hand(state: dict[str, Any], size: int = 5) -> None:
                 break
             draw.extend(discard)
             discard.clear()
+            _shuffle_pile(state, "draw_pile", "player")
         hand.append(draw.pop(0))
 
 
@@ -127,6 +165,7 @@ def _draw_enemy_to_hand(state: dict[str, Any]) -> None:
                 break
             draw.extend(discard)
             discard.clear()
+            _shuffle_pile(state, "enemy_draw_pile", "enemy")
         hand.append(draw.pop(0))
 
 
@@ -210,6 +249,7 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
     enemy = db.get(NpcTemplate, enemy_id)
     if enemy is None:
         abort(404, "敌人不存在")
+    validate_story_battle(db, player, enemy)
     enemy_config, enemy_deck, _ = _validated_enemy_deck(db, enemy)
     active_deck = db.scalar(
         select(Deck).where(Deck.player_id == player.id, Deck.is_active.is_(True))
@@ -230,6 +270,9 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
 
     enemy_hp = _bounded_int(enemy_config.get("hp", 30), minimum=1)
     state: dict[str, Any] = {
+        "battle_seed": randbits(63),
+        "player_shuffle_count": 0,
+        "enemy_shuffle_count": 0,
         "current_turn": 1,
         "energy": 3,
         "player_state": {"hp": player.hp, "max_hp": player.hp, "shield": 0},
@@ -257,6 +300,8 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
             {template.source_spirit_id for _, _, template in deck_rows if template.source_spirit_id}
         ),
     }
+    _shuffle_pile(state, "draw_pile", "player")
+    _shuffle_pile(state, "enemy_draw_pile", "enemy")
     _draw_to_hand(state)
     _draw_enemy_to_hand(state)
     battle = ActiveBattle(player_id=player.id, enemy_id=enemy.id, state_json=state)
@@ -291,13 +336,16 @@ def _complete_battle(
     battle: ActiveBattle,
     player: Player,
     result: str,
+    *,
+    defeat_reason: str | None = None,
 ) -> None:
     enemy = db.get(NpcTemplate, battle.enemy_id)
     reward: dict[str, Any] = {}
+    penalty: dict[str, Any] | None = None
     is_monster = enemy is not None and (enemy.battle_deck or {}).get("monster_rank") is not None
     affection_result = (
         apply_affection(db, player.id, enemy, "battle")
-        if enemy is not None and not is_monster
+        if result == "victory" and enemy is not None and not is_monster
         else None
     )
     if affection_result is not None:
@@ -331,20 +379,34 @@ def _complete_battle(
         fragment_reward = grant_monster_fragments(db, player.id, enemy)
         if fragment_reward is not None:
             reward["fragment"] = fragment_reward
+        opening_reward = mark_opening_battle_complete(db, player.id, enemy, result)
+        if opening_reward is not None:
+            reward["opening"] = opening_reward
+    elif result == "defeat":
+        gold_before = max(0, int(player.gold))
+        gold_lost = min(gold_before, DEFEAT_GOLD_PENALTY)
+        player.gold = gold_before - gold_lost
+        penalty = {
+            "gold_lost": gold_lost,
+            "gold_remaining": player.gold,
+        }
 
     battle.status = result
     state = deepcopy(battle.state_json)
     state["result"] = result
     state["reward"] = reward
+    state["penalty"] = penalty
+    state["defeat_reason"] = defeat_reason if result == "defeat" else None
     state["affection_result"] = affection_result
     battle.state_json = state
+    record_settlement = reward if penalty is None else {"penalty": penalty}
     db.add(
         BattleRecord(
             player_id=player.id,
             enemy_id=battle.enemy_id,
             result=result,
             turn_count=int(state["current_turn"]),
-            reward_json=reward,
+            reward_json=record_settlement,
         )
     )
 
@@ -445,15 +507,33 @@ def deterministic_enemy_sequence(
     hand_cards: list[int],
     energy: int,
     templates: dict[int, CardTemplate],
+    state: dict[str, Any] | None = None,
+    action_weights: dict[str, Any] | None = None,
 ) -> list[int]:
     remaining = list(hand_cards)
     sequence: list[int] = []
     available_energy = energy
+    weights = action_weights if isinstance(action_weights, dict) else {}
+    damage_weight = _bounded_weight(weights.get("damage"))
+    shield_weight = _bounded_weight(weights.get("shield"))
+    player_state = (state or {}).get("player_state", {})
+    player_effective_hp = _bounded_int(player_state.get("hp", 0)) + _bounded_int(
+        player_state.get("shield", 0)
+    )
     while True:
         playable = [templates[card_id] for card_id in remaining if templates[card_id].cost <= available_energy]
         if not playable:
             return sequence
-        chosen = min(playable, key=lambda template: (-template.cost, template.id))
+
+        def score(template: CardTemplate) -> tuple[float, int, int]:
+            effect = template.effect_json or {}
+            damage = _bounded_int(effect.get("damage", 0))
+            shield = _bounded_int(effect.get("shield", 0))
+            lethal_bonus = 1_000_000 if damage > 0 and damage >= player_effective_hp else 0
+            value = lethal_bonus + damage * damage_weight + shield * shield_weight
+            return value, template.cost, -template.id
+
+        chosen = max(playable, key=score)
         sequence.append(chosen.id)
         remaining.remove(chosen.id)
         available_energy -= chosen.cost
@@ -494,8 +574,13 @@ def prepare_enemy_turn(
     templates = _ensure_enemy_deck_state(db, enemy, state)
     state["enemy_energy"] = state["enemy_max_energy"]
     profile = get_npc_ai_profile(enemy)
+    action_weights = (enemy.battle_deck or {}).get("action_weights")
     fallback = deterministic_enemy_sequence(
-        state["enemy_hand_cards"], state["enemy_energy"], templates
+        state["enemy_hand_cards"],
+        state["enemy_energy"],
+        templates,
+        state,
+        action_weights,
     )
     return {
         "battle_id": battle.id,
@@ -534,7 +619,11 @@ def end_turn(
         templates,
     )
     sequence = requested if requested_valid else deterministic_enemy_sequence(
-        state["enemy_hand_cards"], state["enemy_energy"], templates
+        state["enemy_hand_cards"],
+        state["enemy_energy"],
+        templates,
+        state,
+        (enemy.battle_deck or {}).get("action_weights"),
     )
     if not requested_valid:
         battle_line = None
@@ -576,7 +665,7 @@ def end_turn(
     if state["player_state"]["hp"] == 0:
         battle.state_json = state
         battle.version += 1
-        _complete_battle(db, battle, player, "defeat")
+        _complete_battle(db, battle, player, "defeat", defeat_reason="knockout")
     else:
         state["current_turn"] += 1
         state["energy"] = 3
@@ -584,5 +673,22 @@ def end_turn(
         _draw_enemy_to_hand(state)
         battle.state_json = state
         battle.version += 1
+    db.commit()
+    return battle
+
+
+def surrender_battle(
+    db: Session,
+    player: Player,
+    battle_id: int,
+    expected_version: int,
+) -> ActiveBattle:
+    battle = get_owned_battle(db, player.id, battle_id, lock=True)
+    _check_active_version(battle, expected_version)
+    state = deepcopy(battle.state_json)
+    state["last_action"] = {"type": "surrender"}
+    battle.state_json = state
+    battle.version += 1
+    _complete_battle(db, battle, player, "defeat", defeat_reason="surrender")
     db.commit()
     return battle

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, battle, catalog, decks, plants, player, quests, save, world
+from app.api import auth, battle, catalog, decks, opening, plants, player, quests, save, world
 from app.core.config import settings
 from app.db import SessionLocal
 
@@ -72,6 +72,7 @@ for router in (
     decks.router,
     battle.router,
     quests.router,
+    opening.router,
     save.router,
 ):
     app.include_router(router, prefix="/api/v1")

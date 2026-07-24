@@ -17,6 +17,7 @@ import type {
   NpcServiceData,
   NpcShopPurchaseResult,
   NpcTrainingUpgradeResult,
+  OpeningStory,
   PlantCollectResult,
   PlantData,
   PlantNode,
@@ -43,6 +44,7 @@ export const useGameStore = defineStore('game', () => {
   const npcGiftOptions = ref<NpcGiftOptions | null>(null)
   const npcLastGift = ref<NpcGiftResult | null>(null)
   const npcService = ref<NpcServiceData | null>(null)
+  const opening = ref<OpeningStory | null>(null)
   const loading = ref(false)
   const actionLoading = ref(false)
   const chatLoading = ref(false)
@@ -72,6 +74,20 @@ export const useGameStore = defineStore('game', () => {
     return {
       ...profile,
       avatar_gender: profile.avatar_gender === 'male' ? 'male' : 'female',
+    }
+  }
+
+  function applyStoryVisibility(nextMap: MapData): MapData {
+    const story = opening.value
+    return {
+      ...nextMap,
+      resource: {
+        ...nextMap.resource,
+        objects: (nextMap.resource.objects ?? []).filter((item) => (
+          !item.story_gate
+          || (story?.story_key === item.story_gate && story.stage === item.story_stage)
+        )),
+      },
     }
   }
 
@@ -123,15 +139,30 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function reloadCurrentMap(): Promise<void> {
+    if (!player.value?.current_map) return
+    map.value = applyStoryVisibility(
+      await requestData<MapData>(api.get(`/map/${player.value.current_map}`)),
+    )
+    await refreshMapPlants()
+  }
+
+  async function refreshOpening(reloadMap = false): Promise<void> {
+    opening.value = await requestData<OpeningStory>(api.get('/opening'))
+    if (reloadMap) await reloadCurrentMap()
+  }
+
   async function bootstrap(): Promise<void> {
     loading.value = true
     error.value = ''
     try {
-      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
-      if (player.value.current_map) {
-        map.value = await requestData<MapData>(api.get(`/map/${player.value.current_map}`))
-        await refreshMapPlants()
-      }
+      const [profile, story] = await Promise.all([
+        requestData<PlayerProfile>(api.get('/player/profile')),
+        requestData<OpeningStory>(api.get('/opening')),
+      ])
+      player.value = normalizePlayer(profile)
+      opening.value = story
+      await reloadCurrentMap()
       await refreshCollections()
       const savedBattleId = sessionStorage.getItem('world_battle_id')
       if (savedBattleId) {
@@ -231,6 +262,7 @@ export const useGameStore = defineStore('game', () => {
       if (player.value) player.value.gold = result.gold
       await Promise.all([
         refreshNpcService(),
+        refreshOpening(),
         requestData<NpcGiftOptions>(api.get(`/npc/${dialogNpc.value.id}/gifts`)).then((value) => {
           npcGiftOptions.value = value
         }),
@@ -279,6 +311,57 @@ export const useGameStore = defineStore('game', () => {
     } catch (cause) {
       error.value = errorMessage(cause)
       throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function completeNpcQuest(questId: number): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      await requestData(api.post(`/quests/${questId}/complete`))
+      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
+      await Promise.all([refreshNpcService(), refreshOpening(true)])
+      showNotice('任务已完成')
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function startOpening(): Promise<void> {
+    if (actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      opening.value = await requestData<OpeningStory>(api.post('/opening/start'))
+      await reloadCurrentMap()
+      showNotice('序章「雾中月痕」已开始')
+    } catch (cause) {
+      error.value = errorMessage(cause)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function completeOpening(): Promise<void> {
+    if (actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      const result = await requestData<OpeningStory>(api.post('/opening/complete'))
+      opening.value = result
+      if (player.value && result.gold_reward) player.value.gold += result.gold_reward
+      await Promise.all([refreshCollections(), reloadCurrentMap()])
+      showNotice(result.completed_now
+        ? `序章完成 · 开启主线「${result.main_quest ?? '月痕追迹'}」`
+        : '序章已经完成')
+    } catch (cause) {
+      error.value = errorMessage(cause)
     } finally {
       actionLoading.value = false
     }
@@ -372,6 +455,27 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  async function surrenderBattle(): Promise<void> {
+    if (!battle.value || actionLoading.value) return
+    const confirmed = window.confirm('中途退出将按失败结算，并扣除最多 30 金币。确认退出？')
+    if (!confirmed) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      battle.value = await requestData<BattleData>(
+        api.post(`/battle/${battle.value.battle_id}/surrender`, {
+          expected_version: battle.value.version,
+        }),
+      )
+      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      await refreshBattle()
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
   async function refreshBattle(): Promise<void> {
     if (!battle.value) return
     try {
@@ -386,7 +490,7 @@ export const useGameStore = defineStore('game', () => {
     battle.value = null
     sessionStorage.removeItem('world_battle_id')
     player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
-    await refreshCollections()
+    await Promise.all([refreshCollections(), refreshOpening(true)])
   }
 
   async function savePosition(x: number, y: number): Promise<void> {
@@ -415,7 +519,7 @@ export const useGameStore = defineStore('game', () => {
     error.value = ''
     try {
       const entered = await requestData<MapEnterResult>(api.post('/map/enter', { map_id: mapId }))
-      map.value = entered.map
+      map.value = applyStoryVisibility(entered.map)
       player.value = {
         ...player.value,
         current_map: entered.map.id,
@@ -423,6 +527,7 @@ export const useGameStore = defineStore('game', () => {
         position_y: entered.position_y,
       }
       await refreshMapPlants()
+      await refreshOpening()
       showNotice(`已进入${entered.map.map_name}`)
     } catch (cause) {
       error.value = errorMessage(cause)
@@ -511,6 +616,7 @@ export const useGameStore = defineStore('game', () => {
       const index = plants.value.findIndex((item) => item.id === result.plant.id)
       if (index >= 0) plants.value[index] = result.plant
       else plants.value.push(result.plant)
+      await refreshOpening(true)
       showNotice(`获得 ${result.plant.name} ×1`)
       return result
     } catch (cause) {
@@ -621,6 +727,7 @@ export const useGameStore = defineStore('game', () => {
     npcGiftOptions.value = null
     npcLastGift.value = null
     npcService.value = null
+    opening.value = null
     chatLoading.value = false
     mapLoading.value = false
     error.value = ''
@@ -643,6 +750,7 @@ export const useGameStore = defineStore('game', () => {
     npcGiftOptions,
     npcLastGift,
     npcService,
+    opening,
     loading,
     actionLoading,
     chatLoading,
@@ -659,9 +767,13 @@ export const useGameStore = defineStore('game', () => {
     purchaseNpcItem,
     upgradeNpcCard,
     acceptNpcQuest,
+    completeNpcQuest,
+    startOpening,
+    completeOpening,
     startBattle,
     playCard,
     endTurn,
+    surrenderBattle,
     leaveBattle,
     savePosition,
     enterMap,

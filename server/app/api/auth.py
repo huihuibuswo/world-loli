@@ -28,6 +28,12 @@ from app.schemas import LoginRequest, RegisterRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+STARTER_DECK = {
+    "基础攻击": 6,
+    "防御姿态": 4,
+    "月牙撕裂": 2,
+}
+
 
 @router.post("/register", status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
@@ -55,12 +61,19 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
     )
     db.add(player)
     db.flush()
-    starter_templates = db.scalars(select(CardTemplate).order_by(CardTemplate.id).limit(2)).all()
+    starter_templates = db.scalars(
+        select(CardTemplate).where(CardTemplate.name.in_(STARTER_DECK))
+    ).all()
+    templates_by_name = {template.name: template for template in starter_templates}
+    missing_templates = set(STARTER_DECK) - set(templates_by_name)
+    if missing_templates:
+        abort(500, f"初始套牌缺少卡牌模板：{', '.join(sorted(missing_templates))}")
     starter_deck = Deck(player_id=player.id, name="初始套牌", is_active=True)
     db.add(starter_deck)
     db.flush()
-    for template in starter_templates:
-        card = PlayerCard(player_id=player.id, card_template_id=template.id, count=2)
+    for template_name, amount in STARTER_DECK.items():
+        template = templates_by_name[template_name]
+        card = PlayerCard(player_id=player.id, card_template_id=template.id, count=amount)
         db.add(card)
         db.flush()
         db.add(
@@ -68,7 +81,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> dict:
                 deck_id=starter_deck.id,
                 card_id=card.id,
                 player_id=player.id,
-                amount=2,
+                amount=amount,
             )
         )
     try:

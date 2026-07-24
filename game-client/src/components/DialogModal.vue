@@ -40,6 +40,7 @@ const props = defineProps<{
   purchaseItem: (shopItemId: number) => Promise<void>
   upgradeCard: (cardId: number) => Promise<void>
   acceptQuest: (questId: number) => Promise<void>
+  completeQuest: (questId: number) => Promise<void>
 }>()
 const emit = defineEmits<{ close: []; battle: [id: number] }>()
 
@@ -298,6 +299,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               <ScrollText :size="22" aria-hidden="true" />
               <div><strong>{{ quest.title }}</strong><small>{{ quest.description }}</small><span>报酬 {{ quest.reward.gold ?? 0 }} 金币 · {{ quest.status === 'completed' ? '已完成' : quest.status === 'active' ? '进行中' : '可领取' }}</span></div>
               <button v-if="quest.status === 'not_started'" class="button small" type="button" :disabled="loading" @click="acceptQuest(quest.id)">领取</button>
+              <button v-else-if="quest.status === 'active' && quest.progress.ready" class="button small" type="button" :disabled="loading" @click="completeQuest(quest.id)">提交</button>
             </article>
             <p v-if="!service.quests.length" class="empty-state">目前没有新的村务委托。</p>
           </div>

@@ -41,6 +41,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('npc-suna', `${root}/sprites/npc-suna.png`)
     this.load.image('npc-forest-guide', `${root}/sprites/npc-forest-guide.png`)
     this.load.image('npc-trainer', `${root}/sprites/npc-trainer.png`)
+    this.load.image('npc-luna', `${root}/portraits/luna.webp`)
     const plantRoot = `${root}/sprites/plants`
     const plantTextures = [
       'plant-morning-dew-grass',

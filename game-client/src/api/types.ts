@@ -43,6 +43,8 @@ export interface MapObject {
   available_at?: string | null
   icon?: string | null
   habitat?: string
+  story_gate?: string
+  story_stage?: string
   x: number
   y: number
 }
@@ -305,7 +307,43 @@ export interface NpcQuestData {
   type: string
   reward: { gold?: number; [key: string]: unknown }
   status: 'not_started' | 'active' | 'completed'
-  progress: Record<string, unknown>
+  progress: {
+    objective?: string
+    current?: number
+    target?: number
+    ready?: boolean
+    [key: string]: unknown
+  }
+}
+
+export type OpeningStage = 'arrival' | 'prepare' | 'forest_signal' | 'return_village' | 'complete'
+
+export interface OpeningTask {
+  id: number
+  title: string
+  description: string
+  status: 'not_started' | 'active' | 'completed'
+  ready: boolean
+  current: number
+  target: number
+}
+
+export interface OpeningStory {
+  story_key: string
+  title: string
+  stage: OpeningStage
+  started: boolean
+  completed: boolean
+  completed_at: string | null
+  objective: { title: string; description: string }
+  tasks: OpeningTask[]
+  luna_enemy_id: number | null
+  can_battle_luna: boolean
+  can_complete: boolean
+  intro_lines: string[]
+  completed_now?: boolean
+  gold_reward?: number
+  main_quest?: string
 }
 
 export interface NpcQuestService {
@@ -427,6 +465,11 @@ export interface BattleData {
     }>
   }
   result?: string
+  defeat_reason?: 'knockout' | 'surrender' | null
+  penalty?: {
+    gold_lost: number
+    gold_remaining: number
+  } | null
   reward?: {
     first_battle?: boolean
     first_victory?: boolean

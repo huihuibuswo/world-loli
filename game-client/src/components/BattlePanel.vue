@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { ArrowRight, Droplets, RotateCcw, Shield, Swords } from 'lucide-vue-next'
+import { ArrowRight, Droplets, LogOut, RotateCcw, Shield, Swords } from 'lucide-vue-next'
 import { gameEvents } from '@/game/events'
 import { useGameStore } from '@/stores/game'
 
@@ -49,9 +49,12 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
 
     <div v-if="battle.status !== 'active'" class="battle-result glass-panel" role="status">
       <p class="eyebrow">BATTLE COMPLETE</p>
-      <h2>{{ battle.status === 'victory' ? '胜利' : '战斗结束' }}</h2>
-      <p>{{ battle.status === 'victory' ? '林间的回响化作新的力量。' : '休整之后，再次启程。' }}</p>
+      <h2>{{ battle.status === 'victory' ? '胜利' : '败北' }}</h2>
+      <p>{{ battle.status === 'victory' ? '林间的回响化作新的力量。' : battle.defeat_reason === 'surrender' ? '你已中途退出，本场按失败结算。' : '战斗失利，休整之后再次启程。' }}</p>
       <div class="battle-rewards" aria-label="战斗结算">
+        <span v-if="battle.penalty" class="battle-penalty">
+          失败惩罚：金币 -{{ battle.penalty.gold_lost }} · 剩余 {{ battle.penalty.gold_remaining }}
+        </span>
         <span v-if="battle.affection_result?.points_gained">
           好感 +{{ battle.affection_result.points_gained }} · Lv.{{ battle.affection_result.new_level }}
         </span>
@@ -85,7 +88,12 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
           <strong>{{ card!.name }}</strong><small>{{ card!.effect.damage ? `造成 ${card!.effect.damage} 点伤害` : card!.effect.shield ? `获得 ${card!.effect.shield} 点护盾` : '施放卡牌效果' }}</small>
         </button>
       </div>
-      <button class="button end-turn" type="button" :disabled="game.actionLoading" @click="game.endTurn">结束回合<ArrowRight :size="18" /></button>
+      <div class="battle-turn-actions">
+        <button class="button surrender-button" type="button" :disabled="game.actionLoading" @click="game.surrenderBattle">
+          <LogOut :size="17" />中途退出
+        </button>
+        <button class="button end-turn" type="button" :disabled="game.actionLoading" @click="game.endTurn">结束回合<ArrowRight :size="18" /></button>
+      </div>
     </div>
   </section>
 </template>

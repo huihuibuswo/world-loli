@@ -49,13 +49,31 @@ class Player(Base):
     avatar_gender: Mapped[str] = mapped_column(String(8), default="female")
     level: Mapped[int] = mapped_column(Integer, default=1)
     exp: Mapped[int] = mapped_column(BigInteger, default=0)
-    hp: Mapped[int] = mapped_column(Integer, default=100)
+    hp: Mapped[int] = mapped_column(Integer, default=75)
     attack: Mapped[int] = mapped_column(Integer, default=10)
     defense: Mapped[int] = mapped_column(Integer, default=5)
     gold: Mapped[int] = mapped_column(BigInteger, default=0)
     current_map: Mapped[int | None] = mapped_column(ForeignKey("map_data.id", ondelete="SET NULL"))
     position_x: Mapped[float] = mapped_column(Float, default=0)
     position_y: Mapped[float] = mapped_column(Float, default=0)
+
+
+class PlayerStoryProgress(Base):
+    __tablename__ = "player_story_progress"
+    __table_args__ = (
+        UniqueConstraint("player_id", "story_key", name="uq_player_story_progress_player_story"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id", ondelete="CASCADE"))
+    story_key: Mapped[str] = mapped_column(String(64))
+    stage: Mapped[str] = mapped_column(String(32), default="arrival")
+    data_json: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class CardSpiritTemplate(Base):

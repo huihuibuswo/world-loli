@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Coins, Heart, LogOut, Save, Swords } from 'lucide-vue-next'
 import BattlePanel from '@/components/BattlePanel.vue'
 import CollectionDrawer from '@/components/CollectionDrawer.vue'
 import DialogModal from '@/components/DialogModal.vue'
+import OpeningStoryPanel from '@/components/OpeningStoryPanel.vue'
 import { WorldGame } from '@/game/Game'
 import { gameEvents } from '@/game/events'
 import { useGameStore } from '@/stores/game'
@@ -23,6 +24,7 @@ let saveTimer: number | null = null
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
 const currentMapName = computed(() => game.map?.map_name || '晨曦村')
+const openingArrival = computed(() => game.opening?.stage === 'arrival')
 const rarityLabel = (rarity: string): string => ({
   common: '普通',
   uncommon: '少见',
@@ -40,8 +42,13 @@ watch(isBattle, (next) => {
   }
 })
 
-watch([() => Boolean(game.dialogNpc), drawerOpen], ([dialogOpen, collectionOpen]) => {
-  gameEvents.emit('world:input-lock', { locked: dialogOpen || collectionOpen })
+watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival], ([dialogOpen, collectionOpen, prologueOpen]) => {
+  gameEvents.emit('world:input-lock', { locked: dialogOpen || collectionOpen || prologueOpen })
+})
+
+watch(() => game.opening?.stage, (nextStage, previousStage) => {
+  if (!previousStage || nextStage === previousStage || !game.map || !game.player || game.battle) return
+  void nextTick(() => world?.changeMap(game.map!, game.player!))
 })
 
 const onNear = (npc: { id: number | null; name: string | null }): void => { nearNpc.value = npc.id && npc.name ? { id: npc.id, name: npc.name } : null }
@@ -66,7 +73,7 @@ const onPlantInteract = async ({ nodeId }: { nodeId: string; name: string }): Pr
     if (result) gameEvents.emit('plant:collected', { nodeId, availableAt: result.available_at })
   } finally {
     collectingPlant.value = null
-    gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || drawerOpen.value })
+    gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || drawerOpen.value || openingArrival.value })
   }
 }
 const onPortalInteract = async ({ mapId, name }: { mapId: number; name: string }): Promise<void> => {
@@ -101,7 +108,7 @@ async function beginBattle(id: number): Promise<void> {
 
 onMounted(() => {
   if (canvasHost.value && game.map && game.player) world = new WorldGame(canvasHost.value, game.map, game.player)
-  gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) })
+  gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || openingArrival.value })
   gameEvents.on('npc:near', onNear)
   gameEvents.on('npc:interact', onInteract)
   gameEvents.on('plant:near', onPlantNear)
@@ -149,7 +156,15 @@ onBeforeUnmount(() => {
 
     <aside v-if="!isBattle" class="minimap-frame" role="img" :aria-label="`${currentMapName}小地图`" />
 
-    <div v-if="!isBattle" class="quest-card glass-panel">
+    <OpeningStoryPanel
+      v-if="!isBattle && game.opening && !game.opening.completed"
+      :story="game.opening"
+      :loading="game.actionLoading"
+      @start="game.startOpening"
+      @complete="game.completeOpening"
+    />
+
+    <div v-else-if="!isBattle" class="quest-card glass-panel">
       <span><Heart :size="16" />当前地图</span><strong>{{ currentMapName }}</strong><small>探索植物、居民与地图出口，按 E 互动</small>
     </div>
 
@@ -183,6 +198,7 @@ onBeforeUnmount(() => {
       :purchase-item="game.purchaseNpcItem"
       :upgrade-card="game.upgradeNpcCard"
       :accept-quest="game.acceptNpcQuest"
+      :complete-quest="game.completeNpcQuest"
       @close="game.closeDialog"
       @battle="beginBattle"
     />

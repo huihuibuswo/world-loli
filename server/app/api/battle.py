@@ -13,6 +13,7 @@ from app.services.battle_service import (
     get_owned_battle,
     play_card,
     prepare_enemy_turn,
+    surrender_battle,
 )
 from app.services.battle_ai_service import choose_enemy_cards
 
@@ -69,6 +70,17 @@ def finish_turn(
     return ok(battle_data(battle), "回合已结束")
 
 
+@router.post("/{battle_id}/surrender")
+def surrender(
+    battle_id: int,
+    payload: EndTurnRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    battle = surrender_battle(db, player, battle_id, payload.expected_version)
+    return ok(battle_data(battle), "已退出战斗并按失败结算")
+
+
 @router.get("/{battle_id}/result")
 def get_result(
     battle_id: int,
@@ -83,6 +95,8 @@ def get_result(
             "battle_id": battle.id,
             "result": battle.status,
             "reward": battle.state_json.get("reward", {}),
+            "penalty": battle.state_json.get("penalty"),
+            "defeat_reason": battle.state_json.get("defeat_reason"),
             "affection_result": battle.state_json.get("affection_result"),
         }
     )

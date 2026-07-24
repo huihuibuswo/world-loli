@@ -241,7 +241,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             cards_response = client.get("/api/v1/cards", headers=headers_a)
             assert cards_response.status_code == 200
             cards = cards_response.json()["data"]
-            assert len(cards) == 2
+            assert len(cards) == 3
             card_by_id = {card["id"]: card for card in cards}
 
             decks_response = client.get("/api/v1/decks", headers=headers_a)
@@ -249,7 +249,8 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             decks = decks_response.json()["data"]
             assert len(decks) == 1
             assert decks[0]["is_active"] is True
-            assert len(decks[0]["cards"]) == 2
+            assert len(decks[0]["cards"]) == 3
+            assert sum(item["amount"] for item in decks[0]["cards"]) == 12
 
             with SessionLocal() as db:
                 enemy_id = db.scalar(
@@ -341,9 +342,15 @@ def test_ai_guard_action_is_server_authoritative(monkeypatch) -> None:
     user_id: int | None = None
     def choose_guard_sequence(context: dict) -> dict:
         guard = next(item for item in context["candidates"] if item["type"] == "defense")
-        attack = next(item for item in context["candidates"] if item["cost"] == 2)
+        attack = next(item for item in context["candidates"] if item["type"] == "attack")
+        sequence = [guard["card_template_id"], attack["card_template_id"]]
+        remaining_energy = 3 - guard["cost"] - attack["cost"]
+        if remaining_energy >= attack["cost"] and attack["available_copies"] >= 2:
+            sequence.append(attack["card_template_id"])
+        elif remaining_energy >= guard["cost"] and guard["available_copies"] >= 2:
+            sequence.append(guard["card_template_id"])
         return {
-            "card_template_ids": [guard["card_template_id"], attack["card_template_id"]],
+            "card_template_ids": sequence,
             "battle_line": "先稳住阵脚。",
         }
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { defineAsyncComponent, ref, watch } from 'vue'
 import AuthPanel from '@/components/AuthPanel.vue'
-import GameShell from '@/components/GameShell.vue'
 import { useSessionStore } from '@/stores/session'
 import { useGameStore } from '@/stores/game'
+
+const GameShell = defineAsyncComponent(() => import('@/components/GameShell.vue'))
 
 const session = useSessionStore()
 const game = useGameStore()
@@ -32,7 +33,15 @@ watch(() => session.authenticated, (authenticated) => {
       <span class="loader" aria-hidden="true" />
       <p>正在唤醒世界树……</p>
     </div>
-    <GameShell v-else-if="game.player && game.map" @logout="logout" />
+    <Suspense v-else-if="game.player && game.map">
+      <GameShell @logout="logout" />
+      <template #fallback>
+        <div class="loading-screen" role="status">
+          <span class="loader" aria-hidden="true" />
+          <p>正在载入冒险世界……</p>
+        </div>
+      </template>
+    </Suspense>
     <section v-else class="fatal-card" role="alert">
       <h1>暂时无法进入世界</h1>
       <p>{{ game.error || '角色或地图数据不完整，请稍后重试。' }}</p>

@@ -132,6 +132,17 @@
 - Galgame portraits are anchored to the dialogue panel frame instead of the viewport; forest-guide QA passed at
   1280x720, 375x812, and 844x390 without horizontal overflow.
 
+## Phase 10: Battle Card And Actor Balance
+
+- [x] 新增 `017_battle_balance.sql`：玩家基础 HP 调整为 75，更新通用卡牌与签名卡参数，
+  新增敌方专用“战术打击”，并把五名晨曦村 NPC 与序章露娜调整为 10 张角色牌组。
+- [x] 注册改为显式创建基础攻击 6、防御姿态 4、月牙撕裂 2，不再依赖模板 ID 排序。
+- [x] 新战斗保存内部 seed 和双方洗牌计数；初始牌堆及弃牌回收可复现洗牌，公开 API 隐藏内部随机状态。
+- [x] 确定性敌方降级按 `action_weights` 选择最大合法序列，攻击型与防守型角色产生不同序列。
+- [x] 失败态在客户端明确显示“败北”，失败不产生怪物碎片、任务胜利或序章胜利奖励。
+- [x] 增加起始套牌、洗牌复现、权重选牌、失败结算和苏娜固定种子胜负分布测试。
+- [x] 真实规则校准将苏娜 HP 从候选 80 调整为 60，避免高难角色变成起始套牌隐性必败。
+
 ## Validation Commands
 
 ```powershell
