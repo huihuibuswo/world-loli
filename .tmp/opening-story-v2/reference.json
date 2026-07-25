@@ -1,0 +1,2733 @@
+{
+  "source": "D:\\project\\world-loli\\doc\\斗萝大陆_开局剧情设计_V1.0.docx",
+  "sha256": "d7ab9cd055e503a7b108edbc5104dc45d77a6bc209e207df4fe47c138b654d3f",
+  "paragraphs": [
+    {
+      "index": 0,
+      "style": "Normal",
+      "text": "《斗萝大陆》",
+      "alignment": 1,
+      "runs": [
+        {
+          "text": "《斗萝大陆》",
+          "bold": true,
+          "italic": null,
+          "size_pt": 18.0,
+          "font": "Microsoft YaHei",
+          "color": "A9762B"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "style": "Normal",
+      "text": "开局剧情设计 V1.0",
+      "alignment": 1,
+      "runs": [
+        {
+          "text": "开局剧情设计 V1.0",
+          "bold": true,
+          "italic": null,
+          "size_pt": 28.0,
+          "font": "Microsoft YaHei",
+          "color": "17384F"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "style": "Normal",
+      "text": "序章：雾中月痕",
+      "alignment": 1,
+      "runs": [
+        {
+          "text": "序章：雾中月痕",
+          "bold": null,
+          "italic": null,
+          "size_pt": 17.0,
+          "font": "Microsoft YaHei",
+          "color": "2E5D7B"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "style": "Normal",
+      "text": "一句话体验  玩家在晨曦村完成最基础的冒险准备，第一次踏入微光森林时与追查异变的狼娘·露娜发生误会战；战后留下的共鸣碎片，成为玩家追索源萝之力异常和再次见到她的理由。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "一句话体验  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "2E5D7B"
+        },
+        {
+          "text": "玩家在晨曦村完成最基础的冒险准备，第一次踏入微光森林时与追查异变的狼娘·露娜发生误会战；战后留下的共鸣碎片，成为玩家追索源萝之力异常和再次见到她的理由。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 5,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "style": "Heading 1",
+      "text": "1. 设计结论",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "1. 设计结论",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "style": "Normal",
+      "text": "核心判断  开局不从世界历史讲起，而从“村庄需要你完成三件小事”开始。玩家先通过行动理解世界，再由露娜和共鸣碎片制造主线疑问。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "核心判断  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "开局不从世界历史讲起，而从“村庄需要你完成三件小事”开始。玩家先通过行动理解世界，再由露娜和共鸣碎片制造主线疑问。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "style": "Heading 2",
+      "text": "1.1 开局必须兑现的三项承诺",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "1.1 开局必须兑现的三项承诺",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "style": "List Number",
+      "text": "这里的角色不是功能按钮。每位 NPC 都有判断、职业和战斗方式，露娜更是一个会误解、会试探、也会记住玩家行为的对手。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "这里的角色不是功能按钮。每位 NPC 都有判断、职业和战斗方式，露娜更是一个会误解、会试探、也会记住玩家行为的对手。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "style": "List Number",
+      "text": "卡牌代表关系留下的力量。训练教官赠出的《破绽识破》和露娜留下的共鸣碎片，都由一次具体互动产生。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "卡牌代表关系留下的力量。训练教官赠出的《破绽识破》和露娜留下的共鸣碎片，都由一次具体互动产生。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "style": "List Number",
+      "text": "探索会产生问题。微光森林的异常不是背景说明，而是玩家亲眼见到的灭灯、反常雾流和源萝刻痕。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "探索会产生问题。微光森林的异常不是背景说明，而是玩家亲眼见到的灭灯、反常雾流和源萝刻痕。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "style": "Heading 2",
+      "text": "1.2 目标、约束与非目标",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "1.2 目标、约束与非目标",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 14,
+      "style": "Heading 2",
+      "text": "1.3 玩家情绪曲线",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "1.3 玩家情绪曲线",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 16,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "style": "Heading 1",
+      "text": "2. 剧情梗概",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "2. 剧情梗概",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "style": "Normal",
+      "text": "黄昏将至，一名初到斗萝大陆的旅人沿村道抵达晨曦村。村口的引路灯在玩家经过时出现一次短促共鸣，灯芯里浮出陌生的月牙纹。村长没有立即解释，只请玩家先完成三项入村准备：带回一份晨曦暖茶、接受训练教官的实战检验、在村庄东缘完成一次采集记录。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "黄昏将至，一名初到斗萝大陆的旅人沿村道抵达晨曦村。村口的引路灯在玩家经过时出现一次短促共鸣，灯芯里浮出陌生的月牙纹。村长没有立即解释，只请玩家先完成三项入村准备：带回一份晨曦暖茶、接受训练教官的实战检验、在村庄东缘完成一次采集记录。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "style": "Normal",
+      "text": "三项小事让玩家认识村庄的运行方式，也逐步拼出同一条异常：杂货商说近期补给商队听见林中狼嚎；训练教官发现牌面在无风时自行震动；森林向导则确认微光森林的雾正在逆着山风流动。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "三项小事让玩家认识村庄的运行方式，也逐步拼出同一条异常：杂货商说近期补给商队听见林中狼嚎；训练教官发现牌面在无风时自行震动；森林向导则确认微光森林的雾正在逆着山风流动。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "style": "Normal",
+      "text": "玩家进入微光森林完成踏查时，月光空地的植物突然闭合，一道银色身影从雾中扑出。狼娘·露娜正在追查伤害族群的“雾袭者”，而玩家身上残留的月牙共鸣让她误以为找到了目标。双方以卡牌战斗互相试探。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "玩家进入微光森林完成踏查时，月光空地的植物突然闭合，一道银色身影从雾中扑出。狼娘·露娜正在追查伤害族群的“雾袭者”，而玩家身上残留的月牙共鸣让她误以为找到了目标。双方以卡牌战斗互相试探。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "style": "Normal",
+      "text": "战斗结束后，真正的异常刻痕在古树根部短暂亮起。露娜意识到玩家不是制造异变的人，却仍拒绝信任村庄。她留下三枚与战斗共鸣凝成的碎片，约定玩家若能循着月痕找到真相，就有资格再次站到她面前。玩家返回晨曦村，村长认出碎片与古老的源萝刻印有关，主线《月痕追迹》正式开启。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "战斗结束后，真正的异常刻痕在古树根部短暂亮起。露娜意识到玩家不是制造异变的人，却仍拒绝信任村庄。她留下三枚与战斗共鸣凝成的碎片，约定玩家若能循着月痕找到真相，就有资格再次站到她面前。玩家返回晨曦村，村长认出碎片与古老的源萝刻印有关，主线《月痕追迹》正式开启。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "style": "Heading 2",
+      "text": "2.1 冲突机制",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "2.1 冲突机制",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 24,
+      "style": "Heading 2",
+      "text": "2.2 信息释放顺序",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "2.2 信息释放顺序",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "style": "List Number",
+      "text": "先让玩家看到异象：引路灯出现月牙纹。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "先让玩家看到异象：引路灯出现月牙纹。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "style": "List Number",
+      "text": "再让不同 NPC 各提供一条局部事实，但没人拥有完整答案。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "再让不同 NPC 各提供一条局部事实，但没人拥有完整答案。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "style": "List Number",
+      "text": "让露娜用敌意给异常赋予真实代价：她的族群已经受到影响。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "让露娜用敌意给异常赋予真实代价：她的族群已经受到影响。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "style": "List Number",
+      "text": "最后由村长只确认“与古代刻印有关”，保留源萝之力全貌。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "最后由村长只确认“与古代刻印有关”，保留源萝之力全貌。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "style": "Heading 1",
+      "text": "3. 可玩流程总览",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "3. 可玩流程总览",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 32,
+      "style": "Normal",
+      "text": "推荐强制顺序  S1 → S3 → S2/S4 可交换 → S5 → S6。训练战必须早于露娜战；补给和采集允许玩家按兴趣调整。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "推荐强制顺序  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "2E5D7B"
+        },
+        {
+          "text": "S1 → S3 → S2/S4 可交换 → S5 → S6。训练战必须早于露娜战；补给和采集允许玩家按兴趣调整。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "style": "Heading 2",
+      "text": "3.1 任务状态机",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "3.1 任务状态机",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 35,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "style": "Heading 1",
+      "text": "4. 分场脚本",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "4. 分场脚本",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "style": "Heading 2",
+      "text": "S0. 冷开场：月痕",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S0. 冷开场：月痕",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "style": "Normal",
+      "text": "场景目标  用最少文字建立露娜与森林异变，允许跳过且不承载关键操作信息。  |  建议时长：1–2 分钟  |  触发：首次创建角色后",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "用最少文字建立露娜与森林异变，允许跳过且不承载关键操作信息。  |  建议时长：1–2 分钟  |  触发：首次创建角色后",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "style": "Normal",
+      "text": "画面从黑场进入。微光森林深处，月光空地上的花朵依次闭合，雾却逆着树梢的风向向古树聚拢。银色狼耳少女掠过画面，只露出背影。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "画面从黑场进入。微光森林深处，月光空地上的花朵依次闭合，雾却逆着树梢的风向向古树聚拢。银色狼耳少女掠过画面，只露出背影。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "style": "Normal",
+      "text": "露娜（低声）：‘不是野兽的味道……有人把不属于森林的东西埋进来了。’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜（低声）：‘不是野兽的味道……有人把不属于森林的东西埋进来了。’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "style": "Normal",
+      "text": "古树根部亮起残缺月牙刻痕。露娜伸手前，刻痕猛然放出白光。画面切黑，远处村钟响第一声。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "古树根部亮起残缺月牙刻痕。露娜伸手前，刻痕猛然放出白光。画面切黑，远处村钟响第一声。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "style": "Normal",
+      "text": "字幕：‘同一时刻，晨曦村东侧村道。’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "字幕：‘同一时刻，晨曦村东侧村道。’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "style": "Heading 2",
+      "text": "S1. 抵达晨曦村",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S1. 抵达晨曦村",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "style": "Normal",
+      "text": "场景目标  完成移动、镜头、交互提示教学，并由村长给出清晰短目标。  |  建议时长：5–7 分钟  |  触发：玩家出生于晨曦村村道",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "完成移动、镜头、交互提示教学，并由村长给出清晰短目标。  |  建议时长：5–7 分钟  |  触发：玩家出生于晨曦村村道",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "style": "Normal",
+      "text": "玩家向村口移动时，最近的一盏引路灯短暂熄灭，随后在灯罩内浮出月牙纹。玩家可停下观察；若直接离开，镜头只轻微停顿，不阻塞操作。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "玩家向村口移动时，最近的一盏引路灯短暂熄灭，随后在灯罩内浮出月牙纹。玩家可停下观察；若直接离开，镜头只轻微停顿，不阻塞操作。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 46,
+      "style": "Normal",
+      "text": "村长站在道路汇合处，不用长篇欢迎词。他首先确认玩家是否受伤，再说明森林入口暂时由向导看守。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "村长站在道路汇合处，不用长篇欢迎词。他首先确认玩家是否受伤，再说明森林入口暂时由向导看守。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 47,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 48,
+      "style": "Heading 2",
+      "text": "S2. 村道补给",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S2. 村道补给",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 49,
+      "style": "Normal",
+      "text": "场景目标  教学商店购买与任务提交，同时投放商队在森林附近遇到异常的线索。  |  建议时长：5–8 分钟  |  触发：玩家与杂货商交互",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "教学商店购买与任务提交，同时投放商队在森林附近遇到异常的线索。  |  建议时长：5–8 分钟  |  触发：玩家与杂货商交互",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 50,
+      "style": "Normal",
+      "text": "任务直接复用现有《村道补给》：购买或持有一份晨曦暖茶。玩家金币不足时，首次任务价可由村长发放的准备金覆盖，避免软锁。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "任务直接复用现有《村道补给》：购买或持有一份晨曦暖茶。玩家金币不足时，首次任务价可由村长发放的准备金覆盖，避免软锁。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 51,
+      "style": "Normal",
+      "text": "杂货商不直接说“森林有 Boss”，只提到补给车昨夜提前返回，车夫说一路没有看见狼，却始终听见狼嚎。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "杂货商不直接说“森林有 Boss”，只提到补给车昨夜提前返回，车夫说一路没有看见狼，却始终听见狼嚎。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 52,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 53,
+      "style": "Heading 2",
+      "text": "S3. 实战准备",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S3. 实战准备",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 54,
+      "style": "Normal",
+      "text": "场景目标  教授能量、出牌、护盾、结束回合和敌方意图；用一次有角色性的胜利给出首张专属卡。  |  建议时长：10–15 分钟  |  触发：玩家与训练教官交互并选择实战",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "教授能量、出牌、护盾、结束回合和敌方意图；用一次有角色性的胜利给出首张专属卡。  |  建议时长：10–15 分钟  |  触发：玩家与训练教官交互并选择实战",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 55,
+      "style": "Normal",
+      "text": "训练教官明确说明：木偶只能教按钮，她会根据玩家出牌作出反应。第一回合引导使用基础攻击；第二回合引导观察敌方护盾；第三回合取消强提示，只保留可选建议。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "训练教官明确说明：木偶只能教按钮，她会根据玩家出牌作出反应。第一回合引导使用基础攻击；第二回合引导观察敌方护盾；第三回合取消强提示，只保留可选建议。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 56,
+      "style": "Normal",
+      "text": "失败不重置整个序章。教官恢复玩家状态并提供“再来一次”或“查看要点”，第二次挑战可获得轻微保护性增益，但奖励不变。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "失败不重置整个序章。教官恢复玩家状态并提供“再来一次”或“查看要点”，第二次挑战可获得轻微保护性增益，但奖励不变。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 57,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 58,
+      "style": "Heading 2",
+      "text": "S4. 林缘踏查",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S4. 林缘踏查",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 59,
+      "style": "Normal",
+      "text": "场景目标  教学地图切换、采集和图鉴，并把异常从传闻升级为可观察事实。  |  建议时长：8–10 分钟  |  触发：完成训练后与森林向导交互",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "教学地图切换、采集和图鉴，并把异常从传闻升级为可观察事实。  |  建议时长：8–10 分钟  |  触发：完成训练后与森林向导交互",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 60,
+      "style": "Normal",
+      "text": "森林向导开放现有《林缘踏查》，让玩家采集一株可用植物。首选节点为银叶草；若节点处于刷新中，任务自动指向最近可采集节点，不能因共享刷新而卡住。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "森林向导开放现有《林缘踏查》，让玩家采集一株可用植物。首选节点为银叶草；若节点处于刷新中，任务自动指向最近可采集节点，不能因共享刷新而卡住。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 61,
+      "style": "Normal",
+      "text": "进入微光森林后，向导通过短文本提醒玩家观察苔藓、风声和鸟群方向。到达采集点时，风向指示与雾流方向相反。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "进入微光森林后，向导通过短文本提醒玩家观察苔藓、风声和鸟群方向。到达采集点时，风向指示与雾流方向相反。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 62,
+      "style": "Normal",
+      "text": "采集完成后，附近的月光百合在非夜间短暂发光并闭合。任务目标从“返回村庄”更新为“检查异常光点”，形成无缝主线接管。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "采集完成后，附近的月光百合在非夜间短暂发光并闭合。任务目标从“返回村庄”更新为“检查异常光点”，形成无缝主线接管。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 63,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 64,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 65,
+      "style": "Heading 2",
+      "text": "S5. 遭遇露娜：误会战",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S5. 遭遇露娜：误会战",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 66,
+      "style": "Normal",
+      "text": "场景目标  让玩家第一次面对可收集角色，并通过战斗理解“认可不等于立即拥有”。  |  建议时长：12–18 分钟  |  触发：玩家到达月光空地",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "让玩家第一次面对可收集角色，并通过战斗理解“认可不等于立即拥有”。  |  建议时长：12–18 分钟  |  触发：玩家到达月光空地",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 67,
+      "style": "Normal",
+      "text": "露娜从雾中落在玩家与古树之间。她闻到玩家身上的引路灯共鸣，看到玩家牌匣边缘浮出的月牙纹，立即认定玩家与雾袭者有关。她不是为了抢劫或猎杀，而是为了阻止异常继续伤害狼族领地。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜从雾中落在玩家与古树之间。她闻到玩家身上的引路灯共鸣，看到玩家牌匣边缘浮出的月牙纹，立即认定玩家与雾袭者有关。她不是为了抢劫或猎杀，而是为了阻止异常继续伤害狼族领地。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 68,
+      "style": "Normal",
+      "text": "对话只允许改变战斗开场，不允许跳过首场关键战。这样既保留玩家表达，也避免复杂分支扩大实现。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "对话只允许改变战斗开场，不允许跳过首场关键战。这样既保留玩家表达，也避免复杂分支扩大实现。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 69,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 70,
+      "style": "Heading 3",
+      "text": "S5.1 战斗脚本",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S5.1 战斗脚本",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 71,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 72,
+      "style": "Heading 3",
+      "text": "S5.2 战后对白",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S5.2 战后对白",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 73,
+      "style": "Normal",
+      "text": "露娜：‘你不是埋下刻痕的人。刚才它借你的牌回应了我……这更麻烦。’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜：‘你不是埋下刻痕的人。刚才它借你的牌回应了我……这更麻烦。’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 74,
+      "style": "Normal",
+      "text": "玩家：‘你一直在找谁？’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "玩家：‘你一直在找谁？’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 75,
+      "style": "Normal",
+      "text": "露娜：‘一个没有气味、只留下月痕的人。它让幼狼对着空地发抖，让花在月亮升起前闭眼。’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜：‘一个没有气味、只留下月痕的人。它让幼狼对着空地发抖，让花在月亮升起前闭眼。’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 76,
+      "style": "Normal",
+      "text": "她摊开手，三枚银白碎片悬在掌心。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "她摊开手，三枚银白碎片悬在掌心。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 77,
+      "style": "Normal",
+      "text": "露娜：‘这是我们交手时留下的共鸣。别误会，不是认可，也不是礼物。循着它找到下一道月痕。到那时，我会决定要不要再听你解释。’",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜：‘这是我们交手时留下的共鸣。别误会，不是认可，也不是礼物。循着它找到下一道月痕。到那时，我会决定要不要再听你解释。’",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 78,
+      "style": "Normal",
+      "text": "奖励反馈  获得“狼娘·露娜共鸣碎片” ×3。卡灵图鉴解锁露娜剪影与进度 3/30；来源提示为“与露娜及其族群相关的战斗/事件”。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "奖励反馈  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "获得“狼娘·露娜共鸣碎片” ×3。卡灵图鉴解锁露娜剪影与进度 3/30；来源提示为“与露娜及其族群相关的战斗/事件”。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 79,
+      "style": "Heading 2",
+      "text": "S6. 返回晨曦村：新的路标",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "S6. 返回晨曦村：新的路标",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 80,
+      "style": "Normal",
+      "text": "场景目标  完成结算、存档与功能解锁，让玩家明确下一条主线而不被功能列表淹没。  |  建议时长：约 5 分钟  |  触发：玩家携带 3 枚碎片与村长交互",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "场景目标  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "A9762B"
+        },
+        {
+          "text": "完成结算、存档与功能解锁，让玩家明确下一条主线而不被功能列表淹没。  |  建议时长：约 5 分钟  |  触发：玩家携带 3 枚碎片与村长交互",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 81,
+      "style": "Normal",
+      "text": "村长认出碎片上的纹路与旧旅途中见过的源萝刻印相似，但拒绝把猜测说成事实。他将玩家的环境记录、商队痕迹和露娜证词并列，得出下一步：寻找第二道月痕。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "村长认出碎片上的纹路与旧旅途中见过的源萝刻印相似，但拒绝把猜测说成事实。他将玩家的环境记录、商队痕迹和露娜证词并列，得出下一步：寻找第二道月痕。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 82,
+      "style": "Normal",
+      "text": "序章完成时只弹出一个主线面板和一个图鉴提示。商店、锻造、好感度等功能继续通过世界交互发现，不集中弹窗轰炸。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "序章完成时只弹出一个主线面板和一个图鉴提示。商店、锻造、好感度等功能继续通过世界交互发现，不集中弹窗轰炸。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 83,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 84,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 85,
+      "style": "Heading 1",
+      "text": "5. 角色功能与口吻",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "5. 角色功能与口吻",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 86,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 87,
+      "style": "Heading 2",
+      "text": "5.1 露娜的人设落点",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "5.1 露娜的人设落点",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 88,
+      "style": "Normal",
+      "text": "露娜的“活泼”不在首次见面时表现为轻浮，而是表现为动作快、判断快、战斗中会即时回应玩家；“忠诚”首先指向狼族与森林；“喜欢冒险”在结尾转化为她愿意把追查月痕变成一场竞争。这样既保留原设，也让信任有成长空间。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "露娜的“活泼”不在首次见面时表现为轻浮，而是表现为动作快、判断快、战斗中会即时回应玩家；“忠诚”首先指向狼族与森林；“喜欢冒险”在结尾转化为她愿意把追查月痕变成一场竞争。这样既保留原设，也让信任有成长空间。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 89,
+      "style": "Heading 2",
+      "text": "5.2 玩家表达边界",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "5.2 玩家表达边界",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 90,
+      "style": "Normal",
+      "text": "玩家在序章中只有态度选择，不做路线选择。每个选项改变 1–2 句回应、露娜首回合风格或隐藏信任标记，但全部收束到同一战斗与主线。这样能提供角色扮演感，又不要求首版维护多套关卡、奖励和存档分支。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "玩家在序章中只有态度选择，不做路线选择。每个选项改变 1–2 句回应、露娜首回合风格或隐藏信任标记，但全部收束到同一战斗与主线。这样能提供角色扮演感，又不要求首版维护多套关卡、奖励和存档分支。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 91,
+      "style": "Heading 1",
+      "text": "6. 教学与叙事映射",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "6. 教学与叙事映射",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 92,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 93,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 94,
+      "style": "Heading 1",
+      "text": "7. 数据与事件建议",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "7. 数据与事件建议",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 95,
+      "style": "Normal",
+      "text": "实现原则  剧情只读取服务端已确认状态；客户端动画、镜头和对白可以重播，金币、卡牌、碎片、任务完成与好感奖励不能重复结算。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "实现原则  ",
+          "bold": true,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": "2E5D7B"
+        },
+        {
+          "text": "剧情只读取服务端已确认状态；客户端动画、镜头和对白可以重播，金币、卡牌、碎片、任务完成与好感奖励不能重复结算。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 96,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 97,
+      "style": "Heading 2",
+      "text": "7.1 建议剧情变量",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "7.1 建议剧情变量",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 98,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 99,
+      "style": "Heading 2",
+      "text": "7.2 复用与新增范围",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "7.2 复用与新增范围",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 100,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 101,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 102,
+      "style": "Heading 1",
+      "text": "8. 对抗式审查",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "8. 对抗式审查",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 103,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 104,
+      "style": "Heading 2",
+      "text": "8.1 上线阻断项",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "8.1 上线阻断项",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 105,
+      "style": "List Bullet",
+      "text": "任一关键奖励可重复领取，或重登后任务回退到已结算节点。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "任一关键奖励可重复领取，或重登后任务回退到已结算节点。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 106,
+      "style": "List Bullet",
+      "text": "训练、采集或露娜战存在不可恢复的软锁。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "训练、采集或露娜战存在不可恢复的软锁。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 107,
+      "style": "List Bullet",
+      "text": "结算页把碎片描述为完整卡灵，或直接把露娜加入玩家收藏。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "结算页把碎片描述为完整卡灵，或直接把露娜加入玩家收藏。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 108,
+      "style": "List Bullet",
+      "text": "关键任务文本只能由 AI 生成，模型关闭时无法完成序章。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "关键任务文本只能由 AI 生成，模型关闭时无法完成序章。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 109,
+      "style": "List Bullet",
+      "text": "玩家无法在 65 分钟内完成序章，且耗时来自重复跑图或强制长对白。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "玩家无法在 65 分钟内完成序章，且耗时来自重复跑图或强制长对白。",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 110,
+      "style": "Heading 1",
+      "text": "9. 验收清单",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "9. 验收清单",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 111,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 112,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 113,
+      "style": "Heading 1",
+      "text": "附录 A：实现用对白最小集",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "附录 A：实现用对白最小集",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 114,
+      "style": "Normal",
+      "text": "以下文本是关键状态所需的确定性对白最小集。AI 对话可围绕它扩写，但不得覆盖任务目标、世界事实和奖励规则。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "以下文本是关键状态所需的确定性对白最小集。AI 对话可围绕它扩写，但不得覆盖任务目标、世界事实和奖励规则。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 115,
+      "style": "Normal",
+      "text": "",
+      "alignment": null,
+      "runs": []
+    },
+    {
+      "index": 116,
+      "style": "Heading 1",
+      "text": "附录 B：依据与版本取舍",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "附录 B：依据与版本取舍",
+          "bold": null,
+          "italic": null,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 117,
+      "style": "Normal",
+      "text": "本设计综合了项目现有的卡牌精灵、地图生态、角色表、卡牌战斗、NPC/剧情系统、完整 Demo 联调、晨曦村 NPC 功能、植物/礼物偏好及 AI 对话与战斗设计。发生冲突时，以当前代码和最新设计为准：当前可玩森林名称使用“微光森林”；新玩家不直接获得完整怪物卡灵；露娜通过碎片进度收集；关键状态与奖励由服务端决定。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "本设计综合了项目现有的卡牌精灵、地图生态、角色表、卡牌战斗、NPC/剧情系统、完整 Demo 联调、晨曦村 NPC 功能、植物/礼物偏好及 AI 对话与战斗设计。发生冲突时，以当前代码和最新设计为准：当前可玩森林名称使用“微光森林”；新玩家不直接获得完整怪物卡灵；露娜通过碎片进度收集；关键状态与奖励由服务端决定。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "index": 118,
+      "style": "Normal",
+      "text": "后续若恢复“击败并认可后立即加入”的旧设，需要单独调整卡灵获取契约和序章结算，不应只改对白。",
+      "alignment": null,
+      "runs": [
+        {
+          "text": "后续若恢复“击败并认可后立即加入”的旧设，需要单独调整卡灵获取契约和序章结算，不应只改对白。",
+          "bold": null,
+          "italic": false,
+          "size_pt": null,
+          "font": null,
+          "color": null
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "index": 0,
+      "rows": [
+        [
+          "项目",
+          "内容"
+        ],
+        [
+          "定位",
+          "首登可玩的叙事化新手序章"
+        ],
+        [
+          "目标时长",
+          "50–65 分钟；熟练玩家约 35–45 分钟"
+        ],
+        [
+          "覆盖区域",
+          "晨曦村、微光森林入口与月光空地"
+        ],
+        [
+          "核心角色",
+          "玩家、晨曦村村长、训练教官、杂货商、森林向导、铁匠少女苏娜、狼娘·露娜"
+        ],
+        [
+          "核心产出",
+          "首张 NPC 专属卡、基础补给、首次采集、露娜共鸣碎片 ×3、主线任务《月痕追迹》"
+        ],
+        [
+          "版本日期",
+          "2026-07-24"
+        ]
+      ]
+    },
+    {
+      "index": 1,
+      "rows": [
+        [
+          "类别",
+          "本版本定义"
+        ],
+        [
+          "目标",
+          "完成移动、交互、商店、任务、采集、战斗、奖励、存档的首次闭环，并建立露娜与源萝异变两条情感/悬念线。"
+        ],
+        [
+          "硬约束",
+          "新玩家不直接获得完整怪物卡灵；露娜战后只给 3 枚碎片。战斗数值和奖励由服务端权威结算。"
+        ],
+        [
+          "叙事约束",
+          "不使用失忆、天选之子或长篇旁白解释世界；玩家的特殊性只表现为对源萝刻痕产生短暂共鸣。"
+        ],
+        [
+          "非目标",
+          "本序章不解释源萝之力全貌，不招募露娜，不开放复杂分支、配音、多结局或大型过场动画。"
+        ],
+        [
+          "完成标准",
+          "玩家知道下一步去哪、为什么去；记住露娜；理解碎片收集；重新登录后序章节点与奖励不重复。"
+        ]
+      ]
+    },
+    {
+      "index": 2,
+      "rows": [
+        [
+          "阶段",
+          "情绪",
+          "设计手段"
+        ],
+        [
+          "陌生",
+          "我刚来到这里",
+          "晨雾、村灯、村长的克制欢迎；不给百科式说明。"
+        ],
+        [
+          "安定",
+          "这个村子值得认识",
+          "三项小委托分别连接生活、训练和探索。"
+        ],
+        [
+          "胜任",
+          "我已经会行动和战斗",
+          "训练教官给出可复盘的低压教学战。"
+        ],
+        [
+          "不安",
+          "森林里发生了不该发生的事",
+          "村灯熄灭、风向反转、月光百合提前闭合。"
+        ],
+        [
+          "冲突",
+          "露娜为什么认定我是敌人",
+          "先行动后解释的误会战，台词随玩家防守/进攻行为变化。"
+        ],
+        [
+          "牵引",
+          "我要再见到她并查清月痕",
+          "3/30 碎片进度与《月痕追迹》同时开启。"
+        ]
+      ]
+    },
+    {
+      "index": 3,
+      "rows": [
+        [
+          "冲突层",
+          "表面问题",
+          "实际作用"
+        ],
+        [
+          "操作层",
+          "玩家不会移动、交互、买卖、采集和战斗",
+          "用村长的三项准备任务自然教学。"
+        ],
+        [
+          "角色层",
+          "露娜误认玩家为雾袭者",
+          "制造第一场有动机的战斗，而不是路边刷怪。"
+        ],
+        [
+          "世界层",
+          "森林出现逆流雾与月牙刻痕",
+          "建立源萝之力被人为干扰的长期谜题。"
+        ],
+        [
+          "成长层",
+          "玩家无法立刻获得露娜",
+          "用 3/30 碎片把“再次相遇”转化为可追踪目标。"
+        ]
+      ]
+    },
+    {
+      "index": 4,
+      "rows": [
+        [
+          "编号",
+          "场景",
+          "主要玩法",
+          "叙事产出",
+          "时长"
+        ],
+        [
+          "S0",
+          "冷开场：月痕",
+          "短演出/跳过",
+          "露娜、异常刻痕、危险预告",
+          "1–2 分"
+        ],
+        [
+          "S1",
+          "抵达晨曦村",
+          "移动、镜头、首次交互",
+          "玩家身份与三项准备",
+          "5–7 分"
+        ],
+        [
+          "S2",
+          "村道补给",
+          "商店购买、任务追踪",
+          "村庄生活感与商队异常",
+          "5–8 分"
+        ],
+        [
+          "S3",
+          "实战准备",
+          "教学战斗、奖励",
+          "战斗规则与《破绽识破》",
+          "10–15 分"
+        ],
+        [
+          "S4",
+          "林缘踏查",
+          "地图切换、采集、图鉴",
+          "雾流反常，月光植物异常",
+          "8–10 分"
+        ],
+        [
+          "S5",
+          "遭遇露娜",
+          "对话选择、Boss 误会战",
+          "露娜动机、玩家共鸣、3 枚碎片",
+          "12–18 分"
+        ],
+        [
+          "S6",
+          "返回晨曦村",
+          "任务提交、存档、功能解锁",
+          "《月痕追迹》与下一阶段目标",
+          "5 分"
+        ]
+      ]
+    },
+    {
+      "index": 5,
+      "rows": [
+        [
+          "状态",
+          "进入条件",
+          "允许操作",
+          "完成事件"
+        ],
+        [
+          "opening_arrival",
+          "新角色首次进入晨曦村",
+          "移动、村长对话",
+          "接受《入村准备》"
+        ],
+        [
+          "opening_prepare",
+          "已接受准备任务",
+          "三项子任务、村庄 NPC 服务",
+          "训练 + 补给 + 采集全部完成"
+        ],
+        [
+          "opening_forest_signal",
+          "三项完成并接近森林入口",
+          "进入微光森林、跟随异常提示",
+          "到达月光空地"
+        ],
+        [
+          "opening_luna_battle",
+          "露娜对话结束",
+          "Boss 战；禁止切图",
+          "战斗完成并结算"
+        ],
+        [
+          "opening_return",
+          "获得露娜碎片 ×3",
+          "返回晨曦村、提交主线",
+          "解锁《月痕追迹》"
+        ],
+        [
+          "opening_complete",
+          "村长结算完成",
+          "正常世界循环",
+          "永久完成标记"
+        ]
+      ]
+    },
+    {
+      "index": 6,
+      "rows": [
+        [
+          "角色",
+          "对白/选项",
+          "演出与系统反馈"
+        ],
+        [
+          "村长",
+          "“旅人，欢迎来到晨曦村。这里不富裕，但每一盏灯都愿意为归来的人亮着。”",
+          "镜头不锁死；对白结束后开放三项任务卡。"
+        ],
+        [
+          "玩家选项 A",
+          "“刚才那盏灯上出现了月牙。”",
+          "村长停顿：‘我看见了。先别急着替它取名字。’"
+        ],
+        [
+          "玩家选项 B",
+          "“森林入口为什么封着？”",
+          "村长：‘不是封锁，是在确认进去的人懂得回来。’"
+        ],
+        [
+          "村长",
+          "“先做三件小事：准备补给、完成实战、在东缘记下一次采集。回来后，我会回答我知道的部分。”",
+          "获得任务《入村准备》，导航优先指向训练教官。"
+        ]
+      ]
+    },
+    {
+      "index": 7,
+      "rows": [
+        [
+          "角色",
+          "关键对白"
+        ],
+        [
+          "杂货商",
+          "“先别急着掏金币，能平安回来的冒险者才是最好的客人。”"
+        ],
+        [
+          "杂货商",
+          "“昨晚的补给车少了一只灯罩。没有爪痕，也没有劫货，只在车轮上留了半个月牙。”"
+        ],
+        [
+          "玩家追问",
+          "“是狼族做的吗？”"
+        ],
+        [
+          "杂货商",
+          "“做买卖最忌讳先认定答案。你去看，回来告诉我你看见了什么。”"
+        ]
+      ]
+    },
+    {
+      "index": 8,
+      "rows": [
+        [
+          "节点",
+          "教官台词",
+          "教学目标"
+        ],
+        [
+          "开战",
+          "“先稳住节奏，再找我露出的破绽。”",
+          "识别手牌、能量和结束回合。"
+        ],
+        [
+          "玩家透支能量",
+          "“牌不是越快打完越好。先问自己：下一回合要承受什么？”",
+          "理解资源保留。"
+        ],
+        [
+          "玩家成功破盾",
+          "“对。力量用在唯一正确的地方，才叫判断。”",
+          "强化反馈。"
+        ],
+        [
+          "首次胜利",
+          "“这张《破绽识破》是你的毕业礼。记住，真正的破绽往往藏在你以为已经看懂的时候。”",
+          "授予首张 NPC 专属卡。"
+        ]
+      ]
+    },
+    {
+      "index": 9,
+      "rows": [
+        [
+          "角色",
+          "关键对白"
+        ],
+        [
+          "森林向导",
+          "“迷雾不会主动伤人。真正危险的是人在看不清方向时做出的决定。”"
+        ],
+        [
+          "森林向导",
+          "“今天的风往东，雾却往西。看见不合常理的东西，先记住，再靠近。”"
+        ],
+        [
+          "系统提示",
+          "环境记录更新：雾流逆风；月光百合异常闭合。"
+        ]
+      ]
+    },
+    {
+      "index": 10,
+      "rows": [
+        [
+          "玩家选择",
+          "露娜回应",
+          "轻量结果"
+        ],
+        [
+          "“我也在追查月牙刻痕。”",
+          "“那就证明你不是在追自己的脚印。”",
+          "露娜首回合偏防守；战后信任台词较缓和。"
+        ],
+        [
+          "“先放下爪子再谈。”",
+          "“能在森林里命令狼族的人，至少该有让我听完的本事。”",
+          "露娜首回合偏攻击；战后台词更具竞争感。"
+        ],
+        [
+          "“你受伤了。”",
+          "“别把观察当成关心。你身上的味道比伤口更可疑。”",
+          "展示角色细节；战斗参数不变。"
+        ]
+      ]
+    },
+    {
+      "index": 11,
+      "rows": [
+        [
+          "阶段",
+          "露娜行为与台词",
+          "系统设计"
+        ],
+        [
+          "开场",
+          "“别让我在同一个地方闻到第二次这种味道。”",
+          "露娜作为序章 Boss，界面显示月牙标记与碎片奖励预览。"
+        ],
+        [
+          "70% HP",
+          "“只会往前压？那你追不上森林里的任何东西。”",
+          "引导玩家关注护盾/节奏，不新增规则。"
+        ],
+        [
+          "40% HP",
+          "古树刻痕亮起；露娜短暂停手：“这股共鸣……不是从你身上开始的。”",
+          "一次剧情停顿，双方状态保持，随后继续最后一轮。"
+        ],
+        [
+          "战斗完成",
+          "不表现露娜倒地。她主动收爪，承认判断有误但未完全信任。",
+          "服务端结算为首次 Boss 完成，固定碎片 ×3；不得直接生成完整卡灵。"
+        ]
+      ]
+    },
+    {
+      "index": 12,
+      "rows": [
+        [
+          "角色",
+          "终幕对白"
+        ],
+        [
+          "村长",
+          "“真正保护同伴的，从来不只是力量。你今天先听见了别人的理由，才带回了这三枚碎片。”"
+        ],
+        [
+          "村长",
+          "“我只确认一件事：这不是自然形成的纹路。源萝之力在回应某种召唤，而召唤它的人不希望我们看见全貌。”"
+        ],
+        [
+          "村长",
+          "“休息一晚。明天去找森林向导，她知道第二处雾流逆转的位置。”"
+        ],
+        [
+          "系统",
+          "序章《雾中月痕》完成。主线《月痕追迹》已开启。"
+        ]
+      ]
+    },
+    {
+      "index": 13,
+      "rows": [
+        [
+          "角色",
+          "开局功能",
+          "口吻原则",
+          "禁止写法"
+        ],
+        [
+          "村长",
+          "目标发布、信息校准、主线收束",
+          "温和但谨慎；区分事实与猜测。",
+          "不要一见面就讲大陆历史或称玩家为救世主。"
+        ],
+        [
+          "训练教官",
+          "战斗教学、失败保护、首卡奖励",
+          "短句、具体、强调复盘。",
+          "不要用纯 UI 教程术语说话。"
+        ],
+        [
+          "杂货商",
+          "商店教学、生活线索",
+          "务实、会观察、不急着下结论。",
+          "不要把所有商品和系统一次念完。"
+        ],
+        [
+          "森林向导",
+          "地图/采集教学、异常证据",
+          "冷静、重视环境事实。",
+          "不要用神秘学替代可观察线索。"
+        ],
+        [
+          "苏娜",
+          "村庄活力与后续锻造预告",
+          "热情、直率，用炉火和材料比喻。",
+          "序章不强制其支线，避免流程过长。"
+        ],
+        [
+          "露娜",
+          "首个强角色钩子、误会战、碎片目标",
+          "敏锐、行动快、忠于族群；嘴硬但不无理。",
+          "不要战败即倒贴、立即加入或无条件信任。"
+        ]
+      ]
+    },
+    {
+      "index": 14,
+      "rows": [
+        [
+          "系统教学",
+          "剧情理由",
+          "失败/边界处理"
+        ],
+        [
+          "移动与交互",
+          "观察异常村灯并找村长",
+          "玩家 30 秒无操作时出现方向性弱提示，不自动移动。"
+        ],
+        [
+          "任务追踪",
+          "村长给出三项入村准备",
+          "同屏只高亮一个推荐目标，玩家可切换。"
+        ],
+        [
+          "商店",
+          "准备晨曦暖茶",
+          "保证初始金币足够；误购不导致任务软锁。"
+        ],
+        [
+          "战斗",
+          "训练教官亲自检验",
+          "可重试；失败不扣资源、不重复发奖励。"
+        ],
+        [
+          "地图切换",
+          "前往村庄东缘踏查",
+          "战斗中禁止切图；切图失败给明确原因。"
+        ],
+        [
+          "采集",
+          "记录森林边缘植物",
+          "目标节点不可用时自动替换可用节点。"
+        ],
+        [
+          "卡灵碎片",
+          "露娜战斗共鸣",
+          "明确显示 3/30，不用“获得露娜”误导玩家。"
+        ],
+        [
+          "存档",
+          "村长记录调查结果",
+          "每个关键结算点幂等；断线重登从最近完成节点继续。"
+        ]
+      ]
+    },
+    {
+      "index": 15,
+      "rows": [
+        [
+          "事件 ID",
+          "触发条件",
+          "服务端结果",
+          "客户端表现"
+        ],
+        [
+          "opening.lamp_resonance",
+          "首次接近村口灯",
+          "记录已观看，可跳过重播",
+          "月牙纹 1.5 秒，环境音短暂停顿"
+        ],
+        [
+          "opening.prepare.accepted",
+          "接受《入村准备》",
+          "创建/激活三个子目标",
+          "任务面板与推荐导航"
+        ],
+        [
+          "opening.training.completed",
+          "训练战首次完成",
+          "幂等授予《破绽识破》",
+          "卡牌获得演出"
+        ],
+        [
+          "opening.survey.completed",
+          "采集目标完成",
+          "更新踏查进度",
+          "环境记录与异常光点"
+        ],
+        [
+          "opening.luna.started",
+          "到达月光空地并结束对话",
+          "创建露娜序章战斗",
+          "锁定局部区域、切战斗场景"
+        ],
+        [
+          "opening.luna.completed",
+          "战斗首次完成",
+          "固定露娜碎片 ×3；记录选择与战斗结果",
+          "图鉴进度 3/30"
+        ],
+        [
+          "opening.completed",
+          "向村长提交调查",
+          "完成序章，开启《月痕追迹》",
+          "主线卡片、自动存档"
+        ]
+      ]
+    },
+    {
+      "index": 16,
+      "rows": [
+        [
+          "变量",
+          "类型",
+          "用途"
+        ],
+        [
+          "opening_stage",
+          "枚举",
+          "控制序章状态机，避免仅凭客户端场景判断。"
+        ],
+        [
+          "luna_intro_choice",
+          "枚举",
+          "保存玩家态度，供后续重逢引用。"
+        ],
+        [
+          "luna_intro_battle_completed",
+          "布尔",
+          "保证战斗结算与碎片奖励幂等。"
+        ],
+        [
+          "opening_environment_notes",
+          "集合",
+          "记录雾流、花朵、刻痕三条证据；首版可固定获得。"
+        ],
+        [
+          "opening_completed_at",
+          "时间戳",
+          "用于恢复、分析和后续版本迁移。"
+        ]
+      ]
+    },
+    {
+      "index": 17,
+      "rows": [
+        [
+          "Must：本序章必须实现",
+          "Defer：明确延后"
+        ],
+        [
+          "复用现有晨曦村五名 NPC、三项村长任务、商店、训练、采集、微光森林传送、战斗与碎片系统。",
+          "完整源萝历史、露娜招募剧情、狼族聚落、第二/第三条月痕关卡。"
+        ],
+        [
+          "新增序章状态机、村灯短事件、月光空地触发、露娜序章敌方配置、结尾主线任务。",
+          "配音、Live2D、全屏动画、复杂同伴助战、分支地图和多结局。"
+        ],
+        [
+          "为现有静态/AI 对话提供剧情上下文，但关键任务信息必须有确定性文本。",
+          "让模型决定任务完成、碎片数量、角色归属或世界事实。"
+        ]
+      ]
+    },
+    {
+      "index": 18,
+      "rows": [
+        [
+          "优先级",
+          "风险",
+          "真实影响",
+          "处理"
+        ],
+        [
+          "P0",
+          "断线或重复请求导致《破绽识破》/露娜碎片重复发放",
+          "资产一致性破坏，可被主动利用",
+          "所有关键奖励以玩家 + 剧情节点唯一约束和事务幂等处理。"
+        ],
+        [
+          "P0",
+          "露娜战斗进行中允许切图或创建第二场战斗",
+          "状态冲突、奖励错发、无法恢复",
+          "复用 active battle 锁定与版本校验；明确 409 错误。"
+        ],
+        [
+          "P1",
+          "共享采集点刷新导致主线无法推进",
+          "新玩家被永久卡在教学",
+          "任务目标选择任意可用植物；无可用节点时生成任务专用实例或立即刷新。"
+        ],
+        [
+          "P1",
+          "文案暗示玩家已获得露娜",
+          "玩家对 3/30 产生强烈落差",
+          "统一使用“共鸣碎片/图鉴线索”，结算页明确完整卡灵需要 30 枚。"
+        ],
+        [
+          "P1",
+          "AI 对话遗漏关键任务信息或越权承诺奖励",
+          "玩家迷路、规则不一致",
+          "关键台词与选项由策划配置；AI 只能补充角色化闲聊。"
+        ],
+        [
+          "P1",
+          "训练战失败形成挫败墙",
+          "玩家尚未理解系统就流失",
+          "允许无损重试、查看要点和第二次保护增益。"
+        ],
+        [
+          "P2",
+          "序章任务过多显得像清单",
+          "情绪被拆碎",
+          "三项任务共享同一异常线索；S2/S4 可交换，完成后立即进入冲突。"
+        ],
+        [
+          "P2",
+          "露娜误会缺乏依据",
+          "角色显得蛮横",
+          "在 S0、村灯和玩家牌匣上重复月牙共鸣，让她的判断错误但合理。"
+        ]
+      ]
+    },
+    {
+      "index": 19,
+      "rows": [
+        [
+          "验收项",
+          "通过标准"
+        ],
+        [
+          "首次体验",
+          "新账号进入后 60 秒内获得第一个明确目标；不需要阅读世界观说明。"
+        ],
+        [
+          "流程闭环",
+          "移动、NPC 交互、商店、任务、训练战、地图切换、采集、露娜战、碎片与存档全部串联。"
+        ],
+        [
+          "剧情理解",
+          "测试玩家能复述：露娜为何攻击、森林哪里异常、下一步为何追踪月痕。"
+        ],
+        [
+          "角色记忆",
+          "测试玩家能区分村长、教官、向导和露娜的功能与说话方式。"
+        ],
+        [
+          "获取规则",
+          "露娜战后显示碎片 ×3、总进度 3/30；不会创建完整露娜卡灵。"
+        ],
+        [
+          "失败恢复",
+          "训练战/露娜战失败、断线、刷新、重复提交均可恢复且不重复发奖。"
+        ],
+        [
+          "AI 降级",
+          "AI 开关关闭、超时或非法输出时，关键剧情和任务仍完整可玩。"
+        ],
+        [
+          "时长",
+          "首次玩家中位完成时间 50–65 分钟；熟练玩家可快速跳过演出并在 45 分钟内完成。"
+        ]
+      ]
+    },
+    {
+      "index": 20,
+      "rows": [
+        [
+          "节点",
+          "说话者",
+          "确定性文本"
+        ],
+        [
+          "接受序章",
+          "村长",
+          "“先准备补给、完成实战，再去东缘记下一次采集。回来后，我会回答我知道的部分。”"
+        ],
+        [
+          "训练开始",
+          "训练教官",
+          "“先稳住节奏，再找我露出的破绽。”"
+        ],
+        [
+          "训练胜利",
+          "训练教官",
+          "“这张《破绽识破》是你的毕业礼。”"
+        ],
+        [
+          "森林异常",
+          "森林向导",
+          "“风往东，雾却往西。先记住，再靠近。”"
+        ],
+        [
+          "露娜开场",
+          "露娜",
+          "“你身上有那道月痕的味道。别再往前。”"
+        ],
+        [
+          "露娜战后",
+          "露娜",
+          "“循着碎片找到下一道月痕。到那时，我会决定要不要再听你解释。”"
+        ],
+        [
+          "序章收束",
+          "村长",
+          "“这不是自然形成的纹路。明天去找向导，追踪第二处雾流逆转的位置。”"
+        ]
+      ]
+    }
+  ],
+  "headers": [
+    [
+      {
+        "index": 0,
+        "style": "Header",
+        "text": "斗萝大陆 · 开局剧情设计",
+        "alignment": 0,
+        "runs": [
+          {
+            "text": "斗萝大陆 · 开局剧情设计",
+            "bold": null,
+            "italic": null,
+            "size_pt": 8.5,
+            "font": "Microsoft YaHei",
+            "color": "64717C"
+          }
+        ]
+      }
+    ]
+  ],
+  "footers": [
+    [
+      {
+        "index": 0,
+        "style": "Footer",
+        "text": "",
+        "alignment": 2,
+        "runs": [
+          {
+            "text": "",
+            "bold": null,
+            "italic": null,
+            "size_pt": 8.5,
+            "font": "Microsoft YaHei",
+            "color": "64717C"
+          }
+        ]
+      }
+    ]
+  ],
+  "package": [
+    {
+      "path": "[Content_Types].xml",
+      "size": 1994,
+      "sha256": "479ad1a2258771db93540fbde6ad43e861d8d39dd2559e3f6db17286b11cc6ab"
+    },
+    {
+      "path": "_rels/.rels",
+      "size": 734,
+      "sha256": "a9ae57efe9186f07d48303bcac5d54c7e359bf3f503939c03ad2954e5c59a5c4"
+    },
+    {
+      "path": "docProps/core.xml",
+      "size": 921,
+      "sha256": "4426e16c28fd3eb6fade675058df731eb6b9487fa217ff8324c4ff8490509a26"
+    },
+    {
+      "path": "docProps/app.xml",
+      "size": 1132,
+      "sha256": "be664981c3141cddfc59362beb287ebf20d0773660e2dd6faac5968a5930a081"
+    },
+    {
+      "path": "word/document.xml",
+      "size": 188822,
+      "sha256": "ca5c5bb9af322c5eafd00fc29e0f059e0040d82d506c58b0e385e17a80890abf"
+    },
+    {
+      "path": "word/_rels/document.xml.rels",
+      "size": 1484,
+      "sha256": "157ed86827865b095c9c6b39e7c3451315a4b0d6127daa8636026684d8b9df89"
+    },
+    {
+      "path": "word/styles.xml",
+      "size": 350312,
+      "sha256": "34242118a05dde17b31a4c11ae9ba409bc58e31a814de77acd62afb5dd608d7f"
+    },
+    {
+      "path": "word/stylesWithEffects.xml",
+      "size": 438131,
+      "sha256": "463ae0928cf0d84775dbf8cf18d6c3029f6707c81bf590f6d6dd8757a5e93f15"
+    },
+    {
+      "path": "word/settings.xml",
+      "size": 2535,
+      "sha256": "51a0d348fe85965c66e4748a03c3c0d055d78455514f03cb121c334af7d73689"
+    },
+    {
+      "path": "word/webSettings.xml",
+      "size": 438,
+      "sha256": "349d36de7434d09f86987ff671d8814964a0588c1e630c06e562cda7e75e9f95"
+    },
+    {
+      "path": "word/fontTable.xml",
+      "size": 2811,
+      "sha256": "79385fb7f60247507ecaffc292e9ebd52ea0657b8634f629ba6fccc54011d6bb"
+    },
+    {
+      "path": "word/theme/theme1.xml",
+      "size": 10939,
+      "sha256": "e3a8ab7db9ca7afca56f5f2820a56e8b660016c647773555b060b0a02ac76941"
+    },
+    {
+      "path": "customXml/item1.xml",
+      "size": 262,
+      "sha256": "a86086ffc5d8e83ebd6c71a55d1d2efaa31b137977f5f3a752366e1023612144"
+    },
+    {
+      "path": "customXml/_rels/item1.xml.rels",
+      "size": 295,
+      "sha256": "1ca6c9a64edcebe24ee703a54403611b322d96da33371779e742d2d3f7ed7a6c"
+    },
+    {
+      "path": "customXml/itemProps1.xml",
+      "size": 354,
+      "sha256": "c542307b13ec29a8b546217bb37936ab4822e044b265d2952985ec3d6afed24e"
+    },
+    {
+      "path": "word/numbering.xml",
+      "size": 5513,
+      "sha256": "70976f19cbcd896e51890859fe6ecb3467a5a7ad0c040160fedc5a1993cb09ce"
+    },
+    {
+      "path": "word/header1.xml",
+      "size": 1519,
+      "sha256": "0c9a9965c9b339777d71c77afb9f9d2483f3ba5e5f5476d68d4364420f6d339e"
+    },
+    {
+      "path": "word/footer1.xml",
+      "size": 1595,
+      "sha256": "5f04563106475e25d981e89afe75bbd29c6ea727c6f568f0a37b2b6368a01fdb"
+    },
+    {
+      "path": "docProps/thumbnail.jpeg",
+      "size": 8324,
+      "sha256": "96367138dc44ce09bf2c8f0f8e49348a1478d2c5c0af69bbc2bbc38b63cdcead"
+    }
+  ]
+}

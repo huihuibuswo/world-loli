@@ -25,6 +25,7 @@ CONTENT_MARGIN_X = 10
 CONTENT_TOP = 8
 BASELINE = 248
 BOUNDARY_SEARCH_RADIUS = 96
+MAGENTA_RESIDUE_LIMIT = 64
 
 
 def is_magenta(pixel: tuple[int, int, int, int]) -> bool:
@@ -272,6 +273,17 @@ def validate_sheet(sheet: Image.Image, output_name: str) -> None:
             raise ValueError(f"{output_name}: frame {index} exceeds horizontal bounds")
         if bbox[1] < CONTENT_TOP or bbox[3] > BASELINE:
             raise ValueError(f"{output_name}: frame {index} exceeds vertical bounds")
+        frame_pixels = frame.load()
+        magenta_residue = sum(
+            1
+            for y in range(FRAME_SIZE)
+            for x in range(FRAME_SIZE)
+            if frame_pixels[x, y][3] > 24 and is_magenta(frame_pixels[x, y])
+        )
+        if magenta_residue > MAGENTA_RESIDUE_LIMIT:
+            raise ValueError(
+                f"{output_name}: frame {index} retains {magenta_residue} visible magenta pixels"
+            )
 
 
 def main() -> None:

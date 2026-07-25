@@ -63,6 +63,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.nearby = null
+    this.nearbyPortal = null
+    this.nearbyPlant = null
+    this.lastPositionEmit = 0
+    this.npcMapMarkers.clear()
     const map = this.registry.get('world-map') as MapData
     const profile = this.registry.get('world-player') as PlayerProfile
     const bounds = map.resource.bounds ?? { min_x: 0, min_y: 0, max_x: 2048, max_y: 2048 }
@@ -268,13 +273,17 @@ export class WorldScene extends Phaser.Scene {
     gameEvents.on('world:input-lock', this.onInputLock)
     gameEvents.on('plant:collected', this.onPlantCollected)
     this.onInputLock({ locked: this.registry.get(WORLD_INPUT_LOCK_KEY) === true })
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+    const cleanupEvents = (): void => {
       gameEvents.off('input:direction', this.onVirtualDirection)
       gameEvents.off('input:interact', this.interact)
       gameEvents.off('world:input-lock', this.onInputLock)
       gameEvents.off('plant:collected', this.onPlantCollected)
       this.npcMapMarkers.clear()
-    })
+      this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanupEvents)
+      this.events.off(Phaser.Scenes.Events.DESTROY, cleanupEvents)
+    }
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanupEvents)
+    this.events.once(Phaser.Scenes.Events.DESTROY, cleanupEvents)
   }
 
   update(time: number): void {
@@ -311,7 +320,12 @@ export class WorldScene extends Phaser.Scene {
 
   private readonly onInputLock = ({ locked }: { locked: boolean }): void => {
     this.worldInputLocked = locked
-    if (!this.player) return
+    if (locked) {
+      this.npcs.forEach((npc) => {
+        if (npc.active && npc.body) npc.updateWander(this.time.now, true)
+      })
+    }
+    if (!this.player?.body) return
     this.player.state = locked ? 'disabled' : 'idle'
     this.player.setVelocity(0)
     this.player.setVirtualDirection(0, 0)
