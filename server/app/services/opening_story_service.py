@@ -30,12 +30,17 @@ VILLAGE_NAME = "晨曦村"
 FOREST_NAME = "微光森林"
 TASK_TITLES = ("村道补给", "林缘踏查", "实战准备")
 STAGES = {"arrival", "prepare", "forest_signal", "return_village", "complete"}
+LUNA_BATTLE_DIALOGUE = [
+    {"speaker": "露娜", "text": "别靠近！你身上的共鸣正在牵动失控月痕……你也是污染源吗？"},
+    {"speaker": "主角", "text": "我没有卡灵，也不是污染源。我的基础卡牌形成了稳定回路，也许能替你承接这股力量。"},
+    {"speaker": "露娜", "text": "那就让我亲自确认。若你的共鸣真能稳住月痕，我会回应它。"},
+]
 LUNA_CONTRACT_DIALOGUE = [
     {"speaker": "露娜", "text": "停下……那道月痕还在吞噬我的意识。"},
     {"speaker": "主角", "text": "我的卡组里没有卡灵，但这份力量至少还能替你稳住它。"},
     {"speaker": "露娜", "text": "没有卡灵，却能回应我的月光……原来你不是污染森林的人。"},
     {"speaker": "露娜", "text": "收下我的月痕吧。不是战利品，是我自己的选择。"},
-    {"speaker": "露娜", "text": "从现在起，我会成为你的卡灵。下一次，让我们站在同一边。"},
+    {"speaker": "露娜", "text": "你的共鸣，我回应了。从现在起，我会以完整卡灵与你并肩。下一次，让我们站在同一边。"},
 ]
 
 
@@ -155,6 +160,20 @@ def opening_data(db: Session, player: Player) -> dict[str, Any]:
             "“不是野兽的味道……有人把不属于森林的东西埋进来了。”",
             "同一时刻，你沿着东侧村道抵达晨曦村。",
         ],
+    }
+
+
+def opening_battle_intro(enemy: NpcTemplate) -> dict[str, Any] | None:
+    if (
+        enemy.name != LUNA_NAME
+        or str((enemy.reward or {}).get("story_gate", "")) != STORY_KEY
+    ):
+        return None
+    return {
+        "story_key": STORY_KEY,
+        "event": "luna_resonance",
+        "message": "玩家的基础卡牌与失控月痕产生共鸣，露娜决定亲自确认这份回应。",
+        "dialogue": LUNA_BATTLE_DIALOGUE,
     }
 
 
@@ -328,7 +347,8 @@ def mark_opening_battle_complete(
         "story_key": STORY_KEY,
         "stage": "return_village",
         "event": "luna_contract",
-        "message": "露娜主动签订月痕契约，成为你的第一位卡灵。",
+        "reward_kind": "fixed_newbie_reward",
+        "message": "固定新手奖励已到账：完整「狼娘·露娜」卡灵与「月牙撕裂」×2 已直接加入你的收藏和启用套牌。",
         "dialogue": LUNA_CONTRACT_DIALOGUE,
         "contract_reward": contract_reward,
     }

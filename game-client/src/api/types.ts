@@ -373,9 +373,17 @@ export interface OpeningBattleReward {
   story_key: string
   stage: OpeningStage
   event?: 'luna_contract'
+  reward_kind?: 'fixed_newbie_reward'
   message?: string
   dialogue?: StoryDialogueLine[]
   contract_reward?: LunaContractReward
+}
+
+export interface OpeningBattleIntro {
+  story_key: string
+  event: 'luna_resonance'
+  message: string
+  dialogue: StoryDialogueLine[]
 }
 
 export interface NpcQuestService {
@@ -472,6 +480,7 @@ export interface BattleData {
   discard_cards: number[]
   buffs: unknown[]
   debuffs: unknown[]
+  story_intro?: OpeningBattleIntro
   enemy_energy: number
   enemy_max_energy: number
   enemy_hand_count: number

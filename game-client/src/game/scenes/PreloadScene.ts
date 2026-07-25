@@ -7,6 +7,15 @@ import {
 
 type BattleSceneRequest = GameEventMap['scene:battle']
 
+const NPC_TEXTURE_KEYS = [
+  'npc-village-chief',
+  'npc-shopkeeper',
+  'npc-suna',
+  'npc-forest-guide',
+  'npc-trainer',
+  'npc-luna',
+] as const
+
 export class PreloadScene extends Phaser.Scene {
   constructor() {
     super('PreloadScene')
@@ -51,21 +60,12 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('village-inn', `${root}/sprites/village-inn.png`)
     this.load.image('village-cottage-a', `${root}/sprites/village-cottage-a.png`)
     this.load.image('village-cottage-b', `${root}/sprites/village-cottage-b.png`)
-    this.load.image('npc-village-chief', `${root}/sprites/npc-village-chief.png`)
-    this.load.image('npc-shopkeeper', `${root}/sprites/npc-shopkeeper.png`)
-    this.load.image('npc-suna', `${root}/sprites/npc-suna.png`)
-    this.load.image('npc-forest-guide', `${root}/sprites/npc-forest-guide.png`)
-    this.load.image('npc-trainer', `${root}/sprites/npc-trainer.png`)
-    this.load.image('npc-luna', `${root}/sprites/npc-luna.png`)
-    const enemyCombatTextures = [
-      'npc-village-chief',
-      'npc-shopkeeper',
-      'npc-suna',
-      'npc-forest-guide',
-      'npc-trainer',
-      'npc-luna',
-    ] as const
-    enemyCombatTextures.forEach((key) => {
+    NPC_TEXTURE_KEYS.forEach((key) => {
+      this.load.image(key, `${root}/sprites/${key}.png`)
+      this.load.spritesheet(`${key}-walk`, `${root}/sprites/${key}-walk-sheet.png`, {
+        frameWidth: 256,
+        frameHeight: 256,
+      })
       this.load.spritesheet(`${key}-combat`, `${root}/sprites/${key}-combat-sheet.png`, {
         frameWidth: 256,
         frameHeight: 256,
@@ -125,15 +125,19 @@ export class PreloadScene extends Phaser.Scene {
         })
       }
     }
-    for (const texture of [
-      'npc-village-chief-combat',
-      'npc-shopkeeper-combat',
-      'npc-suna-combat',
-      'npc-forest-guide-combat',
-      'npc-trainer-combat',
-      'npc-luna-combat',
-    ]) {
-      if (!this.textures.exists(texture)) continue
+    NPC_TEXTURE_KEYS.forEach((textureKey) => {
+      const walkTexture = `${textureKey}-walk`
+      if (this.textures.exists(walkTexture)) {
+        this.anims.create({
+          key: `${textureKey}-walk-cycle`,
+          frames: this.anims.generateFrameNumbers(walkTexture, { frames: [0, 1, 2, 3] }),
+          frameRate: 8,
+          repeat: -1,
+        })
+      }
+
+      const texture = `${textureKey}-combat`
+      if (!this.textures.exists(texture)) return
       const actions = [
         { name: 'attack', start: 0, frameRate: 10 },
         { name: 'defense', start: 4, frameRate: 8 },
@@ -149,7 +153,7 @@ export class PreloadScene extends Phaser.Scene {
           repeat: 0,
         })
       })
-    }
+    })
     const initialBattle = this.registry.get(BATTLE_SCENE_REQUEST_KEY) as
       | BattleSceneRequest
       | undefined

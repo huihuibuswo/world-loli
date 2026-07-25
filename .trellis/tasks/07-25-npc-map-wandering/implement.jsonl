@@ -1,0 +1,3 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Follow the project frontend layer ownership and pre-development checklist before editing Phaser client code."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Reuse the existing asset key lists and animation registration patterns instead of creating divergent NPC lists."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Keep the source-image to generated-asset to runtime-animation contract explicit at each boundary."}

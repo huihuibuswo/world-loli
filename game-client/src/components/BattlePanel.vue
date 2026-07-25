@@ -13,6 +13,9 @@ const lunaContract = computed(() => (
     ? battle.value.reward.opening
     : null
 ))
+const battleIntroStep = ref(0)
+const battleIntroLine = computed(() => battle.value.story_intro?.dialogue[battleIntroStep.value] ?? null)
+const battleIntroActive = computed(() => battle.value.status === 'active' && battleIntroLine.value !== null)
 const contractStep = ref(0)
 const contractLine = computed(() => lunaContract.value?.dialogue?.[contractStep.value] ?? null)
 const contractStoryActive = computed(() => contractLine.value !== null)
@@ -33,6 +36,7 @@ onBeforeUnmount(() => {
 })
 
 watch(() => battle.value?.battle_id, () => {
+  battleIntroStep.value = 0
   contractStep.value = 0
 })
 
@@ -152,14 +156,33 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
           <span v-if="battle.reward?.fragment">
             {{ battle.reward.fragment.name }}碎片 +{{ battle.reward.fragment.fragment_delta }} · {{ battle.reward.fragment.fragment_count }}/{{ battle.reward.fragment.fragment_target }}
           </span>
-          <span v-if="lunaContract?.contract_reward"><Sparkles :size="15" />{{ lunaContract.contract_reward.spirit.name }}已成为卡灵</span>
-          <span v-if="lunaContract?.contract_reward">{{ lunaContract.contract_reward.card.name }} ×{{ lunaContract.contract_reward.card.deck_amount }} · 已加入启用套牌</span>
+          <span v-if="lunaContract?.contract_reward"><Sparkles :size="15" />固定新手奖励 · 完整「{{ lunaContract.contract_reward.spirit.name }}」卡灵已到账</span>
+          <span v-if="lunaContract?.contract_reward">{{ lunaContract.contract_reward.card.name }} ×2 · 已加入当前启用套牌</span>
           <span v-if="!battle.affection_result?.points_gained && !battle.affection_result?.rewards.length && !battle.reward?.card && !battle.reward?.fragment && !lunaContract">
             本次切磋没有额外奖励
           </span>
         </div>
         <button class="button primary" type="button" :disabled="game.actionLoading || visualBusy" @click="game.leaveBattle"><RotateCcw :size="18" />返回世界</button>
       </template>
+    </div>
+
+    <div v-else-if="battleIntroActive && battleIntroLine" class="battle-result glass-panel" role="dialog" aria-modal="true" aria-label="露娜战前共鸣">
+      <div class="luna-contract-portrait" aria-hidden="true">
+        <img src="/assets/generated/portraits/luna.webp" alt="">
+      </div>
+      <div class="luna-contract-copy">
+        <p class="eyebrow">RESONANCE · {{ battleIntroStep + 1 }}/{{ battle.story_intro?.dialogue.length }}</p>
+        <h2>{{ battleIntroLine.speaker }}</h2>
+        <p class="luna-contract-line">{{ battleIntroLine.text }}</p>
+        <button
+          class="button primary"
+          type="button"
+          :disabled="game.actionLoading || visualBusy"
+          @click="battleIntroStep += 1"
+        >
+          {{ battleIntroStep + 1 === battle.story_intro?.dialogue.length ? '开始战斗' : '继续' }}<ArrowRight :size="18" />
+        </button>
+      </div>
     </div>
 
     <div v-else class="battle-controls">

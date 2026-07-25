@@ -26,6 +26,7 @@ from app.services.card_spirit_service import grant_monster_fragments
 from app.services.npc_affection_service import apply_affection
 from app.services.opening_story_service import (
     mark_opening_battle_complete,
+    opening_battle_intro,
     validate_story_battle,
 )
 from app.services.quest_progress_service import record_quest_objective
@@ -300,6 +301,9 @@ def create_battle(db: Session, player: Player, enemy_id: int) -> ActiveBattle:
             {template.source_spirit_id for _, _, template in deck_rows if template.source_spirit_id}
         ),
     }
+    story_intro = opening_battle_intro(enemy)
+    if story_intro is not None:
+        state["story_intro"] = story_intro
     _shuffle_pile(state, "draw_pile", "player")
     _shuffle_pile(state, "enemy_draw_pile", "enemy")
     _draw_to_hand(state)

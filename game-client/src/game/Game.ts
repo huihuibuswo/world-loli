@@ -4,6 +4,7 @@ import { createGameConfig } from '@/game/config/GameConfig'
 import {
   ASSETS_READY_EVENT,
   BATTLE_SCENE_REQUEST_KEY,
+  WORLD_INPUT_LOCK_KEY,
   gameEvents,
   type GameEventMap,
 } from '@/game/events'
@@ -24,10 +25,12 @@ export class WorldGame {
     map: MapData,
     player: PlayerProfile,
     initialBattle: BattleSceneRequest | null = null,
+    initialInputLocked = false,
   ) {
     this.game = new Phaser.Game(createGameConfig(parent))
     this.game.registry.set('world-map', map)
     this.game.registry.set('world-player', player)
+    this.game.registry.set(WORLD_INPUT_LOCK_KEY, initialInputLocked)
     if (initialBattle) this.game.registry.set(BATTLE_SCENE_REQUEST_KEY, initialBattle)
     this.game.scene.add('BootScene', BootScene)
     this.game.scene.add('PreloadScene', PreloadScene)
@@ -72,6 +75,11 @@ export class WorldGame {
     this.game.registry.set('world-player', player)
     this.game.scene.stop('WorldScene')
     this.game.scene.start('WorldScene')
+  }
+
+  setInputLocked(locked: boolean): void {
+    this.game.registry.set(WORLD_INPUT_LOCK_KEY, locked)
+    gameEvents.emit('world:input-lock', { locked })
   }
 
   destroy(): void {

@@ -79,6 +79,21 @@ def _finish_battle(
     raise AssertionError("露娜战斗未在回合上限内结束")
 
 
+def _lose_battle(client: TestClient, headers: dict[str, str], battle: dict) -> dict:
+    current = battle
+    for _ in range(40):
+        response = client.post(
+            f"/api/v1/battle/{current['battle_id']}/end-turn",
+            json={"expected_version": current["version"]},
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        current = response.json()["data"]
+        if current["status"] != "active":
+            return current
+    raise AssertionError("露娜战斗未在回合上限内结束")
+
+
 def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
     monkeypatch.setattr(settings, "ai_enabled", False)
     monkeypatch.setattr(settings, "ai_battle_enabled", False)
@@ -164,6 +179,13 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             )
             assert abandoned.status_code == 201, abandoned.text
             abandoned_data = abandoned.json()["data"]
+            assert abandoned_data["story_intro"]["event"] == "luna_resonance"
+            assert len(abandoned_data["story_intro"]["dialogue"]) == 3
+            assert "共鸣" in abandoned_data["story_intro"]["message"]
+            assert "回应" in abandoned_data["story_intro"]["dialogue"][-1]["text"]
+            resumed_battle = client.get("/api/v1/battle/current", headers=headers)
+            assert resumed_battle.status_code == 200, resumed_battle.text
+            assert resumed_battle.json()["data"]["story_intro"] == abandoned_data["story_intro"]
             surrendered = client.post(
                 f"/api/v1/battle/{abandoned_data['battle_id']}/surrender",
                 json={"expected_version": abandoned_data["version"]},
@@ -177,6 +199,17 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             assert client.get("/api/v1/opening", headers=headers).json()["data"]["stage"] == "forest_signal"
             assert client.get("/api/v1/spirits", headers=headers).json()["data"] == []
 
+            defeated_battle = client.post(
+                "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers
+            )
+            assert defeated_battle.status_code == 201, defeated_battle.text
+            defeated_data = _lose_battle(client, headers, defeated_battle.json()["data"])
+            assert defeated_data["status"] == "defeat"
+            assert defeated_data["defeat_reason"] == "knockout"
+            assert defeated_data["reward"] == {}
+            assert client.get("/api/v1/opening", headers=headers).json()["data"]["stage"] == "forest_signal"
+            assert client.get("/api/v1/spirits", headers=headers).json()["data"] == []
+
             created = client.post(
                 "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers
             )
@@ -187,7 +220,11 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             opening_reward = victory["reward"]["opening"]
             assert opening_reward["stage"] == "return_village"
             assert opening_reward["event"] == "luna_contract"
+            assert opening_reward["reward_kind"] == "fixed_newbie_reward"
+            assert "完整「狼娘·露娜」卡灵" in opening_reward["message"]
+            assert "已直接加入" in opening_reward["message"]
             assert len(opening_reward["dialogue"]) == 5
+            assert "完整卡灵" in opening_reward["dialogue"][-1]["text"]
             assert opening_reward["contract_reward"]["spirit"]["name"] == "狼娘·露娜"
             assert opening_reward["contract_reward"]["spirit"]["created"] is True
             assert opening_reward["contract_reward"]["card"] == {

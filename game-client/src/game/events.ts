@@ -15,6 +15,7 @@ export type BattleVisualSequence = {
 
 export const ASSETS_READY_EVENT = 'assets:ready'
 export const BATTLE_SCENE_REQUEST_KEY = 'battle-scene-request'
+export const WORLD_INPUT_LOCK_KEY = 'world-input-locked'
 
 export type GameEventMap = {
   'player:moved': { x: number; y: number }

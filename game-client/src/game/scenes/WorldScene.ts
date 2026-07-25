@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import type { MapData, PlayerProfile } from '@/api/types'
-import { gameEvents } from '@/game/events'
+import { gameEvents, WORLD_INPUT_LOCK_KEY } from '@/game/events'
 import { NPC } from '@/game/entities/NPC'
 import { Player } from '@/game/entities/Player'
 
@@ -48,6 +48,7 @@ export class WorldScene extends Phaser.Scene {
   private portals: MapPortal[] = []
   private plants: MapPlant[] = []
   private playerMapMarker!: Phaser.GameObjects.Arc
+  private readonly npcMapMarkers = new Map<NPC, Phaser.GameObjects.Arc>()
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>
   private interactKey!: Phaser.Input.Keyboard.Key
@@ -55,6 +56,7 @@ export class WorldScene extends Phaser.Scene {
   private nearbyPortal: MapPortal | null = null
   private nearbyPlant: MapPlant | null = null
   private lastPositionEmit = 0
+  private worldInputLocked = false
 
   constructor() {
     super('WorldScene')
@@ -129,7 +131,13 @@ export class WorldScene extends Phaser.Scene {
     this.npcs = (map.resource.objects ?? [])
       .filter((item) => item.type === 'npc' && item.template_id)
       .map((item) => new NPC(this, item.x, item.y, item.template_id!, item.template_name ?? '旅人', item.sprite))
-    this.npcs.forEach((npc) => this.physics.add.collider(this.player, npc))
+    this.npcs.forEach((npc, index) => {
+      this.physics.add.collider(this.player, npc)
+      this.physics.add.collider(npc, obstacles)
+      for (let otherIndex = index + 1; otherIndex < this.npcs.length; otherIndex += 1) {
+        this.physics.add.collider(npc, this.npcs[otherIndex])
+      }
+    })
     this.portals = (map.resource.objects ?? []).flatMap((item) => {
       if (item.type !== 'map_portal' || !item.target_map_id || !item.target_map_name) return []
       return [{
@@ -259,17 +267,29 @@ export class WorldScene extends Phaser.Scene {
     gameEvents.on('input:interact', this.interact)
     gameEvents.on('world:input-lock', this.onInputLock)
     gameEvents.on('plant:collected', this.onPlantCollected)
+    this.onInputLock({ locked: this.registry.get(WORLD_INPUT_LOCK_KEY) === true })
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       gameEvents.off('input:direction', this.onVirtualDirection)
       gameEvents.off('input:interact', this.interact)
       gameEvents.off('world:input-lock', this.onInputLock)
       gameEvents.off('plant:collected', this.onPlantCollected)
+      this.npcMapMarkers.clear()
     })
   }
 
   update(time: number): void {
     this.player.move(this.cursors, this.wasd)
     this.playerMapMarker.setPosition(this.player.x, this.player.y)
+    this.npcs.forEach((npc) => {
+      const playerIsNear = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        npc.x,
+        npc.y,
+      ) <= this.player.interactionRange
+      npc.updateWander(time, this.worldInputLocked || playerIsNear)
+      this.npcMapMarkers.get(npc)?.setPosition(npc.x, npc.y)
+    })
     this.plants.forEach((plant) => {
       if (plant.rarity === 'uncommon' && plant.minimapMarker) {
         plant.minimapMarker.setVisible(
@@ -290,6 +310,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private readonly onInputLock = ({ locked }: { locked: boolean }): void => {
+    this.worldInputLocked = locked
     if (!this.player) return
     this.player.state = locked ? 'disabled' : 'idle'
     this.player.setVelocity(0)
@@ -395,9 +416,11 @@ export class WorldScene extends Phaser.Scene {
       .circle(this.player.x, this.player.y, 38, 0xfef3c7)
       .setStrokeStyle(9, 0x15803d)
       .setDepth(100_000)
-    const npcMarkers = this.npcs.map((npc) =>
-      this.add.circle(npc.x, npc.y, 30, 0xf59e0b).setDepth(99_999),
-    )
+    const npcMarkers = this.npcs.map((npc) => {
+      const marker = this.add.circle(npc.x, npc.y, 30, 0xf59e0b).setDepth(99_999)
+      this.npcMapMarkers.set(npc, marker)
+      return marker
+    })
     const portalMarkers = this.portals.map((portal) =>
       this.add.circle(portal.x, portal.y, 34, 0x38bdf8).setDepth(99_999),
     )

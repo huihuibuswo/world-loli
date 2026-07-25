@@ -31,6 +31,20 @@ const rarityLabel = (rarity: string): string => ({
   rare: '稀有',
 })[rarity] ?? '普通'
 
+function currentWorldInputLock(): boolean {
+  return (
+    Boolean(game.dialogNpc)
+    || drawerOpen.value
+    || openingArrival.value
+    || Boolean(collectingPlant.value)
+    || game.mapLoading
+  )
+}
+
+function setWorldInputLock(locked: boolean): void {
+  world?.setInputLocked(locked)
+}
+
 watch(isBattle, (next) => {
   if (next && game.battle) {
     gameEvents.emit('scene:battle', {
@@ -42,8 +56,8 @@ watch(isBattle, (next) => {
   }
 })
 
-watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival], ([dialogOpen, collectionOpen, prologueOpen]) => {
-  gameEvents.emit('world:input-lock', { locked: dialogOpen || collectionOpen || prologueOpen })
+watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival], () => {
+  setWorldInputLock(currentWorldInputLock())
 })
 
 watch(() => game.opening?.stage, (nextStage, previousStage) => {
@@ -66,14 +80,14 @@ const onPlantNear = (plant: { nodeId: string | null; name: string | null; rarity
 const onPlantInteract = async ({ nodeId }: { nodeId: string; name: string }): Promise<void> => {
   if (game.actionLoading || collectingPlant.value) return
   collectingPlant.value = nodeId
-  gameEvents.emit('world:input-lock', { locked: true })
+  setWorldInputLock(true)
   try {
     await new Promise<void>((resolve) => window.setTimeout(resolve, 600))
     const result = await game.collectPlant(nodeId)
     if (result) gameEvents.emit('plant:collected', { nodeId, availableAt: result.available_at })
   } finally {
     collectingPlant.value = null
-    gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || drawerOpen.value || openingArrival.value })
+    setWorldInputLock(currentWorldInputLock())
   }
 }
 const onPortalInteract = async ({ mapId, name }: { mapId: number; name: string }): Promise<void> => {
@@ -83,13 +97,13 @@ const onPortalInteract = async ({ mapId, name }: { mapId: number; name: string }
     saveTimer = null
   }
   transitionTarget.value = name
-  gameEvents.emit('world:input-lock', { locked: true })
+  setWorldInputLock(true)
   try {
     await game.enterMap(mapId)
     if (game.map && game.player) world?.changeMap(game.map, game.player)
   } catch { /* store presents the error */ }
   finally {
-    gameEvents.emit('world:input-lock', { locked: false })
+    setWorldInputLock(currentWorldInputLock())
   }
 }
 const onMoved = ({ x, y }: { x: number; y: number }): void => {
@@ -114,9 +128,14 @@ onMounted(() => {
           enemySprite: game.battle.enemy_state.sprite,
         }
       : null
-    world = new WorldGame(canvasHost.value, game.map, game.player, initialBattle)
+    world = new WorldGame(
+      canvasHost.value,
+      game.map,
+      game.player,
+      initialBattle,
+      currentWorldInputLock(),
+    )
   }
-  gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || openingArrival.value })
   gameEvents.on('npc:near', onNear)
   gameEvents.on('npc:interact', onInteract)
   gameEvents.on('plant:near', onPlantNear)

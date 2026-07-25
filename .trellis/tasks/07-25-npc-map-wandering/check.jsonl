@@ -1,0 +1,3 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Verify the final Phaser and TypeScript changes against frontend project conventions."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check that NPC asset keys, animation keys, and movement constants have a single owner."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify source assets, generated sheets, loader contracts, entity state, and minimap consumers remain consistent."}
