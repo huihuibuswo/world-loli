@@ -26,6 +26,16 @@ class FailingAiClient:
         raise AiProviderError("timeout")
 
 
+class CapturingAiClient(FakeAiClient):
+    def __init__(self, data: dict) -> None:
+        super().__init__(data)
+        self.messages: list[dict[str, str]] = []
+
+    def complete_json(self, messages, *args, **kwargs) -> AiCompletion:
+        self.messages = messages
+        return super().complete_json(messages, *args, **kwargs)
+
+
 def _configure_ai(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "ai_enabled", True)
     monkeypatch.setattr(settings, "ai_battle_enabled", True)
@@ -157,6 +167,134 @@ def test_battle_ai_accepts_only_maximal_server_card_sequence(
     assert choose_enemy_cards(context) == {
         "card_template_ids": [8, 9],
         "battle_line": None,
+    }
+
+
+def test_battle_ai_prompt_rejects_mindless_defense_and_receives_effect_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _configure_ai(monkeypatch)
+    client = CapturingAiClient(
+        {"card_template_ids": [8, 9], "battle_line": "先攻后守。"}
+    )
+    monkeypatch.setattr(
+        "app.services.battle_ai_service.get_ai_client",
+        lambda: client,
+    )
+    context = {
+        "enemy_id": 7,
+        "enemy_name": "测试对手",
+        "battle_enabled": True,
+        "battle_style": "稳健",
+        "state": {
+            "current_turn": 2,
+            "player_state": {"hp": 80, "max_hp": 100, "shield": 0},
+            "enemy_state": {"hp": 24, "max_hp": 30, "shield": 5},
+            "enemy_energy": 2,
+        },
+        "candidates": [
+            {
+                "card_template_id": 8,
+                "name": "战术打击",
+                "cost": 1,
+                "type": "attack",
+                "damage": 8,
+                "shield": 0,
+                "tags": ["damage"],
+                "available_copies": 1,
+            },
+            {
+                "card_template_id": 9,
+                "name": "防御姿态",
+                "cost": 1,
+                "type": "defense",
+                "damage": 0,
+                "shield": 5,
+                "tags": ["shield"],
+                "available_copies": 1,
+            },
+        ],
+        "fallback_card_template_ids": [8, 9],
+    }
+
+    assert choose_enemy_cards(context)["card_template_ids"] == [8, 9]
+    system_prompt = client.messages[0]["content"]
+    user_payload = json.loads(client.messages[1]["content"])
+    assert "实际 damage、shield、cost 数值" in system_prompt
+    assert "不得机械地见到防御牌就先选" in system_prompt
+    assert "必须打出多张纯防御牌" in system_prompt
+    assert user_payload["candidates"][0]["damage"] == 8
+    assert user_payload["candidates"][1]["shield"] == 5
+
+
+def test_battle_ai_rejects_needless_defense_first_without_blocking_valid_defense(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _configure_ai(monkeypatch)
+    candidates = [
+        {
+            "card_template_id": 8,
+            "name": "战术打击",
+            "cost": 1,
+            "type": "attack",
+            "damage": 8,
+            "shield": 0,
+            "available_copies": 1,
+        },
+        {
+            "card_template_id": 9,
+            "name": "防御姿态",
+            "cost": 1,
+            "type": "defense",
+            "damage": 0,
+            "shield": 5,
+            "available_copies": 2,
+        },
+    ]
+    context = {
+        "enemy_id": 7,
+        "enemy_name": "测试对手",
+        "battle_enabled": True,
+        "battle_style": "稳健",
+        "state": {
+            "player_state": {"hp": 80, "max_hp": 100, "shield": 0},
+            "enemy_state": {"hp": 24, "max_hp": 30, "shield": 5},
+            "enemy_energy": 3,
+        },
+        "candidates": candidates,
+        "fallback_card_template_ids": [8, 9, 9],
+    }
+    monkeypatch.setattr(
+        "app.services.battle_ai_service.get_ai_client",
+        lambda: FakeAiClient(
+            {"card_template_ids": [9, 8, 9], "battle_line": "先守再攻。"}
+        ),
+    )
+
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [8, 9, 9],
+        "battle_line": None,
+    }
+
+    context["fallback_card_template_ids"] = [9, 8, 9]
+    context["state"]["enemy_state"] = {"hp": 4, "max_hp": 30, "shield": 0}
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [9, 8, 9],
+        "battle_line": "先守再攻。",
+    }
+
+    context["candidates"] = [candidates[1]]
+    context["fallback_card_template_ids"] = [9, 9]
+    context["state"]["enemy_energy"] = 2
+    monkeypatch.setattr(
+        "app.services.battle_ai_service.get_ai_client",
+        lambda: FakeAiClient(
+            {"card_template_ids": [9, 9], "battle_line": "固守。"}
+        ),
+    )
+    assert choose_enemy_cards(context) == {
+        "card_template_ids": [9, 9],
+        "battle_line": "固守。",
     }
 
 

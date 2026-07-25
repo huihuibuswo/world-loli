@@ -42,6 +42,34 @@ def _valid_sequence(sequence: list[int], candidates: list[dict[str, Any]], energ
     )
 
 
+def _starts_with_needless_defense(
+    sequence: list[int],
+    candidates: list[dict[str, Any]],
+    fallback: list[int],
+) -> bool:
+    if not sequence or not fallback:
+        return False
+    by_id = {
+        candidate["card_template_id"]: candidate
+        for candidate in candidates
+        if isinstance(candidate, dict)
+        and isinstance(candidate.get("card_template_id"), int)
+    }
+    selected = by_id.get(sequence[0], {})
+    baseline = by_id.get(fallback[0], {})
+
+    def effect_value(candidate: dict[str, Any], key: str) -> int:
+        try:
+            return max(0, int(candidate.get(key, 0)))
+        except (TypeError, ValueError):
+            return 0
+
+    selected_damage = effect_value(selected, "damage")
+    selected_shield = effect_value(selected, "shield")
+    baseline_damage = effect_value(baseline, "damage")
+    return selected_damage == 0 and selected_shield > 0 and baseline_damage > 0
+
+
 def choose_enemy_cards(context: dict[str, Any]) -> dict[str, Any]:
     candidates = context.get("candidates")
     candidate_rows = candidates if isinstance(candidates, list) else []
@@ -65,6 +93,10 @@ def choose_enemy_cards(context: dict[str, Any]) -> dict[str, Any]:
             f"战斗风格：{context.get('battle_style', '稳妥行动')}。"
             "只能从候选 card_template_id 中选择，允许同一卡牌按 available_copies 重复出现。"
             "必须连续出牌，直到能量耗尽或剩余卡牌都无法支付。"
+            "必须依据候选中的实际 damage、shield、cost 数值判断，不能只看名称、类型或标签。"
+            "敌方生命较高或已有护盾时，优先造成有效伤害。"
+            "仅当敌方生命较低且现有护盾不足时，才提高防御优先级，不得机械地见到防御牌就先选。"
+            "若为耗尽能量必须打出多张纯防御牌，也应避免把它们排在更有效的攻击之前。"
             "不得创建卡牌、效果、目标、伤害、生命、能量、奖励或其他数值。"
             "只返回 JSON："
             '{"card_template_ids":[1,2],"battle_line":"不超过80字的可选角色台词"}。'
@@ -92,6 +124,12 @@ def choose_enemy_cards(context: dict[str, Any]) -> dict[str, Any]:
             parsed = AiBattleOutput.model_validate(completion.data)
             if not _valid_sequence(parsed.card_template_ids, candidate_rows, enemy_energy):
                 raise AiProviderError("AI 返回了非法或未完成的敌方出牌序列")
+            if _starts_with_needless_defense(
+                parsed.card_template_ids,
+                candidate_rows,
+                fallback_ids,
+            ):
+                raise AiProviderError("AI 在确定性策略应攻击时无效地优先防御")
             battle_line = parsed.battle_line.strip()[:80] if parsed.battle_line else None
             logger.info(
                 "ai_battle_success enemy_id=%s card_count=%s prompt_tokens=%s completion_tokens=%s",

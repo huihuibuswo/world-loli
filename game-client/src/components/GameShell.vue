@@ -107,7 +107,15 @@ async function beginBattle(id: number): Promise<void> {
 }
 
 onMounted(() => {
-  if (canvasHost.value && game.map && game.player) world = new WorldGame(canvasHost.value, game.map, game.player)
+  if (canvasHost.value && game.map && game.player) {
+    const initialBattle = game.battle
+      ? {
+          enemyName: game.battle.enemy_state.name,
+          enemySprite: game.battle.enemy_state.sprite,
+        }
+      : null
+    world = new WorldGame(canvasHost.value, game.map, game.player, initialBattle)
+  }
   gameEvents.emit('world:input-lock', { locked: Boolean(game.dialogNpc) || openingArrival.value })
   gameEvents.on('npc:near', onNear)
   gameEvents.on('npc:interact', onInteract)
@@ -116,12 +124,6 @@ onMounted(() => {
   gameEvents.on('portal:near', onPortalNear)
   gameEvents.on('portal:interact', onPortalInteract)
   gameEvents.on('player:moved', onMoved)
-  if (game.battle) {
-    gameEvents.emit('scene:battle', {
-      enemyName: game.battle.enemy_state.name,
-      enemySprite: game.battle.enemy_state.sprite,
-    })
-  }
 })
 
 onBeforeUnmount(() => {

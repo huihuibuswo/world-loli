@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.services.battle_service import (
     _draw_to_hand,
+    _enemy_candidates,
     deterministic_enemy_sequence,
 )
 
@@ -156,27 +157,143 @@ def test_seeded_reshuffle_is_reproducible_and_private() -> None:
     assert first["player_shuffle_count"] == 1
 
 
-def test_deterministic_fallback_uses_actor_weights() -> None:
+def test_enemy_candidates_include_server_effect_values() -> None:
     attack = CardTemplate(id=101, name="战术打击", type="attack", cost=1, rarity="common", effect_json={"damage": 8})
-    guard = CardTemplate(id=102, name="防御姿态", type="defense", cost=1, rarity="common", effect_json={"shield": 8})
+    guard = CardTemplate(id=102, name="防御姿态", type="defense", cost=1, rarity="common", effect_json={"shield": 5})
+
+    assert _enemy_candidates(
+        {"enemy_hand_cards": [attack.id, guard.id], "enemy_energy": 1},
+        {attack.id: attack, guard.id: guard},
+    ) == [
+        {
+            "card_template_id": attack.id,
+            "name": "战术打击",
+            "cost": 1,
+            "type": "attack",
+            "damage": 8,
+            "shield": 0,
+            "tags": ["damage"],
+            "available_copies": 1,
+        },
+        {
+            "card_template_id": guard.id,
+            "name": "防御姿态",
+            "cost": 1,
+            "type": "defense",
+            "damage": 0,
+            "shield": 5,
+            "tags": ["shield"],
+            "available_copies": 1,
+        },
+    ]
+
+
+def test_deterministic_fallback_balances_attack_and_defense_pressure() -> None:
+    attack = CardTemplate(id=101, name="战术打击", type="attack", cost=1, rarity="common", effect_json={"damage": 8})
+    guard = CardTemplate(id=102, name="防御姿态", type="defense", cost=1, rarity="common", effect_json={"shield": 5})
     signature = CardTemplate(id=103, name="炽热锻击", type="attack", cost=2, rarity="rare", effect_json={"damage": 16})
     templates = {item.id: item for item in (attack, guard, signature)}
-    state = {"player_state": {"hp": 75, "shield": 0}}
+    for enemy_hp in (60, 30):
+        state = {
+            "player_state": {"hp": 75, "shield": 0},
+            "enemy_state": {"hp": enemy_hp, "max_hp": 60, "shield": 0},
+        }
+        assert deterministic_enemy_sequence(
+            [attack.id, guard.id, signature.id],
+            3,
+            templates,
+            state,
+            {"damage": 1.25, "shield": 0.55},
+        ) == [signature.id, attack.id]
+        assert deterministic_enemy_sequence(
+            [attack.id, guard.id, signature.id],
+            3,
+            templates,
+            state,
+            {"damage": 0.75, "shield": 1.2},
+        ) == [signature.id, attack.id]
+
+    low_hp_state = {
+        "player_state": {"hp": 75, "shield": 0},
+        "enemy_state": {"hp": 10, "max_hp": 60, "shield": 0},
+    }
+    assert deterministic_enemy_sequence(
+        [attack.id, guard.id],
+        1,
+        templates,
+        low_hp_state,
+        {"damage": 0.75, "shield": 1.2},
+    ) == [guard.id]
+
+    shielded_low_hp_state = deepcopy(low_hp_state)
+    shielded_low_hp_state["enemy_state"]["shield"] = 5
+    assert deterministic_enemy_sequence(
+        [attack.id, guard.id],
+        1,
+        templates,
+        shielded_low_hp_state,
+        {"damage": 0.75, "shield": 1.2},
+    ) == [attack.id]
+
+
+def test_deterministic_fallback_prioritizes_lethal_and_delays_redundant_guards() -> None:
+    attack = CardTemplate(id=101, name="战术打击", type="attack", cost=1, rarity="common", effect_json={"damage": 8})
+    guard = CardTemplate(id=102, name="防御姿态", type="defense", cost=1, rarity="common", effect_json={"shield": 5})
+    templates = {item.id: item for item in (attack, guard)}
 
     assert deterministic_enemy_sequence(
-        [attack.id, guard.id, signature.id],
+        [guard.id, guard.id, attack.id],
         3,
         templates,
-        state,
-        {"damage": 1.25, "shield": 0.55},
-    ) == [signature.id, attack.id]
-    assert deterministic_enemy_sequence(
-        [attack.id, guard.id, signature.id],
-        3,
-        templates,
-        state,
+        {
+            "player_state": {"hp": 7, "shield": 0},
+            "enemy_state": {"hp": 8, "max_hp": 60, "shield": 0},
+        },
         {"damage": 0.75, "shield": 1.2},
-    ) == [signature.id, guard.id]
+    ) == [attack.id, guard.id, guard.id]
+
+    assert deterministic_enemy_sequence(
+        [guard.id, guard.id, attack.id],
+        3,
+        templates,
+        {
+            "player_state": {"hp": 75, "shield": 0},
+            "enemy_state": {"hp": 8, "max_hp": 60, "shield": 0},
+        },
+        {"damage": 0.75, "shield": 1.2},
+    )[:2] == [guard.id, attack.id]
+
+    assert deterministic_enemy_sequence(
+        [guard.id, attack.id],
+        2,
+        templates,
+        {
+            "player_state": {"hp": 3, "shield": 5},
+            "enemy_state": {"hp": 8, "max_hp": 60, "shield": 0},
+        },
+        {"damage": 0.75, "shield": 1.2},
+    ) == [attack.id, guard.id]
+
+
+def test_deterministic_fallback_handles_pure_defense_and_malformed_state() -> None:
+    attack = CardTemplate(id=101, name="战术打击", type="attack", cost=1, rarity="common", effect_json={"damage": 8})
+    guard = CardTemplate(id=102, name="防御姿态", type="defense", cost=1, rarity="common", effect_json={"shield": 5})
+    templates = {item.id: item for item in (attack, guard)}
+
+    assert deterministic_enemy_sequence(
+        [guard.id, guard.id],
+        2,
+        templates,
+        {"player_state": None, "enemy_state": "invalid"},
+        {"damage": "invalid", "shield": float("nan")},
+    ) == [guard.id, guard.id]
+    assert deterministic_enemy_sequence(
+        [guard.id, attack.id],
+        "invalid",  # type: ignore[arg-type]
+        templates,
+        None,
+        None,
+    ) == []
 
 
 def test_defeat_and_surrender_apply_the_same_penalty_once(monkeypatch) -> None:

@@ -13,8 +13,10 @@ export type BattleVisualSequence = {
   result: 'active' | 'victory' | 'defeat' | 'abandoned'
 }
 
+export const ASSETS_READY_EVENT = 'assets:ready'
+export const BATTLE_SCENE_REQUEST_KEY = 'battle-scene-request'
+
 export type GameEventMap = {
-  'world:ready': undefined
   'player:moved': { x: number; y: number }
   'npc:near': { id: number | null; name: string | null }
   'npc:interact': { id: number }

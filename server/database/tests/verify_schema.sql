@@ -250,7 +250,7 @@ BEGIN
         SELECT 1 FROM card_templates
         WHERE name = '防御姿态'
           AND cost = 1
-          AND effect_json = '{"shield":8}'::JSONB
+          AND effect_json = '{"shield":5}'::JSONB
     ) THEN
         RAISE EXCEPTION 'balanced guard configuration is missing';
     END IF;

@@ -506,6 +506,8 @@ def _enemy_candidates(
                 "name": template.name,
                 "cost": template.cost,
                 "type": template.type,
+                "damage": _bounded_int(effect.get("damage")),
+                "shield": _bounded_int(effect.get("shield")),
                 "tags": [key for key in ("damage", "shield") if _bounded_int(effect.get(key)) > 0],
                 "available_copies": counts[template.id],
             }
@@ -522,14 +524,23 @@ def deterministic_enemy_sequence(
 ) -> list[int]:
     remaining = list(hand_cards)
     sequence: list[int] = []
-    available_energy = energy
+    available_energy = _bounded_int(energy)
     weights = action_weights if isinstance(action_weights, dict) else {}
     damage_weight = _bounded_weight(weights.get("damage"))
     shield_weight = _bounded_weight(weights.get("shield"))
-    player_state = (state or {}).get("player_state", {})
+    battle_state = state if isinstance(state, dict) else {}
+    raw_player_state = battle_state.get("player_state")
+    player_state = raw_player_state if isinstance(raw_player_state, dict) else {}
     player_effective_hp = _bounded_int(player_state.get("hp", 0)) + _bounded_int(
         player_state.get("shield", 0)
     )
+    raw_enemy_state = battle_state.get("enemy_state")
+    enemy_state = raw_enemy_state if isinstance(raw_enemy_state, dict) else {}
+    enemy_hp = _bounded_int(enemy_state.get("hp", 0))
+    enemy_max_hp = _bounded_int(enemy_state.get("max_hp", 0))
+    enemy_hp_ratio = enemy_hp / enemy_max_hp if enemy_max_hp > 0 else 1.0
+    low_hp_pressure = max(0.0, min(1.0, (0.5 - enemy_hp_ratio) / 0.5))
+    projected_enemy_shield = _bounded_int(enemy_state.get("shield", 0))
     while True:
         playable = [templates[card_id] for card_id in remaining if templates[card_id].cost <= available_energy]
         if not playable:
@@ -540,10 +551,23 @@ def deterministic_enemy_sequence(
             damage = _bounded_int(effect.get("damage", 0))
             shield = _bounded_int(effect.get("shield", 0))
             lethal_bonus = 1_000_000 if damage > 0 and damage >= player_effective_hp else 0
-            value = lethal_bonus + damage * damage_weight + shield * shield_weight
+            shield_gap = max(0, shield - projected_enemy_shield)
+            shield_need = shield_gap / shield if shield > 0 else 0.0
+            defense_pressure = 0.25 + 1.5 * low_hp_pressure
+            value = (
+                lethal_bonus
+                + damage * damage_weight
+                + shield * shield_weight * shield_need * defense_pressure
+            )
             return value, template.cost, -template.id
 
         chosen = max(playable, key=score)
+        chosen_effect = chosen.effect_json or {}
+        projected_enemy_shield += _bounded_int(chosen_effect.get("shield", 0))
+        player_effective_hp = max(
+            0,
+            player_effective_hp - _bounded_int(chosen_effect.get("damage", 0)),
+        )
         sequence.append(chosen.id)
         remaining.remove(chosen.id)
         available_energy -= chosen.cost

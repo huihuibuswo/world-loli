@@ -1,4 +1,11 @@
 import Phaser from 'phaser'
+import {
+  ASSETS_READY_EVENT,
+  BATTLE_SCENE_REQUEST_KEY,
+  type GameEventMap,
+} from '@/game/events'
+
+type BattleSceneRequest = GameEventMap['scene:battle']
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -142,6 +149,15 @@ export class PreloadScene extends Phaser.Scene {
           repeat: 0,
         })
       })
+    }
+    const initialBattle = this.registry.get(BATTLE_SCENE_REQUEST_KEY) as
+      | BattleSceneRequest
+      | undefined
+    this.registry.remove(BATTLE_SCENE_REQUEST_KEY)
+    this.game.events.emit(ASSETS_READY_EVENT)
+    if (initialBattle) {
+      this.scene.start('BattleScene', initialBattle)
+      return
     }
     this.scene.start('WorldScene')
   }

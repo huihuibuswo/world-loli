@@ -265,7 +265,6 @@ export class WorldScene extends Phaser.Scene {
       gameEvents.off('world:input-lock', this.onInputLock)
       gameEvents.off('plant:collected', this.onPlantCollected)
     })
-    gameEvents.emit('world:ready', undefined)
   }
 
   update(time: number): void {
