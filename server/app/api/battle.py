@@ -10,6 +10,7 @@ from app.services.battle_service import (
     battle_data,
     create_battle,
     end_turn,
+    get_active_battle,
     get_owned_battle,
     play_card,
     prepare_enemy_turn,
@@ -28,6 +29,15 @@ def create(
     db: Session = Depends(get_db),
 ) -> dict:
     return ok(battle_data(create_battle(db, player, payload.enemy_id)), "战斗已创建")
+
+
+@router.get("/current")
+def get_current_battle(
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    battle = get_active_battle(db, player.id)
+    return ok(battle_data(battle) if battle is not None else None)
 
 
 @router.get("/{battle_id}")

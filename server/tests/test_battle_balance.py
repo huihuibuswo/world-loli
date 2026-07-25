@@ -61,6 +61,78 @@ def test_registration_uses_explicit_balanced_starter_deck() -> None:
                 db.commit()
 
 
+def test_current_battle_endpoint_recovers_server_state() -> None:
+    suffix = uuid4().hex[:10]
+    username = f"battle_resume_{suffix}"
+    user_id: int | None = None
+    other_user_id: int | None = None
+    with TestClient(app) as client:
+        try:
+            headers, user_id, _ = _register(client, username)
+            empty_response = client.get("/api/v1/battle/current", headers=headers)
+            assert empty_response.status_code == 200
+            assert empty_response.json()["data"] is None
+
+            with SessionLocal() as db:
+                enemy_id = db.scalar(
+                    select(NpcTemplate.id).where(NpcTemplate.name == "训练教官")
+                )
+            assert enemy_id is not None
+
+            created_response = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": enemy_id},
+                headers=headers,
+            )
+            assert created_response.status_code == 201, created_response.text
+            created = created_response.json()["data"]
+
+            other_headers, other_user_id, _ = _register(
+                client, f"battle_resume_other_{suffix}"
+            )
+            other_response = client.get(
+                "/api/v1/battle/current", headers=other_headers
+            )
+            assert other_response.status_code == 200
+            assert other_response.json()["data"] is None
+
+            login_response = client.post(
+                "/api/v1/auth/login",
+                json={"username": username, "password": "SafePassword123!"},
+            )
+            assert login_response.status_code == 200, login_response.text
+            resumed_headers = {
+                "Authorization": f"Bearer {login_response.json()['data']['access_token']}"
+            }
+
+            recovered_response = client.get(
+                "/api/v1/battle/current", headers=resumed_headers
+            )
+            assert recovered_response.status_code == 200
+            recovered = recovered_response.json()["data"]
+            assert recovered["battle_id"] == created["battle_id"]
+            assert recovered["status"] == "active"
+            assert recovered["version"] == created["version"]
+
+            surrendered_response = client.post(
+                f"/api/v1/battle/{created['battle_id']}/surrender",
+                json={"expected_version": created["version"]},
+                headers=resumed_headers,
+            )
+            assert surrendered_response.status_code == 200, surrendered_response.text
+            assert (
+                client.get("/api/v1/battle/current", headers=resumed_headers).json()["data"]
+                is None
+            )
+        finally:
+            with SessionLocal() as db:
+                if user_id is not None:
+                    db.execute(delete(User).where(User.id == user_id))
+                if other_user_id is not None:
+                    db.execute(delete(User).where(User.id == other_user_id))
+                db.commit()
+
+
 def test_seeded_reshuffle_is_reproducible_and_private() -> None:
     base_state = {
         "battle_seed": 20260724,

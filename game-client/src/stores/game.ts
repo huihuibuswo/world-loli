@@ -157,24 +157,21 @@ export const useGameStore = defineStore('game', () => {
     loading.value = true
     error.value = ''
     try {
-      const [profile, story] = await Promise.all([
+      const [profile, story, activeBattle] = await Promise.all([
         requestData<PlayerProfile>(api.get('/player/profile')),
         requestData<OpeningStory>(api.get('/opening')),
+        requestData<BattleData | null>(api.get('/battle/current')),
       ])
       player.value = normalizePlayer(profile)
       opening.value = story
+      battle.value = activeBattle
+      if (activeBattle) {
+        sessionStorage.setItem('world_battle_id', String(activeBattle.battle_id))
+      } else {
+        sessionStorage.removeItem('world_battle_id')
+      }
       await reloadCurrentMap()
       await refreshCollections()
-      const savedBattleId = sessionStorage.getItem('world_battle_id')
-      if (savedBattleId) {
-        try {
-          const current = await requestData<BattleData>(api.get(`/battle/${savedBattleId}`))
-          battle.value = current.status === 'active' ? current : null
-          if (!battle.value) sessionStorage.removeItem('world_battle_id')
-        } catch {
-          sessionStorage.removeItem('world_battle_id')
-        }
-      }
     } catch (cause) {
       error.value = errorMessage(cause)
       throw cause

@@ -324,6 +324,15 @@ def get_owned_battle(
     return battle
 
 
+def get_active_battle(db: Session, player_id: int) -> ActiveBattle | None:
+    return db.scalar(
+        select(ActiveBattle).where(
+            ActiveBattle.player_id == player_id,
+            ActiveBattle.status == "active",
+        )
+    )
+
+
 def _check_active_version(battle: ActiveBattle, expected_version: int) -> None:
     if battle.status != "active":
         abort(409, "战斗已经结束")
