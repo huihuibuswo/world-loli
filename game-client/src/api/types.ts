@@ -45,6 +45,10 @@ export interface MapObject {
   habitat?: string
   story_gate?: string
   story_stage?: string
+  stationary?: boolean
+  tint?: number
+  evidence_id?: string
+  description?: string
   x: number
   y: number
 }
@@ -80,6 +84,10 @@ export interface NpcData {
   dialogue: string[]
   actions: string[]
   service_type: 'shop' | 'quest' | 'guide' | 'training' | null
+  story_action: {
+    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1'
+    label: string
+  } | null
   ai: {
     dialogue_enabled: boolean
     battle_enabled: boolean
@@ -317,6 +325,13 @@ export interface NpcQuestData {
 }
 
 export type OpeningStage = 'arrival' | 'prepare' | 'forest_signal' | 'return_village' | 'complete'
+export type MoonTraceStage =
+  | 'moon_trace_accept'
+  | 'moon_trace_guide'
+  | 'moon_trace_evidence'
+  | 'moon_trace_battle'
+  | 'moon_trace_return'
+  | 'moon_trace_stage1_complete'
 
 export interface OpeningTask {
   id: number
@@ -338,12 +353,29 @@ export interface OpeningStory {
   objective: { title: string; description: string }
   tasks: OpeningTask[]
   luna_enemy_id: number | null
+  shadow_enemy_id: number | null
   can_battle_luna: boolean
   can_complete: boolean
   intro_lines: string[]
   completed_now?: boolean
   gold_reward?: number
-  main_quest?: string
+  completion_dialogue?: StoryDialogueLine[]
+  main_quest: {
+    title: string
+    chapter: string
+    stage: MoonTraceStage
+    objective: { title: string; description: string }
+    evidence: Array<{
+      id: string
+      name: string
+      description: string
+      completed: boolean
+    }>
+    evidence_count: number
+    evidence_target: number
+    shadow_completed: boolean
+    stage1_completed: boolean
+  } | null
   contract_reward?: LunaContractReward
 }
 
@@ -372,7 +404,7 @@ export interface LunaContractReward {
 export interface OpeningBattleReward {
   story_key: string
   stage: OpeningStage
-  event?: 'luna_contract'
+  event?: 'luna_contract' | 'moon_trace_shadow'
   reward_kind?: 'fixed_newbie_reward'
   message?: string
   dialogue?: StoryDialogueLine[]
@@ -381,7 +413,7 @@ export interface OpeningBattleReward {
 
 export interface OpeningBattleIntro {
   story_key: string
-  event: 'luna_resonance'
+  event: 'luna_resonance' | 'moon_trace_shadow'
   message: string
   dialogue: StoryDialogueLine[]
 }

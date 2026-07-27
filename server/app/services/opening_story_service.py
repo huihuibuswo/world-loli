@@ -26,21 +26,62 @@ STORY_KEY = "opening_moon_scar"
 STORY_TITLE = "雾中月痕"
 LUNA_NAME = "狼娘·露娜"
 LUNA_CARD_NAME = "月牙撕裂"
+GUIDE_NAME = "森林向导"
+SHADOW_NAME = "雾痕兽影"
 VILLAGE_NAME = "晨曦村"
 FOREST_NAME = "微光森林"
 TASK_TITLES = ("村道补给", "林缘踏查", "实战准备")
 STAGES = {"arrival", "prepare", "forest_signal", "return_village", "complete"}
+MOON_TRACE_STAGES = {
+    "moon_trace_accept",
+    "moon_trace_guide",
+    "moon_trace_evidence",
+    "moon_trace_battle",
+    "moon_trace_return",
+    "moon_trace_stage1_complete",
+}
+EVIDENCE = {
+    "moonlight_flora": {
+        "name": "异常闭合的月光植物",
+        "description": "花瓣在雾流逆转时同时闭合，根部没有自然病变。",
+    },
+    "broken_wolf_tracks": {
+        "name": "突然中断的狼族足迹",
+        "description": "足迹在开阔地中央消失，没有折返或跃离痕迹。",
+    },
+    "broken_moon_mist_core": {
+        "name": "附着断月纹的雾核",
+        "description": "雾核表面排列着无法自然形成的断月纹。",
+    },
+}
 LUNA_BATTLE_DIALOGUE = [
-    {"speaker": "露娜", "text": "别靠近！你身上的共鸣正在牵动失控月痕……你也是污染源吗？"},
-    {"speaker": "主角", "text": "我没有卡灵，也不是污染源。我的基础卡牌形成了稳定回路，也许能替你承接这股力量。"},
-    {"speaker": "露娜", "text": "那就让我亲自确认。若你的共鸣真能稳住月痕，我会回应它。"},
+    {"speaker": "露娜", "text": "别靠近！你身上的月牙共鸣正在牵动我的旧伤。你和雾袭者是什么关系？"},
+    {"speaker": "主角", "text": "我刚离开晨曦村，也在追查逆流的雾。你已经受伤了，先停下来。"},
+    {"speaker": "露娜", "text": "相同的纹路刚刚伤了我和狼族领地。用你的基础卡牌证明这道回路没有污染。"},
 ]
 LUNA_CONTRACT_DIALOGUE = [
-    {"speaker": "露娜", "text": "停下……那道月痕还在吞噬我的意识。"},
-    {"speaker": "主角", "text": "我的卡组里没有卡灵，但这份力量至少还能替你稳住它。"},
-    {"speaker": "露娜", "text": "没有卡灵，却能回应我的月光……原来你不是污染森林的人。"},
-    {"speaker": "露娜", "text": "收下我的月痕吧。不是战利品，是我自己的选择。"},
-    {"speaker": "露娜", "text": "你的共鸣，我回应了。从现在起，我会以完整卡灵与你并肩。下一次，让我们站在同一边。"},
+    {"speaker": "露娜", "text": "咳……旧伤裂开了。月痕还在吞噬我的意识……"},
+    {"speaker": "主角", "text": "别再动了。我会用基础卡牌的共鸣先稳住它。"},
+    {"speaker": "露娜", "text": "你的回路没有污染……是我认错了人。可我已经走不回安全的地方。"},
+    {"speaker": "露娜", "text": "收下这道月痕。它会化成我的卡灵投影，代替现在的我与你并肩。"},
+    {"speaker": "露娜", "text": "污染源还在森林深处……替我追下去。这是我交给你的长期委托——月痕追迹。"},
+    {"speaker": "主角", "text": "先别说了。我带你回晨曦村疗伤。"},
+    {"speaker": "露娜", "text": "那就……拜托你了。"},
+]
+OPENING_COMPLETION_DIALOGUE = [
+    {"speaker": "村长", "text": "先救人，再谈月痕。向导，把东侧疗养间打开。"},
+    {"speaker": "森林向导", "text": "她会留在疗养点稳定旧伤，短时间内不能再进入森林。"},
+    {"speaker": "露娜", "text": "实体的我会留在这里疗养。卡灵投影仍会代替现在的我与你并肩。"},
+    {"speaker": "露娜", "text": "等我醒来，到疗养点找我。第二处逆流雾源还需要确认。"},
+    {"speaker": "系统", "text": "序章《雾中月痕》完成。长期主线《月痕追迹》已发布。"},
+]
+SHADOW_BATTLE_DIALOGUE = [
+    {"speaker": "系统", "text": "三处证据同时发出银白微光，雾核凝成一头没有气味的兽影。"},
+    {"speaker": "主角", "text": "它在模仿狼族的力量。击散它，才能留下完整的断月纹记录。"},
+]
+SHADOW_VICTORY_DIALOGUE = [
+    {"speaker": "系统", "text": "雾痕兽影崩解，留下无法自然形成的断月纹排列。调查记录已保存。"},
+    {"speaker": "主角", "text": "证据已经足够。该回晨曦村向露娜回报了。"},
 ]
 
 
@@ -89,6 +130,45 @@ def _effective_stage(
     return stage
 
 
+def _moon_trace_stage(progress: PlayerStoryProgress | None) -> str | None:
+    if progress is None or progress.stage != "complete":
+        return None
+    value = str((progress.data_json or {}).get("moon_trace_stage", "moon_trace_accept"))
+    return value if value in MOON_TRACE_STAGES else "moon_trace_accept"
+
+
+def _moon_trace_objective(stage: str, evidence_count: int) -> dict[str, str]:
+    if stage == "moon_trace_accept":
+        return {
+            "title": "与疗养中的露娜交谈",
+            "description": "前往晨曦村东侧疗养点，接取《逆流雾源》。",
+        }
+    if stage == "moon_trace_guide":
+        return {
+            "title": "向森林向导确认雾流",
+            "description": "请向导标记第二处雾流逆转位置。",
+        }
+    if stage == "moon_trace_evidence":
+        return {
+            "title": f"调查三处固定证据（{evidence_count}/3）",
+            "description": "前往微光森林调查月光植物、狼族足迹与断月雾核。",
+        }
+    if stage == "moon_trace_battle":
+        return {
+            "title": "击败雾痕兽影",
+            "description": "三处证据已经共鸣。击败污染凝成的兽影并保存调查记录。",
+        }
+    if stage == "moon_trace_return":
+        return {
+            "title": "返回晨曦村向露娜回报",
+            "description": "把断月纹调查记录交给疗养中的露娜。",
+        }
+    return {
+        "title": "追查操纵断月纹的人",
+        "description": "《逆流雾源》已完成。露娜疗养期间，继续追查幕后操纵者。",
+    }
+
+
 def _task_data(quest: Quest, progress: PlayerQuest | None) -> dict[str, Any]:
     state = progress.progress if progress else {}
     return {
@@ -120,14 +200,14 @@ def _objective(stage: str, current_map_name: str | None) -> dict[str, str]:
         }
     if stage == "return_village":
         return {
-            "title": "汇报月痕契约",
-            "description": "返回晨曦村，向村长汇报露娜与失控月痕。"
+            "title": "带露娜返回晨曦村疗伤",
+            "description": "护送负伤的实体露娜返回晨曦村疗养点。"
             if current_map_name != VILLAGE_NAME
-            else "露娜已经成为你的卡灵，可以向村长说明月光空地的真相。",
+            else "露娜已抵达晨曦村。请让村长和向导安排疗养。",
         }
     return {
-        "title": "追踪下一道月痕",
-        "description": "序章已完成。森林向导正在确认第二处雾流逆转的位置。",
+        "title": "月痕追迹",
+        "description": "序章已完成。前往疗养点继续露娜托付的长期调查。",
     }
 
 
@@ -137,6 +217,12 @@ def opening_data(db: Session, player: Player) -> dict[str, Any]:
     stage = _effective_stage(progress, tasks)
     current_map = db.get(MapData, player.current_map) if player.current_map else None
     luna = db.scalar(select(NpcTemplate).where(NpcTemplate.name == LUNA_NAME))
+    shadow = db.scalar(select(NpcTemplate).where(NpcTemplate.name == SHADOW_NAME))
+    data = progress.data_json if progress else {}
+    moon_stage = _moon_trace_stage(progress)
+    evidence_ids = sorted(
+        item for item in (data or {}).get("moon_trace_evidence", []) if item in EVIDENCE
+    )
     return {
         "story_key": STORY_KEY,
         "title": STORY_TITLE,
@@ -147,6 +233,7 @@ def opening_data(db: Session, player: Player) -> dict[str, Any]:
         "objective": _objective(stage, current_map.map_name if current_map else None),
         "tasks": [_task_data(quest, item) for quest, item in tasks],
         "luna_enemy_id": luna.id if luna is not None else None,
+        "shadow_enemy_id": shadow.id if shadow is not None else None,
         "can_battle_luna": stage == "forest_signal"
         and current_map is not None
         and current_map.map_name == FOREST_NAME,
@@ -155,24 +242,52 @@ def opening_data(db: Session, player: Player) -> dict[str, Any]:
         and current_map.map_name == VILLAGE_NAME,
         "intro_lines": [
             "微光森林深处，雾逆着树梢的风向流动。",
-            "银色狼耳少女停在一处残缺的月牙刻痕前。",
-            "失控的月痕正侵入她的意识，她却仍挡在通往村庄的方向。",
-            "“不是野兽的味道……有人把不属于森林的东西埋进来了。”",
+            "银色狼耳少女捂着受伤的肩侧，踉跄着停在残缺月牙刻痕前。",
+            "断月纹仍在追赶她，失控月痕正沿旧伤侵入意识。",
+            "“不是野兽的味道……断月纹还在追我。”",
             "同一时刻，你沿着东侧村道抵达晨曦村。",
         ],
+        "main_quest": (
+            {
+                "title": "月痕追迹",
+                "chapter": "逆流雾源",
+                "stage": moon_stage,
+                "objective": _moon_trace_objective(moon_stage, len(evidence_ids)),
+                "evidence": [
+                    {
+                        "id": evidence_id,
+                        **EVIDENCE[evidence_id],
+                        "completed": evidence_id in evidence_ids,
+                    }
+                    for evidence_id in EVIDENCE
+                ],
+                "evidence_count": len(evidence_ids),
+                "evidence_target": len(EVIDENCE),
+                "shadow_completed": bool((data or {}).get("moon_trace_shadow_completed")),
+                "stage1_completed": moon_stage == "moon_trace_stage1_complete",
+            }
+            if moon_stage is not None
+            else None
+        ),
     }
 
 
 def opening_battle_intro(enemy: NpcTemplate) -> dict[str, Any] | None:
-    if (
-        enemy.name != LUNA_NAME
-        or str((enemy.reward or {}).get("story_gate", "")) != STORY_KEY
-    ):
+    if str((enemy.reward or {}).get("story_gate", "")) != STORY_KEY:
+        return None
+    if enemy.name == SHADOW_NAME:
+        return {
+            "story_key": STORY_KEY,
+            "event": "moon_trace_shadow",
+            "message": "三处固定证据共鸣，污染凝成了雾痕兽影。",
+            "dialogue": SHADOW_BATTLE_DIALOGUE,
+        }
+    if enemy.name != LUNA_NAME:
         return None
     return {
         "story_key": STORY_KEY,
         "event": "luna_resonance",
-        "message": "玩家的基础卡牌与失控月痕产生共鸣，露娜决定亲自确认这份回应。",
+        "message": "负伤露娜把玩家误认为污染源，要求用基础卡牌的稳定回路证明清白。",
         "dialogue": LUNA_BATTLE_DIALOGUE,
     }
 
@@ -299,6 +414,150 @@ def start_opening(db: Session, player: Player) -> dict[str, Any]:
     return opening_data(db, player)
 
 
+def opening_npc_context(
+    db: Session,
+    player: Player,
+    npc: NpcTemplate,
+) -> dict[str, Any] | None:
+    progress = _progress(db, player.id)
+    opening_stage = _effective_stage(progress, _task_rows(db, player.id))
+    moon_stage = _moon_trace_stage(progress)
+    if npc.name == LUNA_NAME and opening_stage == "forest_signal":
+        return {
+            "dialogue": [
+                "你身上有那道月痕的味道。别再往前——它正在牵动我的伤口。",
+                "相同的断月纹刚刚袭击了我，也正在伤害狼族领地。",
+                "如果你不是污染者，就用基础卡牌的稳定回路证明给我看。",
+            ],
+            "actions": ["dialog", "battle"],
+            "story_action": None,
+        }
+    if npc.name == LUNA_NAME and moon_stage is not None:
+        if moon_stage == "moon_trace_accept":
+            dialogue = [
+                "旧伤已经暂时稳定，但我还不能离开疗养点。",
+                "第二处逆流雾源还在。替我确认三件事：花、足迹，还有那枚雾核。",
+                "先去找森林向导。他能标出雾流第二次逆转的位置。",
+            ]
+            action = {"action": "accept_stage1", "label": "接取《逆流雾源》"}
+        elif moon_stage == "moon_trace_return":
+            dialogue = [
+                "你带回来的记录里有断月纹的排列。把雾痕兽影消散前的变化告诉我。",
+                "这不是野兽留下的痕迹。有人在用断月纹模仿狼族的力量。",
+                "等我能重新站起来，我们再追那个没有气味的人。",
+            ]
+            action = {"action": "report_stage1", "label": "提交调查记录"}
+        elif moon_stage == "moon_trace_stage1_complete":
+            dialogue = [
+                "《逆流雾源》的记录已经交给向导。",
+                "污染不是自然形成的。下一步，是追查操纵断月纹的人。",
+            ]
+            action = None
+        else:
+            dialogue = [
+                "卡灵投影会代替现在的我与你并肩，实体的我还需要留在这里疗养。",
+                "按我们确认的步骤行动。不要追逐声音，只记录能被重复观察的证据。",
+            ]
+            action = None
+        return {"dialogue": dialogue, "actions": ["dialog"], "story_action": action}
+    if npc.name == GUIDE_NAME and moon_stage == "moon_trace_guide":
+        return {
+            "dialogue": [
+                "我确认过了：风往东，第二处雾流却在月光空地以南逆转。",
+                "我会标出三处固定证据。逐一核对，不要被林中的狼嚎带偏。",
+            ],
+            "actions": ["dialog"],
+            "story_action": {"action": "confirm_guide", "label": "确认调查位置"},
+        }
+    if npc.name == SHADOW_NAME and moon_stage == "moon_trace_battle":
+        return {
+            "dialogue": [
+                "雾核吞下三处证据的共鸣，凝成了一头没有气味的兽影。",
+                "它并非真正的狼族。击散它，留下完整的断月纹记录。",
+            ],
+            "actions": ["dialog", "battle"],
+            "story_action": None,
+        }
+    return None
+
+
+def _require_npc(db: Session, npc_id: int | None, name: str) -> NpcTemplate:
+    npc = db.get(NpcTemplate, npc_id) if npc_id is not None else None
+    if npc is None or npc.name != name:
+        abort(422, "剧情互动目标不匹配")
+    return npc
+
+
+def perform_opening_action(
+    db: Session,
+    player: Player,
+    *,
+    action: str,
+    npc_id: int | None,
+    evidence_id: str | None,
+) -> dict[str, Any]:
+    progress = _progress(db, player.id, lock=True)
+    if progress is None or progress.stage != "complete":
+        abort(409, "请先完成露娜返村疗养剧情")
+    current_map = db.get(MapData, player.current_map) if player.current_map else None
+    current_map_name = current_map.map_name if current_map else None
+    data = dict(progress.data_json or {})
+    moon_stage = _moon_trace_stage(progress)
+
+    if action == "accept_stage1":
+        _require_npc(db, npc_id, LUNA_NAME)
+        if current_map_name != VILLAGE_NAME:
+            abort(409, "请在晨曦村疗养点与露娜交谈")
+        if moon_stage == "moon_trace_accept":
+            data["moon_trace_stage"] = "moon_trace_guide"
+            data["moon_trace_stage1_accepted"] = True
+    elif action == "confirm_guide":
+        _require_npc(db, npc_id, GUIDE_NAME)
+        if current_map_name != VILLAGE_NAME:
+            abort(409, "请在晨曦村向森林向导确认位置")
+        if moon_stage == "moon_trace_guide":
+            data["moon_trace_stage"] = "moon_trace_evidence"
+            data["moon_trace_guide_confirmed"] = True
+        elif moon_stage == "moon_trace_accept":
+            abort(409, "请先向疗养中的露娜接取《逆流雾源》")
+    elif action == "inspect_evidence":
+        if evidence_id not in EVIDENCE:
+            abort(422, "调查证据不存在")
+        if current_map_name != FOREST_NAME:
+            abort(409, "请前往微光森林调查证据")
+        completed = {
+            item for item in data.get("moon_trace_evidence", []) if item in EVIDENCE
+        }
+        if moon_stage not in {"moon_trace_evidence", "moon_trace_battle"}:
+            if evidence_id in completed and moon_stage in {
+                "moon_trace_return",
+                "moon_trace_stage1_complete",
+            }:
+                return opening_data(db, player)
+            abort(409, "当前阶段不能调查该证据")
+        completed.add(evidence_id)
+        data["moon_trace_evidence"] = sorted(completed)
+        if len(completed) == len(EVIDENCE):
+            data["moon_trace_stage"] = "moon_trace_battle"
+            data["moon_trace_evidence_completed"] = True
+    elif action == "report_stage1":
+        _require_npc(db, npc_id, LUNA_NAME)
+        if current_map_name != VILLAGE_NAME:
+            abort(409, "请返回晨曦村疗养点向露娜回报")
+        if moon_stage == "moon_trace_return":
+            data["moon_trace_stage"] = "moon_trace_stage1_complete"
+            data["moon_trace_stage1_completed"] = True
+            data["moon_trace_next_objective"] = "追查操纵断月纹的人"
+        elif moon_stage != "moon_trace_stage1_complete":
+            abort(409, "请先完成雾痕兽影调查")
+    else:
+        abort(422, "未知的月痕追迹动作")
+
+    progress.data_json = data
+    db.commit()
+    return opening_data(db, player)
+
+
 def validate_story_battle(
     db: Session,
     player: Player,
@@ -313,13 +572,20 @@ def validate_story_battle(
     tasks = _task_rows(db, player.id)
     stage = _effective_stage(progress, tasks)
     current_map = db.get(MapData, player.current_map) if player.current_map else None
-    if progress is None or stage != "forest_signal":
-        abort(409, "请先完成晨曦村的入村准备")
-    if current_map is None or current_map.map_name != FOREST_NAME:
-        abort(409, "需要在微光森林的月光空地发起这场战斗")
-    if enemy.name != LUNA_NAME:
-        abort(403, "剧情战斗目标不匹配")
-    progress.stage = "forest_signal"
+    if enemy.name == LUNA_NAME:
+        if progress is None or stage != "forest_signal":
+            abort(409, "请先完成晨曦村的入村准备")
+        if current_map is None or current_map.map_name != FOREST_NAME:
+            abort(409, "需要在微光森林的月光空地发起这场战斗")
+        progress.stage = "forest_signal"
+        return
+    if enemy.name == SHADOW_NAME:
+        if progress is None or _moon_trace_stage(progress) != "moon_trace_battle":
+            abort(409, "请先完成三处固定证据调查")
+        if current_map is None or current_map.map_name != FOREST_NAME:
+            abort(409, "需要在微光森林发起雾痕兽影战斗")
+        return
+    abort(403, "剧情战斗目标不匹配")
 
 
 def mark_opening_battle_complete(
@@ -328,10 +594,33 @@ def mark_opening_battle_complete(
     enemy: NpcTemplate,
     result: str,
 ) -> dict[str, Any] | None:
-    if enemy.name != LUNA_NAME or str((enemy.reward or {}).get("story_gate", "")) != STORY_KEY:
+    if str((enemy.reward or {}).get("story_gate", "")) != STORY_KEY:
         return None
     progress = _progress(db, player_id, lock=True)
     if progress is None or result != "victory":
+        return None
+    if enemy.name == SHADOW_NAME:
+        moon_stage = _moon_trace_stage(progress)
+        if moon_stage not in {
+            "moon_trace_battle",
+            "moon_trace_return",
+            "moon_trace_stage1_complete",
+        }:
+            return None
+        data = dict(progress.data_json or {})
+        if moon_stage == "moon_trace_battle":
+            data["moon_trace_stage"] = "moon_trace_return"
+            data["moon_trace_shadow_completed"] = True
+            data["moon_trace_investigation_record"] = "断月纹排列记录"
+            progress.data_json = data
+        return {
+            "story_key": STORY_KEY,
+            "stage": "complete",
+            "event": "moon_trace_shadow",
+            "message": "雾痕兽影已经消散，确定性调查记录已保存。返回晨曦村向露娜回报。",
+            "dialogue": SHADOW_VICTORY_DIALOGUE,
+        }
+    if enemy.name != LUNA_NAME:
         return None
     if progress.stage == "complete":
         return {"story_key": STORY_KEY, "stage": "complete"}
@@ -342,13 +631,17 @@ def mark_opening_battle_complete(
         "luna_battle_completed": True,
         "luna_contract_completed": True,
         "luna_contract_version": 1,
+        "luna_injured": True,
+        "luna_recovery_state": "returning_to_village",
+        "luna_returning_to_village": True,
+        "main_quest": "月痕追迹",
     }
     return {
         "story_key": STORY_KEY,
         "stage": "return_village",
         "event": "luna_contract",
         "reward_kind": "fixed_newbie_reward",
-        "message": "固定新手奖励已到账：完整「狼娘·露娜」卡灵与「月牙撕裂」×2 已直接加入你的收藏和启用套牌。",
+        "message": "露娜把自身月痕凝成共鸣卡灵投影。完整「狼娘·露娜」卡灵与「月牙撕裂」×2 已加入收藏和启用套牌；实体露娜仍需带回村疗伤。",
         "dialogue": LUNA_CONTRACT_DIALOGUE,
         "contract_reward": contract_reward,
     }
@@ -396,12 +689,16 @@ def complete_opening(db: Session, player: Player) -> dict[str, Any]:
     progress.data_json = {
         **(progress.data_json or {}),
         "main_quest": "月痕追迹",
+        "luna_injured": True,
+        "luna_recovery_state": "recuperating",
+        "luna_returning_to_village": False,
+        "moon_trace_stage": "moon_trace_accept",
     }
     db.commit()
     result = opening_data(db, player)
     result["completed_now"] = True
     result["gold_reward"] = total_gold
-    result["main_quest"] = "月痕追迹"
+    result["completion_dialogue"] = OPENING_COMPLETION_DIALOGUE
     if contract_reward is not None:
         result["contract_reward"] = contract_reward
     return result

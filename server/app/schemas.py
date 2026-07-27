@@ -126,5 +126,15 @@ class EndTurnRequest(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class OpeningActionRequest(BaseModel):
+    action: Literal["accept_stage1", "confirm_guide", "inspect_evidence", "report_stage1"]
+    npc_id: int | None = Field(default=None, gt=0)
+    evidence_id: str | None = Field(
+        default=None,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
+
+
 class QuestProgressRequest(BaseModel):
     progress: dict[str, Any] = Field(default_factory=dict)

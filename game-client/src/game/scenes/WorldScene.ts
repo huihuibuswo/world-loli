@@ -22,6 +22,15 @@ type MapPlant = {
   minimapMarker?: Phaser.GameObjects.Arc
 }
 
+type MapEvidence = {
+  evidenceId: string
+  name: string
+  x: number
+  y: number
+  display: Phaser.GameObjects.Container
+  minimapMarker?: Phaser.GameObjects.Arc
+}
+
 type WorldBounds = { min_x: number; min_y: number; max_x: number; max_y: number }
 
 type ObstacleLayoutItem = {
@@ -47,6 +56,7 @@ export class WorldScene extends Phaser.Scene {
   private npcs: NPC[] = []
   private portals: MapPortal[] = []
   private plants: MapPlant[] = []
+  private evidenceNodes: MapEvidence[] = []
   private playerMapMarker!: Phaser.GameObjects.Arc
   private readonly npcMapMarkers = new Map<NPC, Phaser.GameObjects.Arc>()
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
@@ -55,6 +65,7 @@ export class WorldScene extends Phaser.Scene {
   private nearby: NPC | null = null
   private nearbyPortal: MapPortal | null = null
   private nearbyPlant: MapPlant | null = null
+  private nearbyEvidence: MapEvidence | null = null
   private lastPositionEmit = 0
   private worldInputLocked = false
 
@@ -66,6 +77,7 @@ export class WorldScene extends Phaser.Scene {
     this.nearby = null
     this.nearbyPortal = null
     this.nearbyPlant = null
+    this.nearbyEvidence = null
     this.lastPositionEmit = 0
     this.npcMapMarkers.clear()
     const map = this.registry.get('world-map') as MapData
@@ -135,7 +147,16 @@ export class WorldScene extends Phaser.Scene {
     this.physics.add.collider(this.player, obstacles)
     this.npcs = (map.resource.objects ?? [])
       .filter((item) => item.type === 'npc' && item.template_id)
-      .map((item) => new NPC(this, item.x, item.y, item.template_id!, item.template_name ?? '旅人', item.sprite))
+      .map((item) => new NPC(
+        this,
+        item.x,
+        item.y,
+        item.template_id!,
+        item.template_name ?? '旅人',
+        item.sprite,
+        item.stationary === true,
+        item.tint,
+      ))
     this.npcs.forEach((npc, index) => {
       this.physics.add.collider(this.player, npc)
       this.physics.add.collider(npc, obstacles)
@@ -168,9 +189,43 @@ export class WorldScene extends Phaser.Scene {
         padding: { x: 9, y: 5 },
       }).setOrigin(0.5).setDepth(portal.y + 1)
     })
+    this.evidenceNodes = (map.resource.objects ?? []).flatMap((item) => {
+      if (item.type !== 'story_evidence' || !item.evidence_id || !item.name) return []
+      const display = this.add.container(item.x, item.y).setDepth(item.y)
+      const glow = this.add.circle(0, 0, 36, 0x93c5fd, 0.2)
+        .setStrokeStyle(2, 0xc4b5fd, 0.8)
+      const sigil = this.add.star(0, -5, 6, 9, 22, 0xe0e7ff, 0.92).setAngle(30)
+      const label = this.add.text(0, 42, item.name, {
+        fontFamily: 'ui-rounded, sans-serif',
+        fontSize: '14px',
+        color: '#eef2ff',
+        backgroundColor: 'rgba(20, 18, 48, 0.88)',
+        padding: { x: 8, y: 5 },
+      }).setOrigin(0.5)
+      display.add([glow, sigil, label])
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        this.tweens.add({
+          targets: [glow, sigil],
+          alpha: { from: 0.45, to: 1 },
+          scale: { from: 0.92, to: 1.08 },
+          duration: 1_200,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1,
+        })
+      }
+      return [{
+        evidenceId: item.evidence_id,
+        name: item.name,
+        x: item.x,
+        y: item.y,
+        display,
+      }]
+    })
     const reservedPlantAreas: ReservedPlantArea[] = [
       ...this.npcs.map((npc) => ({ x: npc.x, y: npc.y, radius: 86 })),
       ...this.portals.map((portal) => ({ x: portal.x, y: portal.y, radius: 112 })),
+      ...this.evidenceNodes.map((evidence) => ({ x: evidence.x, y: evidence.y, radius: 72 })),
     ]
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     this.plants = (map.resource.objects ?? []).flatMap((item) => {
@@ -267,6 +322,7 @@ export class WorldScene extends Phaser.Scene {
     gameEvents.emit('npc:near', { id: null, name: null })
     gameEvents.emit('portal:near', { mapId: null, name: null, label: null })
     gameEvents.emit('plant:near', { nodeId: null, name: null, rarity: null })
+    gameEvents.emit('evidence:near', { evidenceId: null, name: null })
 
     gameEvents.on('input:direction', this.onVirtualDirection)
     gameEvents.on('input:interact', this.interact)
@@ -338,6 +394,11 @@ export class WorldScene extends Phaser.Scene {
         nodeId: this.nearbyPlant.nodeId,
         name: this.nearbyPlant.name,
       })
+    } else if (this.nearbyEvidence) {
+      gameEvents.emit('evidence:interact', {
+        evidenceId: this.nearbyEvidence.evidenceId,
+        name: this.nearbyEvidence.name,
+      })
     } else if (this.nearbyPortal) {
       gameEvents.emit('portal:interact', {
         mapId: this.nearbyPortal.targetMapId,
@@ -367,6 +428,7 @@ export class WorldScene extends Phaser.Scene {
     let nearest: NPC | null = null
     let nearestPortal: MapPortal | null = null
     let nearestPlant: MapPlant | null = null
+    let nearestEvidence: MapEvidence | null = null
     let distance = this.player.interactionRange
     for (const npc of this.npcs) {
       const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y)
@@ -393,6 +455,16 @@ export class WorldScene extends Phaser.Scene {
         nearestPlant = plant
       }
     }
+    for (const evidence of this.evidenceNodes) {
+      const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, evidence.x, evidence.y)
+      if (next < distance) {
+        distance = next
+        nearest = null
+        nearestPortal = null
+        nearestPlant = null
+        nearestEvidence = evidence
+      }
+    }
     if (nearest !== this.nearby) {
       this.nearby = nearest
       gameEvents.emit('npc:near', { id: nearest?.npcId ?? null, name: nearest?.npcName ?? null })
@@ -411,6 +483,13 @@ export class WorldScene extends Phaser.Scene {
         nodeId: nearestPlant?.nodeId ?? null,
         name: nearestPlant?.name ?? null,
         rarity: nearestPlant?.rarity ?? null,
+      })
+    }
+    if (nearestEvidence !== this.nearbyEvidence) {
+      this.nearbyEvidence = nearestEvidence
+      gameEvents.emit('evidence:near', {
+        evidenceId: nearestEvidence?.evidenceId ?? null,
+        name: nearestEvidence?.name ?? null,
       })
     }
   }
@@ -446,7 +525,18 @@ export class WorldScene extends Phaser.Scene {
       plant.minimapMarker = marker
       return [marker]
     })
-    this.cameras.main.ignore([this.playerMapMarker, ...npcMarkers, ...portalMarkers, ...plantMarkers])
+    const evidenceMarkers = this.evidenceNodes.map((evidence) => {
+      const marker = this.add.circle(evidence.x, evidence.y, 26, 0xa78bfa).setDepth(99_999)
+      evidence.minimapMarker = marker
+      return marker
+    })
+    this.cameras.main.ignore([
+      this.playerMapMarker,
+      ...npcMarkers,
+      ...portalMarkers,
+      ...plantMarkers,
+      ...evidenceMarkers,
+    ])
   }
 
   private resolveVisiblePlantPosition(

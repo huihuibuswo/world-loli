@@ -220,6 +220,50 @@ BEGIN
     ) THEN
         RAISE EXCEPTION 'opening Luna boss configuration is missing';
     END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM npc_templates
+        WHERE name = '雾痕兽影'
+          AND battle_deck->>'monster_rank' = 'elite'
+          AND reward->>'story_gate' = 'opening_moon_scar'
+    ) THEN
+        RAISE EXCEPTION 'moon trace shadow battle configuration is missing';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM map_data,
+             LATERAL jsonb_array_elements(COALESCE(resource_json->'objects', '[]'::JSONB)) AS item
+        WHERE map_name = '微光森林'
+          AND item->>'template_name' = '雾痕兽影'
+          AND (item->>'tint')::INTEGER = 7153881
+    ) THEN
+        RAISE EXCEPTION 'moon trace shadow visual distinction is missing';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM map_data,
+             LATERAL jsonb_array_elements(COALESCE(resource_json->'objects', '[]'::JSONB)) AS item
+        WHERE map_name = '晨曦村'
+          AND item->>'template_name' = '狼娘·露娜'
+          AND item->>'story_stage' = 'complete'
+          AND (item->>'stationary')::BOOLEAN IS TRUE
+    ) THEN
+        RAISE EXCEPTION 'recuperating Luna village NPC is missing';
+    END IF;
+
+    IF (
+        SELECT COUNT(*)
+        FROM map_data,
+             LATERAL jsonb_array_elements(COALESCE(resource_json->'objects', '[]'::JSONB)) AS item
+        WHERE map_name = '微光森林'
+          AND item->>'type' = 'story_evidence'
+          AND item->>'story_stage' = 'moon_trace_evidence'
+    ) <> 3 THEN
+        RAISE EXCEPTION 'moon trace fixed evidence nodes are incomplete';
+    END IF;
 END
 $verify_opening_story$;
 

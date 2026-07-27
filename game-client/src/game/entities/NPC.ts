@@ -24,6 +24,8 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     readonly npcId: number,
     readonly npcName: string,
     textureKey = 'npc-trainer',
+    private readonly stationary = false,
+    tint?: number,
   ) {
     const texture = scene.textures.exists(textureKey) ? textureKey : 'npc-trainer'
     super(scene, x, y, texture)
@@ -39,6 +41,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true)
     this.setPushable(false)
     this.setDisplaySize(100, 100)
+    if (tint !== undefined) this.setTint(tint)
     this.syncCollisionBody()
     this.nameLabel = scene.add.text(x, y - 62, npcName, {
       fontFamily: 'ui-rounded, sans-serif',
@@ -54,7 +57,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
 
   updateWander(time: number, paused: boolean): void {
     this.enforceWanderRadius(time)
-    if (paused) {
+    if (paused || this.stationary) {
       this.enterPaused()
       this.syncPresentation()
       return

@@ -22,6 +22,7 @@ from app.services.npc_affection_service import (
     npc_gift_options,
 )
 from app.services.npc_ai_service import chat_with_npc, get_chat_state
+from app.services.opening_story_service import opening_npc_context
 from app.services.npc_service import (
     npc_service_data,
     purchase_shop_item,
@@ -42,12 +43,13 @@ def _map_data(item: MapData) -> dict:
     }
 
 
-def _npc_data(item: NpcTemplate) -> dict:
+def _npc_data(item: NpcTemplate, story_context: dict | None = None) -> dict:
     reward = item.reward or {}
     ai_profile = get_npc_ai_profile(item)
-    dialogue = reward.get("dialogue")
+    dialogue = (story_context or {}).get("dialogue", reward.get("dialogue"))
     if not isinstance(dialogue, list) or not dialogue:
         dialogue = [item.story]
+    actions = (story_context or {}).get("actions", reward.get("actions", ["dialog", "battle"]))
     return {
         "id": item.id,
         "name": item.name,
@@ -59,8 +61,9 @@ def _npc_data(item: NpcTemplate) -> dict:
         "sprite": reward.get("sprite", "npc-trainer"),
         "portrait": reward.get("portrait"),
         "dialogue": [str(line) for line in dialogue if str(line).strip()],
-        "actions": reward.get("actions", ["dialog", "battle"]),
+        "actions": actions,
         "service_type": reward.get("service_type"),
+        "story_action": (story_context or {}).get("story_action"),
         "ai": {
             "dialogue_enabled": ai_profile.dialogue_enabled,
             "battle_enabled": ai_profile.battle_enabled,
@@ -133,11 +136,15 @@ def enter_map(
 
 
 @router.get("/npc/{npc_id}")
-def get_npc(npc_id: int, db: Session = Depends(get_db)) -> dict:
+def get_npc(
+    npc_id: int,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
     item = db.get(NpcTemplate, npc_id)
     if item is None:
         abort(404, "NPC不存在")
-    return ok(_npc_data(item))
+    return ok(_npc_data(item, opening_npc_context(db, player, item)))
 
 
 @router.get("/npc/{npc_id}/chat")

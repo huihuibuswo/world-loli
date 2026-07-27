@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowRight, Droplets, LogOut, RotateCcw, Shield, Sparkles, Swords } from 'lucide-vue-next'
+import { ArrowRight, Droplets, LogOut, MoonStar, RotateCcw, Shield, Sparkles, Swords } from 'lucide-vue-next'
 import { gameEvents, type BattleVisualStep } from '@/game/events'
 import { useGameStore } from '@/stores/game'
 
@@ -13,11 +13,14 @@ const lunaContract = computed(() => (
     ? battle.value.reward.opening
     : null
 ))
+const openingStoryReward = computed(() => battle.value.reward?.opening ?? null)
 const battleIntroStep = ref(0)
 const battleIntroLine = computed(() => battle.value.story_intro?.dialogue[battleIntroStep.value] ?? null)
 const battleIntroActive = computed(() => battle.value.status === 'active' && battleIntroLine.value !== null)
 const contractStep = ref(0)
-const contractLine = computed(() => lunaContract.value?.dialogue?.[contractStep.value] ?? null)
+const contractLine = computed(
+  () => openingStoryReward.value?.dialogue?.[contractStep.value] ?? null,
+)
 const contractStoryActive = computed(() => contractLine.value !== null)
 const visualBusy = ref(false)
 let visualTimeout: number | null = null
@@ -117,10 +120,11 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
     <div v-if="battle.status !== 'active'" class="battle-result glass-panel" role="status">
       <template v-if="contractStoryActive && contractLine">
         <div class="luna-contract-portrait" aria-hidden="true">
-          <img src="/assets/generated/portraits/luna.webp" alt="">
+          <img v-if="lunaContract" src="/assets/generated/portraits/luna.webp" alt="">
+          <MoonStar v-else class="story-result-sigil" :size="88" />
         </div>
         <div class="luna-contract-copy">
-          <p class="eyebrow">MOON SCAR CONTRACT · {{ contractStep + 1 }}/{{ lunaContract?.dialogue?.length }}</p>
+          <p class="eyebrow">{{ lunaContract ? 'MOON SCAR CONTRACT' : 'INVESTIGATION RECORD' }} · {{ contractStep + 1 }}/{{ openingStoryReward?.dialogue?.length }}</p>
           <h2>{{ contractLine.speaker }}</h2>
           <p class="luna-contract-line">{{ contractLine.text }}</p>
           <button
@@ -129,14 +133,14 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
             :disabled="game.actionLoading || visualBusy"
             @click="contractStep += 1"
           >
-            {{ contractStep + 1 === lunaContract?.dialogue?.length ? '接受契约' : '继续' }}<ArrowRight :size="18" />
+            {{ contractStep + 1 === openingStoryReward?.dialogue?.length ? (lunaContract ? '接受契约' : '保存记录') : '继续' }}<ArrowRight :size="18" />
           </button>
         </div>
       </template>
       <template v-else>
         <p class="eyebrow">BATTLE COMPLETE</p>
         <h2>{{ battle.status === 'victory' ? '胜利' : '败北' }}</h2>
-        <p>{{ lunaContract?.message ?? (battle.status === 'victory' ? '林间的回响化作新的力量。' : battle.defeat_reason === 'surrender' ? '你已中途退出，本场按失败结算。' : '战斗失利，休整之后再次启程。') }}</p>
+        <p>{{ openingStoryReward?.message ?? (battle.status === 'victory' ? '林间的回响化作新的力量。' : battle.defeat_reason === 'surrender' ? '你已中途退出，本场按失败结算。' : '战斗失利，休整之后再次启程。') }}</p>
         <div class="battle-rewards" aria-label="战斗结算">
           <span v-if="battle.penalty" class="battle-penalty">
             失败惩罚：金币 -{{ battle.penalty.gold_lost }} · 剩余 {{ battle.penalty.gold_remaining }}
@@ -158,7 +162,7 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
           </span>
           <span v-if="lunaContract?.contract_reward"><Sparkles :size="15" />固定新手奖励 · 完整「{{ lunaContract.contract_reward.spirit.name }}」卡灵已到账</span>
           <span v-if="lunaContract?.contract_reward">{{ lunaContract.contract_reward.card.name }} ×2 · 已加入当前启用套牌</span>
-          <span v-if="!battle.affection_result?.points_gained && !battle.affection_result?.rewards.length && !battle.reward?.card && !battle.reward?.fragment && !lunaContract">
+          <span v-if="!battle.affection_result?.points_gained && !battle.affection_result?.rewards.length && !battle.reward?.card && !battle.reward?.fragment && !openingStoryReward">
             本次切磋没有额外奖励
           </span>
         </div>
@@ -166,12 +170,13 @@ watch(() => battle.value?.version, (nextVersion, previousVersion) => {
       </template>
     </div>
 
-    <div v-else-if="battleIntroActive && battleIntroLine" class="battle-result glass-panel" role="dialog" aria-modal="true" aria-label="露娜战前共鸣">
+    <div v-else-if="battleIntroActive && battleIntroLine" class="battle-result glass-panel" role="dialog" aria-modal="true" :aria-label="battle.story_intro?.event === 'luna_resonance' ? '露娜战前共鸣' : '雾痕兽影出现'">
       <div class="luna-contract-portrait" aria-hidden="true">
-        <img src="/assets/generated/portraits/luna.webp" alt="">
+        <img v-if="battle.story_intro?.event === 'luna_resonance'" src="/assets/generated/portraits/luna.webp" alt="">
+        <MoonStar v-else class="story-result-sigil" :size="88" />
       </div>
       <div class="luna-contract-copy">
-        <p class="eyebrow">RESONANCE · {{ battleIntroStep + 1 }}/{{ battle.story_intro?.dialogue.length }}</p>
+        <p class="eyebrow">{{ battle.story_intro?.event === 'luna_resonance' ? 'RESONANCE' : 'MIST SHADOW' }} · {{ battleIntroStep + 1 }}/{{ battle.story_intro?.dialogue.length }}</p>
         <h2>{{ battleIntroLine.speaker }}</h2>
         <p class="luna-contract-line">{{ battleIntroLine.text }}</p>
         <button

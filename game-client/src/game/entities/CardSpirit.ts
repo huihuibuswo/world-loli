@@ -18,7 +18,16 @@ export class CardSpirit extends Phaser.GameObjects.Container {
   private barrierAnimation: Phaser.Tweens.Tween | null = null
   private defeated = false
 
-  constructor(scene: Phaser.Scene, x: number, y: number, name: string, texture: string, color = 0xd97706, defenseTexture?: string) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    name: string,
+    texture: string,
+    color = 0xd97706,
+    defenseTexture?: string,
+    tint?: number,
+  ) {
     super(scene, x, y)
     this.homeX = x
     this.homeY = y
@@ -27,6 +36,7 @@ export class CardSpirit extends Phaser.GameObjects.Container {
     this.aura = scene.add.circle(0, 0, 68, color, 0.16)
     this.barrier = scene.add.ellipse(0, -4, 116, 142, 0x5eead4, 0).setStrokeStyle(4, 0xccfbf1, 0).setVisible(false)
     this.characterSprite = scene.add.sprite(0, 0, texture).setDisplaySize(136, 136)
+    if (tint !== undefined) this.characterSprite.setTint(tint)
     if (this.animationPrefix) this.characterSprite.setFrame(3)
     const label = scene.add
       .text(0, 78, name, { fontFamily: 'ui-rounded, sans-serif', fontSize: '18px', color: '#fff7dc' })

@@ -26,6 +26,8 @@ export type GameEventMap = {
   'plant:near': { nodeId: string | null; name: string | null; rarity: string | null }
   'plant:interact': { nodeId: string; name: string }
   'plant:collected': { nodeId: string; availableAt: string }
+  'evidence:near': { evidenceId: string | null; name: string | null }
+  'evidence:interact': { evidenceId: string; name: string }
   'input:direction': { x: number; y: number }
   'input:interact': undefined
   'world:input-lock': { locked: boolean }

@@ -111,7 +111,7 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             map_npcs = {
                 item["template_name"]: item
                 for item in map_data["resource"]["objects"]
-                if item["type"] == "npc"
+                if item["type"] == "npc" and not item.get("story_gate")
             }
             assert set(map_npcs) == {
                 "训练教官",
@@ -120,6 +120,15 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
                 "杂货商",
                 "森林向导",
             }
+            recuperating_luna = next(
+                item
+                for item in map_data["resource"]["objects"]
+                if item["type"] == "npc"
+                and item.get("template_name") == "狼娘·露娜"
+                and item.get("story_stage") == "complete"
+            )
+            assert recuperating_luna["story_gate"] == "opening_moon_scar"
+            assert recuperating_luna["stationary"] is True
             assert "训练木偶" not in map_npcs
 
             village_portal = next(
@@ -181,7 +190,10 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             assert return_village.json()["data"]["map"]["map_name"] == "晨曦村"
 
             for map_npc in map_npcs.values():
-                npc_response = client.get(f"/api/v1/npc/{map_npc['template_id']}")
+                npc_response = client.get(
+                    f"/api/v1/npc/{map_npc['template_id']}",
+                    headers=headers_a,
+                )
                 assert npc_response.status_code == 200
                 npc = npc_response.json()["data"]
                 assert npc["actions"][:2] == ["dialog", "battle"]

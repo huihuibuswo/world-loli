@@ -29,7 +29,17 @@ export class BattleScene extends Phaser.Scene {
       : 'npc-trainer'
     const enemyCombatTexture = `${enemyTexture}-combat`
     const enemyBattleTexture = this.textures.exists(enemyCombatTexture) ? enemyCombatTexture : enemyTexture
-    this.enemy = new CardSpirit(this, width * 0.72, height * 0.42, data.enemyName ?? '对手', enemyBattleTexture, 0xb45309)
+    const isMistShadow = data.enemyName === '雾痕兽影'
+    this.enemy = new CardSpirit(
+      this,
+      width * 0.72,
+      height * 0.42,
+      data.enemyName ?? '对手',
+      enemyBattleTexture,
+      isMistShadow ? 0x7c3aed : 0xb45309,
+      undefined,
+      isMistShadow ? 0x6d28d9 : undefined,
+    )
     this.playerSpirit = new CardSpirit(
       this,
       width * 0.28,

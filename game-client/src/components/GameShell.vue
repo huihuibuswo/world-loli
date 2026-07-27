@@ -15,6 +15,7 @@ const canvasHost = ref<HTMLElement | null>(null)
 const nearNpc = ref<{ id: number; name: string } | null>(null)
 const nearPortal = ref<{ mapId: number; name: string; label: string } | null>(null)
 const nearPlant = ref<{ nodeId: string; name: string; rarity: string } | null>(null)
+const nearEvidence = ref<{ evidenceId: string; name: string } | null>(null)
 const collectingPlant = ref<string | null>(null)
 const transitionTarget = ref('')
 const drawerOpen = ref(false)
@@ -25,6 +26,9 @@ const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 
 const isBattle = computed(() => Boolean(game.battle))
 const currentMapName = computed(() => game.map?.map_name || '晨曦村')
 const openingArrival = computed(() => game.opening?.stage === 'arrival')
+const openingDialogueActive = computed(
+  () => Boolean(game.opening?.completion_dialogue?.length),
+)
 const rarityLabel = (rarity: string): string => ({
   common: '普通',
   uncommon: '少见',
@@ -36,6 +40,7 @@ function currentWorldInputLock(): boolean {
     Boolean(game.dialogNpc)
     || drawerOpen.value
     || openingArrival.value
+    || openingDialogueActive.value
     || Boolean(collectingPlant.value)
     || game.mapLoading
   )
@@ -56,14 +61,23 @@ watch(isBattle, (next) => {
   }
 })
 
-watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival], () => {
+watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival, openingDialogueActive], () => {
   setWorldInputLock(currentWorldInputLock())
 })
 
-watch(() => game.opening?.stage, (nextStage, previousStage) => {
-  if (!previousStage || nextStage === previousStage || !game.map || !game.player || game.battle) return
+watch(
+  [() => game.opening?.stage, () => game.opening?.main_quest?.stage],
+  (nextStage, previousStage) => {
+  if (
+    !previousStage
+    || (nextStage[0] === previousStage[0] && nextStage[1] === previousStage[1])
+    || !game.map
+    || !game.player
+    || game.battle
+  ) return
   void nextTick(() => world?.changeMap(game.map!, game.player!))
-})
+  },
+)
 
 const onNear = (npc: { id: number | null; name: string | null }): void => { nearNpc.value = npc.id && npc.name ? { id: npc.id, name: npc.name } : null }
 const onPortalNear = (portal: { mapId: number | null; name: string | null; label: string | null }): void => {
@@ -76,6 +90,16 @@ const onPlantNear = (plant: { nodeId: string | null; name: string | null; rarity
   nearPlant.value = plant.nodeId && plant.name && plant.rarity
     ? { nodeId: plant.nodeId, name: plant.name, rarity: plant.rarity }
     : null
+}
+const onEvidenceNear = (evidence: { evidenceId: string | null; name: string | null }): void => {
+  nearEvidence.value = evidence.evidenceId && evidence.name
+    ? { evidenceId: evidence.evidenceId, name: evidence.name }
+    : null
+}
+const onEvidenceInteract = ({ evidenceId }: { evidenceId: string; name: string }): void => {
+  void game.inspectMoonTraceEvidence(evidenceId).catch(() => {
+    // The store exposes the request error in the existing global error UI.
+  })
 }
 const onPlantInteract = async ({ nodeId }: { nodeId: string; name: string }): Promise<void> => {
   if (game.actionLoading || collectingPlant.value) return
@@ -140,6 +164,8 @@ onMounted(() => {
   gameEvents.on('npc:interact', onInteract)
   gameEvents.on('plant:near', onPlantNear)
   gameEvents.on('plant:interact', onPlantInteract)
+  gameEvents.on('evidence:near', onEvidenceNear)
+  gameEvents.on('evidence:interact', onEvidenceInteract)
   gameEvents.on('portal:near', onPortalNear)
   gameEvents.on('portal:interact', onPortalInteract)
   gameEvents.on('player:moved', onMoved)
@@ -151,6 +177,8 @@ onBeforeUnmount(() => {
   gameEvents.off('npc:interact', onInteract)
   gameEvents.off('plant:near', onPlantNear)
   gameEvents.off('plant:interact', onPlantInteract)
+  gameEvents.off('evidence:near', onEvidenceNear)
+  gameEvents.off('evidence:interact', onEvidenceInteract)
   gameEvents.off('portal:near', onPortalNear)
   gameEvents.off('portal:interact', onPortalInteract)
   gameEvents.off('player:moved', onMoved)
@@ -178,20 +206,21 @@ onBeforeUnmount(() => {
     <aside v-if="!isBattle" class="minimap-frame" role="img" :aria-label="`${currentMapName}小地图`" />
 
     <OpeningStoryPanel
-      v-if="!isBattle && game.opening && !game.opening.completed"
+      v-if="!isBattle && game.opening"
       :story="game.opening"
       :loading="game.actionLoading"
       @start="game.startOpening"
       @complete="game.completeOpening"
+      @dismiss-dialogue="game.dismissOpeningDialogue"
     />
 
     <div v-else-if="!isBattle" class="quest-card glass-panel">
       <span><Heart :size="16" />当前地图</span><strong>{{ currentMapName }}</strong><small>探索植物、居民与地图出口，按 E 互动</small>
     </div>
 
-    <div v-if="!isBattle && !game.dialogNpc && !drawerOpen && (nearPlant || nearPortal || nearNpc)" class="interaction-hint" role="status">
+    <div v-if="!isBattle && !game.dialogNpc && !drawerOpen && (nearEvidence || nearPlant || nearPortal || nearNpc)" class="interaction-hint" role="status">
       <button type="button" :disabled="game.mapLoading || game.actionLoading || Boolean(collectingPlant)" @click="interact">
-        <kbd>E</kbd><span>{{ collectingPlant && nearPlant ? '采集中…' : nearPlant ? `采集「${nearPlant.name}」· ${rarityLabel(nearPlant.rarity)}` : nearPortal ? nearPortal.label : `与 ${nearNpc?.name} 交谈` }}</span>
+        <kbd>E</kbd><span>{{ nearEvidence ? `调查「${nearEvidence.name}」` : collectingPlant && nearPlant ? '采集中…' : nearPlant ? `采集「${nearPlant.name}」· ${rarityLabel(nearPlant.rarity)}` : nearPortal ? nearPortal.label : `与 ${nearNpc?.name} 交谈` }}</span>
       </button>
     </div>
 
@@ -220,6 +249,7 @@ onBeforeUnmount(() => {
       :upgrade-card="game.upgradeNpcCard"
       :accept-quest="game.acceptNpcQuest"
       :complete-quest="game.completeNpcQuest"
+      :perform-story-action="game.performMoonTraceAction"
       @close="game.closeDialog"
       @battle="beginBattle"
     />

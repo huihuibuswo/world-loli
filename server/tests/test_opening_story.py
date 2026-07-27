@@ -122,6 +122,12 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
                 luna = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "狼娘·露娜"))
                 assert luna is not None
                 luna_id = luna.id
+                guide = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "森林向导"))
+                shadow = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "雾痕兽影"))
+                assert guide is not None
+                assert shadow is not None
+                guide_id = guide.id
+                shadow_id = shadow.id
 
             early_battle = client.post(
                 "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers
@@ -181,8 +187,8 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             abandoned_data = abandoned.json()["data"]
             assert abandoned_data["story_intro"]["event"] == "luna_resonance"
             assert len(abandoned_data["story_intro"]["dialogue"]) == 3
-            assert "共鸣" in abandoned_data["story_intro"]["message"]
-            assert "回应" in abandoned_data["story_intro"]["dialogue"][-1]["text"]
+            assert "负伤" in abandoned_data["story_intro"]["message"]
+            assert "基础卡牌" in abandoned_data["story_intro"]["dialogue"][-1]["text"]
             resumed_battle = client.get("/api/v1/battle/current", headers=headers)
             assert resumed_battle.status_code == 200, resumed_battle.text
             assert resumed_battle.json()["data"]["story_intro"] == abandoned_data["story_intro"]
@@ -222,9 +228,10 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             assert opening_reward["event"] == "luna_contract"
             assert opening_reward["reward_kind"] == "fixed_newbie_reward"
             assert "完整「狼娘·露娜」卡灵" in opening_reward["message"]
-            assert "已直接加入" in opening_reward["message"]
-            assert len(opening_reward["dialogue"]) == 5
-            assert "完整卡灵" in opening_reward["dialogue"][-1]["text"]
+            assert "已加入收藏和启用套牌" in opening_reward["message"]
+            assert len(opening_reward["dialogue"]) == 7
+            assert "卡灵投影" in opening_reward["dialogue"][3]["text"]
+            assert opening_reward["dialogue"][-1]["text"] == "那就……拜托你了。"
             assert opening_reward["contract_reward"]["spirit"]["name"] == "狼娘·露娜"
             assert opening_reward["contract_reward"]["spirit"]["created"] is True
             assert opening_reward["contract_reward"]["card"] == {
@@ -273,6 +280,8 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
                 )
                 assert progress is not None
                 assert progress.data_json["luna_contract_completed"] is True
+                assert progress.data_json["luna_injured"] is True
+                assert progress.data_json["luna_recovery_state"] == "returning_to_village"
                 assert db.scalar(
                     select(PlayerCardSpiritFragment).where(
                         PlayerCardSpiritFragment.player_id == player_id
@@ -304,8 +313,25 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             assert completed_data["stage"] == "complete"
             assert completed_data["completed_now"] is True
             assert completed_data["gold_reward"] == 480
-            assert completed_data["main_quest"] == "月痕追迹"
+            assert len(completed_data["completion_dialogue"]) == 5
+            assert "疗养" in completed_data["completion_dialogue"][1]["text"]
+            assert completed_data["main_quest"]["title"] == "月痕追迹"
+            assert completed_data["main_quest"]["chapter"] == "逆流雾源"
+            assert completed_data["main_quest"]["stage"] == "moon_trace_accept"
             assert all(task["status"] == "completed" for task in completed_data["tasks"])
+
+            premature_guide = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "confirm_guide", "npc_id": guide_id},
+                headers=headers,
+            )
+            assert premature_guide.status_code == 409
+            premature_report = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "report_stage1", "npc_id": luna_id},
+                headers=headers,
+            )
+            assert premature_report.status_code == 409
 
             gold_after = client.get("/api/v1/player/profile", headers=headers).json()["data"]["gold"]
             duplicate = client.post("/api/v1/opening/complete", headers=headers)
@@ -313,6 +339,176 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             assert duplicate.json()["data"]["completed_now"] is False
             assert duplicate.json()["data"]["gold_reward"] == 0
             assert client.get("/api/v1/player/profile", headers=headers).json()["data"]["gold"] == gold_after
+
+            accepted = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "accept_stage1", "npc_id": luna_id},
+                headers=headers,
+            )
+            assert accepted.status_code == 200, accepted.text
+            assert accepted.json()["data"]["main_quest"]["stage"] == "moon_trace_guide"
+            repeated_accept = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "accept_stage1", "npc_id": luna_id},
+                headers=headers,
+            )
+            assert repeated_accept.status_code == 200, repeated_accept.text
+            assert repeated_accept.json()["data"]["main_quest"]["stage"] == "moon_trace_guide"
+
+            guide_context = client.get(f"/api/v1/npc/{guide_id}", headers=headers)
+            assert guide_context.status_code == 200, guide_context.text
+            assert guide_context.json()["data"]["story_action"]["action"] == "confirm_guide"
+            guided = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "confirm_guide", "npc_id": guide_id},
+                headers=headers,
+            )
+            assert guided.status_code == 200, guided.text
+            assert guided.json()["data"]["main_quest"]["stage"] == "moon_trace_evidence"
+            repeated_guide = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "confirm_guide", "npc_id": guide_id},
+                headers=headers,
+            )
+            assert repeated_guide.status_code == 200, repeated_guide.text
+            assert repeated_guide.json()["data"]["main_quest"]["stage"] == "moon_trace_evidence"
+
+            forest_again = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": forest["id"]},
+                headers=headers,
+            )
+            assert forest_again.status_code == 200, forest_again.text
+
+            premature_shadow = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": shadow_id},
+                headers=headers,
+            )
+            assert premature_shadow.status_code == 409
+
+            evidence_ids = [
+                "moonlight_flora",
+                "broken_wolf_tracks",
+                "broken_moon_mist_core",
+            ]
+            for index, evidence_id in enumerate(evidence_ids):
+                inspected = client.post(
+                    "/api/v1/opening/moon-trace/action",
+                    json={"action": "inspect_evidence", "evidence_id": evidence_id},
+                    headers=headers,
+                )
+                assert inspected.status_code == 200, inspected.text
+                main_quest = inspected.json()["data"]["main_quest"]
+                assert main_quest["evidence_count"] == index + 1
+                expected_stage = (
+                    "moon_trace_battle" if index == len(evidence_ids) - 1
+                    else "moon_trace_evidence"
+                )
+                assert main_quest["stage"] == expected_stage
+
+            duplicate_evidence = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "inspect_evidence", "evidence_id": evidence_ids[-1]},
+                headers=headers,
+            )
+            assert duplicate_evidence.status_code == 200, duplicate_evidence.text
+            assert duplicate_evidence.json()["data"]["main_quest"]["evidence_count"] == 3
+
+            defeated_shadow_battle = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": shadow_id},
+                headers=headers,
+            )
+            assert defeated_shadow_battle.status_code == 201, defeated_shadow_battle.text
+            defeated_shadow = _lose_battle(
+                client,
+                headers,
+                defeated_shadow_battle.json()["data"],
+            )
+            assert defeated_shadow["status"] == "defeat"
+            assert defeated_shadow["defeat_reason"] == "knockout"
+            assert defeated_shadow["penalty"]["gold_lost"] > 0
+            assert (
+                client.get("/api/v1/opening", headers=headers)
+                .json()["data"]["main_quest"]["stage"]
+                == "moon_trace_battle"
+            )
+
+            abandoned_shadow = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": shadow_id},
+                headers=headers,
+            )
+            assert abandoned_shadow.status_code == 201, abandoned_shadow.text
+            surrendered_shadow = client.post(
+                f"/api/v1/battle/{abandoned_shadow.json()['data']['battle_id']}/surrender",
+                json={"expected_version": abandoned_shadow.json()["data"]["version"]},
+                headers=headers,
+            )
+            assert surrendered_shadow.status_code == 200, surrendered_shadow.text
+            assert surrendered_shadow.json()["data"]["status"] == "defeat"
+            assert (
+                client.get("/api/v1/opening", headers=headers)
+                .json()["data"]["main_quest"]["stage"]
+                == "moon_trace_battle"
+            )
+
+            shadow_battle = client.post(
+                "/api/v1/battle/create",
+                json={"enemy_id": shadow_id},
+                headers=headers,
+            )
+            assert shadow_battle.status_code == 201, shadow_battle.text
+            shadow_victory = _finish_battle(
+                client,
+                headers,
+                shadow_battle.json()["data"],
+                {card["id"]: card for card in cards_after},
+            )
+            assert shadow_victory["status"] == "victory"
+            assert "fragment" not in shadow_victory["reward"]
+            assert shadow_victory["reward"]["opening"]["event"] == "moon_trace_shadow"
+            assert (
+                client.get("/api/v1/opening", headers=headers)
+                .json()["data"]["main_quest"]["stage"]
+                == "moon_trace_return"
+            )
+            repeated_evidence_after_victory = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "inspect_evidence", "evidence_id": evidence_ids[-1]},
+                headers=headers,
+            )
+            assert repeated_evidence_after_victory.status_code == 200
+            assert (
+                repeated_evidence_after_victory.json()["data"]["main_quest"]["stage"]
+                == "moon_trace_return"
+            )
+
+            returned_again = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": village["id"]},
+                headers=headers,
+            )
+            assert returned_again.status_code == 200, returned_again.text
+            reported = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "report_stage1", "npc_id": luna_id},
+                headers=headers,
+            )
+            assert reported.status_code == 200, reported.text
+            final_quest = reported.json()["data"]["main_quest"]
+            assert final_quest["stage"] == "moon_trace_stage1_complete"
+            assert final_quest["stage1_completed"] is True
+            assert final_quest["objective"]["title"] == "追查操纵断月纹的人"
+
+            repeated_report = client.post(
+                "/api/v1/opening/moon-trace/action",
+                json={"action": "report_stage1", "npc_id": luna_id},
+                headers=headers,
+            )
+            assert repeated_report.status_code == 200, repeated_report.text
+            assert repeated_report.json()["data"]["main_quest"] == final_quest
         finally:
             with SessionLocal() as db:
                 if user_id is not None:

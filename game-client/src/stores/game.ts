@@ -86,7 +86,13 @@ export const useGameStore = defineStore('game', () => {
         ...nextMap.resource,
         objects: (nextMap.resource.objects ?? []).filter((item) => (
           !item.story_gate
-          || (story?.story_key === item.story_gate && story.stage === item.story_stage)
+          || (
+            story?.story_key === item.story_gate
+            && (
+              story.stage === item.story_stage
+              || story.main_quest?.stage === item.story_stage
+            )
+          )
         )),
       },
     }
@@ -356,10 +362,64 @@ export const useGameStore = defineStore('game', () => {
       if (player.value && result.gold_reward) player.value.gold += result.gold_reward
       await Promise.all([refreshCollections(), reloadCurrentMap()])
       showNotice(result.completed_now
-        ? `序章完成 · 开启主线「${result.main_quest ?? '月痕追迹'}」`
+        ? `序章完成 · 开启主线「${result.main_quest?.title ?? '月痕追迹'}」`
         : '序章已经完成')
     } catch (cause) {
       error.value = errorMessage(cause)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  function dismissOpeningDialogue(): void {
+    if (opening.value) opening.value.completion_dialogue = []
+  }
+
+  async function performMoonTraceAction(
+    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1',
+  ): Promise<void> {
+    if (!dialogNpc.value || actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    const npcId = dialogNpc.value.id
+    try {
+      opening.value = await requestData<OpeningStory>(
+        api.post('/opening/moon-trace/action', { action, npc_id: npcId }),
+      )
+      closeDialog()
+      await reloadCurrentMap()
+      showNotice(
+        action === 'accept_stage1'
+          ? '已接取《月痕追迹·逆流雾源》'
+          : action === 'confirm_guide'
+            ? '三处固定证据已标记'
+            : '《逆流雾源》完成，长期目标已更新',
+      )
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function inspectMoonTraceEvidence(evidenceId: string): Promise<void> {
+    if (actionLoading.value) return
+    actionLoading.value = true
+    error.value = ''
+    try {
+      opening.value = await requestData<OpeningStory>(
+        api.post('/opening/moon-trace/action', {
+          action: 'inspect_evidence',
+          evidence_id: evidenceId,
+        }),
+      )
+      await reloadCurrentMap()
+      const count = opening.value.main_quest?.evidence_count ?? 0
+      showNotice(count >= 3 ? '三处证据已齐全 · 雾痕兽影出现' : `调查记录 ${count}/3`)
+    } catch (cause) {
+      error.value = errorMessage(cause)
+      throw cause
     } finally {
       actionLoading.value = false
     }
@@ -774,6 +834,9 @@ export const useGameStore = defineStore('game', () => {
     completeNpcQuest,
     startOpening,
     completeOpening,
+    dismissOpeningDialogue,
+    performMoonTraceAction,
+    inspectMoonTraceEvidence,
     startBattle,
     playCard,
     endTurn,

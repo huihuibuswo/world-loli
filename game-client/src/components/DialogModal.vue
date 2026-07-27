@@ -10,6 +10,7 @@ import {
   Heart,
   MapPinned,
   MessageCircle,
+  MoonStar,
   PackageCheck,
   RotateCcw,
   ScrollText,
@@ -41,6 +42,9 @@ const props = defineProps<{
   upgradeCard: (cardId: number) => Promise<void>
   acceptQuest: (questId: number) => Promise<void>
   completeQuest: (questId: number) => Promise<void>
+  performStoryAction: (
+    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1',
+  ) => Promise<void>
 }>()
 const emit = defineEmits<{ close: []; battle: [id: number] }>()
 
@@ -317,7 +321,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </aside>
 
         <div class="gal-portrait-stage">
-          <img :src="portraitSrc" :alt="`${npc.name}的角色立绘`" @error="useFallbackPortrait">
+          <img
+            :class="{ 'moon-trace-shadow-portrait': npc.name === '雾痕兽影' }"
+            :src="portraitSrc"
+            :alt="`${npc.name}的角色立绘`"
+            @error="useFallbackPortrait"
+          >
         </div>
 
         <div class="gal-dialog-panel">
@@ -338,6 +347,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               <span v-else />
               <div class="gal-choices">
                 <button class="button ghost" type="button" @click="$emit('close')"><DoorOpen :size="19" aria-hidden="true" />离开</button>
+                <button
+                  v-if="npc.story_action"
+                  class="button primary story-action-button"
+                  type="button"
+                  :disabled="loading"
+                  @click="performStoryAction(npc.story_action.action)"
+                >
+                  <MoonStar :size="19" aria-hidden="true" />{{ loading ? '记录中…' : npc.story_action.label }}
+                </button>
                 <button v-if="canBattle" class="button primary" type="button" :disabled="loading" @click="$emit('battle', npc.id)">
                   <Swords :size="19" aria-hidden="true" />{{ loading ? '准备中…' : '对战' }}
                 </button>
