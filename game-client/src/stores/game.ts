@@ -17,6 +17,7 @@ import type {
   NpcGiftResult,
   NpcServiceData,
   NpcShopPurchaseResult,
+  NpcStoryAction,
   NpcTrainingUpgradeResult,
   OpeningStory,
   PlantCollectResult,
@@ -344,7 +345,7 @@ export const useGameStore = defineStore('game', () => {
     try {
       opening.value = await requestData<OpeningStory>(api.post('/opening/start'))
       await reloadCurrentMap()
-      showNotice('序章「雾中月痕」已开始')
+      showNotice('当前目标：与晨曦村村长对话')
     } catch (cause) {
       error.value = errorMessage(cause)
     } finally {
@@ -375,21 +376,22 @@ export const useGameStore = defineStore('game', () => {
     if (opening.value) opening.value.completion_dialogue = []
   }
 
-  async function performMoonTraceAction(
-    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1',
-  ): Promise<void> {
+  async function performOpeningStoryAction(action: NpcStoryAction): Promise<void> {
     if (!dialogNpc.value || actionLoading.value) return
     actionLoading.value = true
     error.value = ''
     const npcId = dialogNpc.value.id
     try {
-      opening.value = await requestData<OpeningStory>(
-        api.post('/opening/moon-trace/action', { action, npc_id: npcId }),
-      )
+      const endpoint = action === 'accept_village_preparation'
+        ? '/opening/action'
+        : '/opening/moon-trace/action'
+      opening.value = await requestData<OpeningStory>(api.post(endpoint, { action, npc_id: npcId }))
       closeDialog()
       await reloadCurrentMap()
       showNotice(
-        action === 'accept_stage1'
+        action === 'accept_village_preparation'
+          ? '获得任务：村道补给、林缘踏查、实战准备'
+          : action === 'accept_stage1'
           ? '已接取《月痕追迹·逆流雾源》'
           : action === 'confirm_guide'
             ? '三处固定证据已标记'
@@ -835,7 +837,7 @@ export const useGameStore = defineStore('game', () => {
     startOpening,
     completeOpening,
     dismissOpeningDialogue,
-    performMoonTraceAction,
+    performOpeningStoryAction,
     inspectMoonTraceEvidence,
     startBattle,
     playCard,

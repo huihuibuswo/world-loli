@@ -126,6 +126,11 @@ class EndTurnRequest(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class OpeningVillageActionRequest(BaseModel):
+    action: Literal["accept_village_preparation"]
+    npc_id: int = Field(gt=0)
+
+
 class OpeningActionRequest(BaseModel):
     action: Literal["accept_stage1", "confirm_guide", "inspect_evidence", "report_stage1"]
     npc_id: int | None = Field(default=None, gt=0)

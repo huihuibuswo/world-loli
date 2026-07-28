@@ -85,7 +85,7 @@ export interface NpcData {
   actions: string[]
   service_type: 'shop' | 'quest' | 'guide' | 'training' | null
   story_action: {
-    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1'
+    action: NpcStoryAction
     label: string
   } | null
   ai: {
@@ -94,6 +94,12 @@ export interface NpcData {
     fallback_replies: [string, string]
   }
 }
+
+export type NpcStoryAction =
+  | 'accept_village_preparation'
+  | 'accept_stage1'
+  | 'confirm_guide'
+  | 'report_stage1'
 
 export interface NpcChatTurn {
   request_id: string
@@ -324,7 +330,13 @@ export interface NpcQuestData {
   }
 }
 
-export type OpeningStage = 'arrival' | 'prepare' | 'forest_signal' | 'return_village' | 'complete'
+export type OpeningStage =
+  | 'arrival'
+  | 'meet_chief'
+  | 'prepare'
+  | 'forest_signal'
+  | 'return_village'
+  | 'complete'
 export type MoonTraceStage =
   | 'moon_trace_accept'
   | 'moon_trace_guide'

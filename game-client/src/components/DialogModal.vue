@@ -24,6 +24,7 @@ import type {
   NpcData,
   NpcGiftOptions,
   NpcGiftResult,
+  NpcStoryAction,
   NpcServiceData,
 } from '@/api/types'
 
@@ -42,9 +43,7 @@ const props = defineProps<{
   upgradeCard: (cardId: number) => Promise<void>
   acceptQuest: (questId: number) => Promise<void>
   completeQuest: (questId: number) => Promise<void>
-  performStoryAction: (
-    action: 'accept_stage1' | 'confirm_guide' | 'report_stage1',
-  ) => Promise<void>
+  performStoryAction: (action: NpcStoryAction) => Promise<void>
 }>()
 const emit = defineEmits<{ close: []; battle: [id: number] }>()
 
@@ -80,7 +79,9 @@ const giftUnavailable = computed(() => (
   || !props.giftOptions?.remaining_gifts
   || !(props.giftOptions.plants.length + props.giftOptions.items.length)
 ))
-const serviceAvailable = computed(() => props.service && props.service.kind !== 'none')
+const serviceAvailable = computed(() => (
+  !props.npc.story_action && props.service && props.service.kind !== 'none'
+))
 const serviceLabel = computed(() => ({
   shop: props.npc.type === 'craft' ? '锻造用品' : '购买杂货',
   quest: '村务委托',

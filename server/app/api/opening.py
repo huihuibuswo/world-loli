@@ -5,8 +5,9 @@ from app.api.deps import get_current_player
 from app.core.responses import ok
 from app.db import get_db
 from app.models import Player
-from app.schemas import OpeningActionRequest
+from app.schemas import OpeningActionRequest, OpeningVillageActionRequest
 from app.services.opening_story_service import (
+    accept_village_preparation,
     complete_opening,
     opening_data,
     perform_opening_action,
@@ -39,6 +40,18 @@ def post_complete_opening(
     db: Session = Depends(get_db),
 ) -> dict:
     return ok(complete_opening(db, player), "序章已完成")
+
+
+@router.post("/action")
+def post_opening_action(
+    payload: OpeningVillageActionRequest,
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
+) -> dict:
+    return ok(
+        accept_village_preparation(db, player, npc_id=payload.npc_id),
+        "入村准备任务已领取",
+    )
 
 
 @router.post("/moon-trace/action")

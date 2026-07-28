@@ -110,17 +110,23 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
             started = client.post("/api/v1/opening/start", headers=headers)
             assert started.status_code == 200, started.text
             started_data = started.json()["data"]
-            assert started_data["stage"] == "prepare"
+            assert started_data["stage"] == "meet_chief"
+            assert started_data["objective"]["title"] == "与晨曦村村长对话"
             assert {task["title"] for task in started_data["tasks"]} == {
                 "村道补给",
                 "林缘踏查",
                 "实战准备",
             }
-            assert all(task["status"] == "active" for task in started_data["tasks"])
+            assert all(task["status"] == "not_started" for task in started_data["tasks"])
 
             with SessionLocal() as db:
+                chief = db.scalar(
+                    select(NpcTemplate).where(NpcTemplate.name == "晨曦村村长")
+                )
                 luna = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "狼娘·露娜"))
+                assert chief is not None
                 assert luna is not None
+                chief_id = chief.id
                 luna_id = luna.id
                 guide = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "森林向导"))
                 shadow = db.scalar(select(NpcTemplate).where(NpcTemplate.name == "雾痕兽影"))
@@ -128,6 +134,38 @@ def test_opening_story_full_flow_is_gated_and_idempotent(monkeypatch) -> None:
                 assert shadow is not None
                 guide_id = guide.id
                 shadow_id = shadow.id
+
+            chief_context = client.get(f"/api/v1/npc/{chief_id}", headers=headers)
+            assert chief_context.status_code == 200, chief_context.text
+            assert (
+                chief_context.json()["data"]["story_action"]["action"]
+                == "accept_village_preparation"
+            )
+
+            wrong_chief = client.post(
+                "/api/v1/opening/action",
+                json={"action": "accept_village_preparation", "npc_id": guide_id},
+                headers=headers,
+            )
+            assert wrong_chief.status_code == 422
+
+            accepted = client.post(
+                "/api/v1/opening/action",
+                json={"action": "accept_village_preparation", "npc_id": chief_id},
+                headers=headers,
+            )
+            assert accepted.status_code == 200, accepted.text
+            accepted_data = accepted.json()["data"]
+            assert accepted_data["stage"] == "prepare"
+            assert all(task["status"] == "active" for task in accepted_data["tasks"])
+
+            repeated_accept = client.post(
+                "/api/v1/opening/action",
+                json={"action": "accept_village_preparation", "npc_id": chief_id},
+                headers=headers,
+            )
+            assert repeated_accept.status_code == 200, repeated_accept.text
+            assert repeated_accept.json()["data"]["stage"] == "prepare"
 
             early_battle = client.post(
                 "/api/v1/battle/create", json={"enemy_id": luna_id}, headers=headers

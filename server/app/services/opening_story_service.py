@@ -27,11 +27,12 @@ STORY_TITLE = "雾中月痕"
 LUNA_NAME = "狼娘·露娜"
 LUNA_CARD_NAME = "月牙撕裂"
 GUIDE_NAME = "森林向导"
+CHIEF_NAME = "晨曦村村长"
 SHADOW_NAME = "雾痕兽影"
 VILLAGE_NAME = "晨曦村"
 FOREST_NAME = "微光森林"
 TASK_TITLES = ("村道补给", "林缘踏查", "实战准备")
-STAGES = {"arrival", "prepare", "forest_signal", "return_village", "complete"}
+STAGES = {"arrival", "meet_chief", "prepare", "forest_signal", "return_village", "complete"}
 MOON_TRACE_STAGES = {
     "moon_trace_accept",
     "moon_trace_guide",
@@ -187,6 +188,11 @@ def _objective(stage: str, current_map_name: str | None) -> dict[str, str]:
         return {
             "title": "抵达晨曦村",
             "description": "听村长说明入村准备，开始序章。",
+        }
+    if stage == "meet_chief":
+        return {
+            "title": "与晨曦村村长对话",
+            "description": "前往村庄中央与村长交谈，领取三项入村准备。",
         }
     if stage == "prepare":
         return {
@@ -393,23 +399,10 @@ def start_opening(db: Session, player: Player) -> dict[str, Any]:
         progress = PlayerStoryProgress(
             player_id=player.id,
             story_key=STORY_KEY,
-            stage="prepare",
+            stage="meet_chief",
             data_json={},
         )
         db.add(progress)
-    tasks = _task_rows(db, player.id)
-    for quest, item in tasks:
-        if item is None:
-            db.add(
-                PlayerQuest(
-                    player_id=player.id,
-                    quest_id=quest.id,
-                    status="active",
-                    progress={},
-                )
-            )
-        elif item.status == "not_started":
-            item.status = "active"
     db.commit()
     return opening_data(db, player)
 
@@ -422,6 +415,19 @@ def opening_npc_context(
     progress = _progress(db, player.id)
     opening_stage = _effective_stage(progress, _task_rows(db, player.id))
     moon_stage = _moon_trace_stage(progress)
+    if npc.name == CHIEF_NAME and opening_stage == "meet_chief":
+        return {
+            "dialogue": [
+                "先确认一下，你没有受伤吧？东侧森林这几天不太安稳。",
+                "入村前，先熟悉这里的补给、训练和林缘记录。完成这三项准备，你才有能力调查那股逆流的雾。",
+                "去吧。村里的人会协助你，做完后再来告诉我你在东边看见了什么。",
+            ],
+            "actions": ["dialog"],
+            "story_action": {
+                "action": "accept_village_preparation",
+                "label": "领取三项入村准备",
+            },
+        }
     if npc.name == LUNA_NAME and opening_stage == "forest_signal":
         return {
             "dialogue": [
@@ -486,6 +492,42 @@ def _require_npc(db: Session, npc_id: int | None, name: str) -> NpcTemplate:
     if npc is None or npc.name != name:
         abort(422, "剧情互动目标不匹配")
     return npc
+
+
+def accept_village_preparation(
+    db: Session,
+    player: Player,
+    *,
+    npc_id: int,
+) -> dict[str, Any]:
+    progress = _progress(db, player.id, lock=True)
+    if progress is None:
+        abort(409, "请先观看冷开场并进入晨曦村")
+    _require_npc(db, npc_id, CHIEF_NAME)
+
+    current_map = db.get(MapData, player.current_map) if player.current_map else None
+    if current_map is None or current_map.map_name != VILLAGE_NAME:
+        abort(409, "请在晨曦村与村长交谈")
+    if progress.stage != "meet_chief":
+        if progress.stage in {"prepare", "forest_signal", "return_village", "complete"}:
+            return opening_data(db, player)
+        abort(409, "当前阶段不能领取入村准备任务")
+
+    for quest, item in _task_rows(db, player.id):
+        if item is None:
+            db.add(
+                PlayerQuest(
+                    player_id=player.id,
+                    quest_id=quest.id,
+                    status="active",
+                    progress={},
+                )
+            )
+        elif item.status == "not_started":
+            item.status = "active"
+    progress.stage = "prepare"
+    db.commit()
+    return opening_data(db, player)
 
 
 def perform_opening_action(

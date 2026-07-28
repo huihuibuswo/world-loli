@@ -249,7 +249,7 @@ onBeforeUnmount(() => {
       :upgrade-card="game.upgradeNpcCard"
       :accept-quest="game.acceptNpcQuest"
       :complete-quest="game.completeNpcQuest"
-      :perform-story-action="game.performMoonTraceAction"
+      :perform-story-action="game.performOpeningStoryAction"
       @close="game.closeDialog"
       @battle="beginBattle"
     />
