@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -7,6 +7,7 @@ from app.api.deps import get_current_player, player_data
 from app.core.responses import ok
 from app.db import get_db
 from app.models import Deck, Player, PlayerCard, PlayerCardSpirit, PlayerQuest
+from app.schemas import SaveGameRequest
 
 
 router = APIRouter(prefix="/save", tags=["save"])
@@ -64,7 +65,15 @@ def load_save(
 
 @router.post("")
 def save_game(
-    player: Player = Depends(get_current_player), db: Session = Depends(get_db)
+    payload: SaveGameRequest | None = Body(default=None),
+    player: Player = Depends(get_current_player),
+    db: Session = Depends(get_db),
 ) -> dict:
+    if payload is not None:
+        if payload.day_index is not None:
+            player.day_index = payload.day_index
+        if payload.minute_of_day is not None:
+            player.minute_of_day = payload.minute_of_day
     db.commit()
+    db.refresh(player)
     return ok(_snapshot(db, player), "存档已同步")

@@ -24,6 +24,8 @@ export interface PlayerProfile {
   current_map: number | null
   position_x: number
   position_y: number
+  day_index: number
+  minute_of_day: number
 }
 
 export interface MapObject {
@@ -46,6 +48,9 @@ export interface MapObject {
   story_gate?: string
   story_stage?: string
   stationary?: boolean
+  available_from?: number
+  available_until?: number
+  schedule_critical?: boolean
   tint?: number
   evidence_id?: string
   description?: string

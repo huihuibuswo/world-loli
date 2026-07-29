@@ -1,3 +1,5 @@
+import type { GameTimeState } from '@/game/time'
+
 export type BattleVisualStep = {
   actor: 'player' | 'enemy'
   kind: 'attack' | 'defense'
@@ -16,6 +18,7 @@ export type BattleVisualSequence = {
 export const ASSETS_READY_EVENT = 'assets:ready'
 export const BATTLE_SCENE_REQUEST_KEY = 'battle-scene-request'
 export const WORLD_INPUT_LOCK_KEY = 'world-input-locked'
+export const GAME_TIME_KEY = 'game-time'
 
 export type GameEventMap = {
   'player:moved': { x: number; y: number }
@@ -31,6 +34,8 @@ export type GameEventMap = {
   'input:direction': { x: number; y: number }
   'input:interact': undefined
   'world:input-lock': { locked: boolean }
+  'time:advance': { elapsedMs: number }
+  'time:changed': GameTimeState
   'scene:world': undefined
   'scene:battle': { enemyName: string; enemySprite: string }
   'battle:action': BattleVisualSequence

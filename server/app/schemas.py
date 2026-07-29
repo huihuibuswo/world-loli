@@ -31,6 +31,11 @@ class MapEnterRequest(BaseModel):
     map_id: int = Field(gt=0)
 
 
+class SaveGameRequest(BaseModel):
+    day_index: int | None = Field(default=None, ge=1, strict=True)
+    minute_of_day: int | None = Field(default=None, ge=0, lt=1440, strict=True)
+
+
 class NpcInteractionRequest(BaseModel):
     npc_id: int = Field(gt=0)
     action: str | None = Field(default=None, max_length=64)

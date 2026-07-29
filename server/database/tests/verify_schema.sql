@@ -12,6 +12,68 @@ SELECT id, username
 FROM users
 WHERE username IN ('schema_owner_a', 'schema_owner_b');
 
+DO $verify_game_time$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM players
+        WHERE name IN ('schema_owner_a', 'schema_owner_b')
+          AND (day_index <> 1 OR minute_of_day <> 480)
+    ) THEN
+        RAISE EXCEPTION 'player game-time defaults are invalid';
+    END IF;
+
+    BEGIN
+        UPDATE players SET day_index = 0 WHERE name = 'schema_owner_a';
+        RAISE EXCEPTION 'invalid day_index was unexpectedly accepted';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'invalid day_index correctly rejected';
+    END;
+
+    BEGIN
+        UPDATE players SET minute_of_day = 1440 WHERE name = 'schema_owner_a';
+        RAISE EXCEPTION 'invalid minute_of_day was unexpectedly accepted';
+    EXCEPTION
+        WHEN check_violation THEN
+            RAISE NOTICE 'invalid minute_of_day correctly rejected';
+    END;
+
+    IF (
+        SELECT COUNT(*)
+        FROM jsonb_array_elements(COALESCE(
+            (SELECT resource_json->'objects' FROM map_data WHERE map_name = '晨曦村'),
+            '[]'::JSONB
+        )) AS item
+        WHERE item ? 'available_from'
+           OR item ? 'available_until'
+           OR item ? 'schedule_critical'
+    ) <> 3 THEN
+        RAISE EXCEPTION 'Dawn Village must contain exactly three scheduled NPCs';
+    END IF;
+
+    IF (
+        SELECT COUNT(*)
+        FROM jsonb_array_elements(COALESCE(
+            (SELECT resource_json->'objects' FROM map_data WHERE map_name = '晨曦村'),
+            '[]'::JSONB
+        )) AS item
+        WHERE item->>'template_name' IN ('杂货商', '铁匠少女苏娜', '训练教官')
+          AND (item->>'schedule_critical')::BOOLEAN IS FALSE
+          AND CASE item->>'template_name'
+              WHEN '杂货商' THEN (item->>'available_from')::INTEGER = 480
+                  AND (item->>'available_until')::INTEGER = 1200
+              WHEN '铁匠少女苏娜' THEN (item->>'available_from')::INTEGER = 420
+                  AND (item->>'available_until')::INTEGER = 1140
+              WHEN '训练教官' THEN (item->>'available_from')::INTEGER = 360
+                  AND (item->>'available_until')::INTEGER = 1320
+          END
+    ) <> 3 THEN
+        RAISE EXCEPTION 'Dawn Village NPC schedule values are invalid';
+    END IF;
+END
+$verify_game_time$;
+
 INSERT INTO card_templates (name, type, rarity)
 VALUES ('schema_ownership_test_card', 'skill', 'common');
 

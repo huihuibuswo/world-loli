@@ -32,4 +32,6 @@ def player_data(player: Player) -> dict:
         "current_map": player.current_map,
         "position_x": player.position_x,
         "position_y": player.position_y,
+        "day_index": player.day_index,
+        "minute_of_day": player.minute_of_day,
     }

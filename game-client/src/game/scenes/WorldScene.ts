@@ -1,8 +1,14 @@
 import Phaser from 'phaser'
 import type { MapData, PlayerProfile } from '@/api/types'
-import { gameEvents, WORLD_INPUT_LOCK_KEY } from '@/game/events'
+import { GAME_TIME_KEY, gameEvents, WORLD_INPUT_LOCK_KEY } from '@/game/events'
 import { NPC } from '@/game/entities/NPC'
 import { Player } from '@/game/entities/Player'
+import {
+  getEnvironmentStyle,
+  isMinuteInRange,
+  normalizeGameTime,
+  type GameTimeState,
+} from '@/game/time'
 
 type MapPortal = {
   x: number
@@ -45,6 +51,7 @@ type ObstacleLayoutItem = {
 }
 
 type ReservedPlantArea = { x: number; y: number; radius: number }
+type NpcSchedule = { availableFrom?: number; availableUntil?: number; critical: boolean }
 
 const PLANT_SPARKLE_COLORS: Record<MapPlant['rarity'], readonly [number, number]> = {
   common: [0xbae6fd, 0xe0f2fe],
@@ -102,6 +109,11 @@ export class WorldScene extends Phaser.Scene {
   private evidenceNodes: MapEvidence[] = []
   private playerMapMarker!: Phaser.GameObjects.Arc
   private readonly npcMapMarkers = new Map<NPC, Phaser.GameObjects.Arc>()
+  private readonly npcSchedules = new Map<NPC, NpcSchedule>()
+  private environmentOverlay!: Phaser.GameObjects.Rectangle
+  private environmentLights: Phaser.GameObjects.Arc[] = []
+  private environmentObjects: Phaser.GameObjects.GameObject[] = []
+  private mapType = 'village'
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>
   private interactKey!: Phaser.Input.Keyboard.Key
@@ -111,6 +123,7 @@ export class WorldScene extends Phaser.Scene {
   private nearbyEvidence: MapEvidence | null = null
   private lastPositionEmit = 0
   private worldInputLocked = false
+  private discardNextDelta = true
 
   constructor() {
     super('WorldScene')
@@ -123,8 +136,13 @@ export class WorldScene extends Phaser.Scene {
     this.nearbyEvidence = null
     this.lastPositionEmit = 0
     this.npcMapMarkers.clear()
+    this.npcSchedules.clear()
+    this.environmentLights = []
+    this.environmentObjects = []
+    this.discardNextDelta = true
     const map = this.registry.get('world-map') as MapData
     const profile = this.registry.get('world-player') as PlayerProfile
+    this.mapType = map.map_type
     const bounds = map.resource.bounds ?? { min_x: 0, min_y: 0, max_x: 2048, max_y: 2048 }
     const width = bounds.max_x - bounds.min_x
     const height = bounds.max_y - bounds.min_y
@@ -132,6 +150,7 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(bounds.min_x, bounds.min_y, width, height)
 
     this.drawWorld(width, height, map.map_type)
+    this.createEnvironmentEffects(map.map_type)
     const obstacles = this.physics.add.staticGroup()
     // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
     const activeObstacleLayout = map.map_type === 'forest'
@@ -163,16 +182,24 @@ export class WorldScene extends Phaser.Scene {
     this.physics.add.collider(this.player, obstacles)
     this.npcs = (map.resource.objects ?? [])
       .filter((item) => item.type === 'npc' && item.template_id)
-      .map((item) => new NPC(
-        this,
-        item.x,
-        item.y,
-        item.template_id!,
-        item.template_name ?? '旅人',
-        item.sprite,
-        item.stationary === true,
-        item.tint,
-      ))
+      .map((item) => {
+        const npc = new NPC(
+          this,
+          item.x,
+          item.y,
+          item.template_id!,
+          item.template_name ?? '旅人',
+          item.sprite,
+          item.stationary === true,
+          item.tint,
+        )
+        this.npcSchedules.set(npc, {
+          availableFrom: item.available_from,
+          availableUntil: item.available_until,
+          critical: item.schedule_critical === true || Boolean(item.story_gate),
+        })
+        return npc
+      })
     this.npcs.forEach((npc, index) => {
       this.physics.add.collider(this.player, npc)
       this.physics.add.collider(npc, obstacles)
@@ -203,7 +230,7 @@ export class WorldScene extends Phaser.Scene {
         color: '#e0f2fe',
         backgroundColor: 'rgba(3, 22, 32, 0.82)',
         padding: { x: 9, y: 5 },
-      }).setOrigin(0.5).setDepth(portal.y + 1)
+      }).setOrigin(0.5).setDepth(90_002)
     })
     this.evidenceNodes = (map.resource.objects ?? []).flatMap((item) => {
       if (item.type !== 'story_evidence' || !item.evidence_id || !item.name) return []
@@ -343,12 +370,15 @@ export class WorldScene extends Phaser.Scene {
     gameEvents.on('input:direction', this.onVirtualDirection)
     gameEvents.on('input:interact', this.interact)
     gameEvents.on('world:input-lock', this.onInputLock)
+    gameEvents.on('time:changed', this.onTimeChanged)
     gameEvents.on('plant:collected', this.onPlantCollected)
     this.onInputLock({ locked: this.registry.get(WORLD_INPUT_LOCK_KEY) === true })
+    this.applyGameTime(this.registry.get(GAME_TIME_KEY) as GameTimeState | undefined)
     const cleanupEvents = (): void => {
       gameEvents.off('input:direction', this.onVirtualDirection)
       gameEvents.off('input:interact', this.interact)
       gameEvents.off('world:input-lock', this.onInputLock)
+      gameEvents.off('time:changed', this.onTimeChanged)
       gameEvents.off('plant:collected', this.onPlantCollected)
       this.npcMapMarkers.clear()
       this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanupEvents)
@@ -358,7 +388,12 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.DESTROY, cleanupEvents)
   }
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
+    if (this.discardNextDelta) {
+      this.discardNextDelta = false
+    } else if (!this.worldInputLocked) {
+      gameEvents.emit('time:advance', { elapsedMs: delta })
+    }
     this.player.move(this.cursors, this.wasd)
     this.playerMapMarker.setPosition(this.player.x, this.player.y)
     this.npcs.forEach((npc) => {
@@ -369,7 +404,7 @@ export class WorldScene extends Phaser.Scene {
         npc.y,
       ) <= this.player.interactionRange
       npc.updateWander(time, this.worldInputLocked || playerIsNear)
-      this.npcMapMarkers.get(npc)?.setPosition(npc.x, npc.y)
+      this.npcMapMarkers.get(npc)?.setPosition(npc.x, npc.y).setVisible(npc.active)
     })
     this.plants.forEach((plant) => {
       if (plant.rarity === 'uncommon' && plant.minimapMarker) {
@@ -391,6 +426,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private readonly onInputLock = ({ locked }: { locked: boolean }): void => {
+    if (this.worldInputLocked && !locked) this.discardNextDelta = true
     this.worldInputLocked = locked
     if (locked) {
       this.npcs.forEach((npc) => {
@@ -401,6 +437,32 @@ export class WorldScene extends Phaser.Scene {
     this.player.state = locked ? 'disabled' : 'idle'
     this.player.setVelocity(0)
     this.player.setVirtualDirection(0, 0)
+  }
+
+  private readonly onTimeChanged = (gameTime: GameTimeState): void => {
+    this.applyGameTime(gameTime)
+  }
+
+  private applyGameTime(gameTime?: GameTimeState): void {
+    const normalized = normalizeGameTime(gameTime?.dayIndex, gameTime?.minuteOfDay)
+    const style = getEnvironmentStyle(this.mapType, normalized.minuteOfDay)
+    this.environmentOverlay.setFillStyle(style.color, 1).setAlpha(style.alpha)
+    this.environmentLights.forEach((light) => {
+      light.setAlpha(style.lightAlpha).setVisible(style.lightAlpha > 0.01)
+    })
+    this.npcs.forEach((npc) => {
+      const schedule = this.npcSchedules.get(npc)
+      const scheduled = schedule?.availableFrom !== undefined && schedule.availableUntil !== undefined
+      const available = !scheduled
+        || schedule.critical
+        || isMinuteInRange(normalized.minuteOfDay, schedule.availableFrom!, schedule.availableUntil!)
+      npc.setScheduleAvailable(available)
+      this.npcMapMarkers.get(npc)?.setVisible(available)
+      if (!available && this.nearby === npc) {
+        this.nearby = null
+        gameEvents.emit('npc:near', { id: null, name: null })
+      }
+    })
   }
 
   private readonly interact = (): void => {
@@ -447,6 +509,7 @@ export class WorldScene extends Phaser.Scene {
     let nearestEvidence: MapEvidence | null = null
     let distance = this.player.interactionRange
     for (const npc of this.npcs) {
+      if (!npc.active) continue
       const next = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y)
       if (next < distance) {
         distance = next
@@ -520,6 +583,7 @@ export class WorldScene extends Phaser.Scene {
       .setRoundPixels(true)
     minimap.setZoom(Math.min(viewport.width / width, viewport.height / height) * 0.94)
     minimap.centerOn(minX + width / 2, minY + height / 2)
+    minimap.ignore(this.environmentObjects)
 
     this.playerMapMarker = this.add
       .circle(this.player.x, this.player.y, 38, 0xfef3c7)
@@ -553,6 +617,30 @@ export class WorldScene extends Phaser.Scene {
       ...plantMarkers,
       ...evidenceMarkers,
     ])
+  }
+
+  private createEnvironmentEffects(mapType: string): void {
+    this.environmentOverlay = this.add
+      .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0xffffff)
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(90_000)
+      .setInteractive({ useHandCursor: false })
+      .disableInteractive()
+    this.environmentObjects.push(this.environmentOverlay)
+    if (mapType !== 'village') return
+    const lightAnchors = [
+      { x: 790, y: 790, radius: 105 },
+      { x: 1110, y: 760, radius: 92 },
+      { x: 820, y: 1080, radius: 86 },
+      { x: 390, y: 820, radius: 76 },
+    ]
+    this.environmentLights = lightAnchors.map(({ x, y, radius }) => this.add
+      .circle(x, y, radius, 0xfbbf24, 0.18)
+      .setDepth(90_001)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setVisible(false))
+    this.environmentObjects.push(...this.environmentLights)
   }
 
   private resolveVisiblePlantPosition(

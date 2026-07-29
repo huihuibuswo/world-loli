@@ -1,14 +1,10 @@
 import Phaser from 'phaser'
 import type { MapData, PlayerProfile } from '@/api/types'
 import { CardSpirit } from '@/game/entities/CardSpirit'
-import { gameEvents, type BattleVisualSequence, type BattleVisualStep } from '@/game/events'
+import { GAME_TIME_KEY, gameEvents, type BattleVisualSequence, type BattleVisualStep } from '@/game/events'
+import { getTimePhase, type GameTimeState } from '@/game/time'
 
 const DAWN_VILLAGE_NAME = '晨曦村'
-
-function isDaytime(date = new Date()): boolean {
-  const hour = date.getHours()
-  return hour >= 6 && hour < 18
-}
 
 export class BattleScene extends Phaser.Scene {
   private enemy!: CardSpirit
@@ -23,9 +19,13 @@ export class BattleScene extends Phaser.Scene {
     const { width, height } = this.scale
     const profile = this.registry.get('world-player') as PlayerProfile
     const map = this.registry.get('world-map') as MapData | undefined
+    const gameTime = this.registry.get(GAME_TIME_KEY) as GameTimeState | undefined
+    const phase = getTimePhase(gameTime?.minuteOfDay ?? profile.minute_of_day)
     const isDawnVillage = map?.map_name === DAWN_VILLAGE_NAME
     const backgroundTexture = isDawnVillage
-      ? isDaytime() ? 'dawn-village-battle-day' : 'dawn-village-battle-night'
+      ? phase === 'dawn' || phase === 'day'
+        ? 'dawn-village-battle-day'
+        : 'dawn-village-battle-night'
       : 'moon-arena'
     const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
     const background = this.add.image(width / 2, height / 2, backgroundTexture)

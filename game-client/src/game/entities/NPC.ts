@@ -53,6 +53,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
   }
 
   updateWander(time: number, paused: boolean): void {
+    if (!this.active) return
     this.enforceWanderRadius(time)
     if (paused || this.stationary) {
       this.enterPaused()
@@ -67,6 +68,19 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
       this.moveTowardTarget(time)
     }
     this.syncPresentation()
+  }
+
+  setScheduleAvailable(available: boolean): void {
+    if (this.active === available) return
+    this.enterPaused()
+    this.setActive(available).setVisible(available)
+    this.nameLabel.setActive(available).setVisible(available)
+    const body = this.body as Phaser.Physics.Arcade.Body | null
+    if (body) body.enable = available
+    if (available) {
+      this.nextDecisionAt = this.scene.time.now + Phaser.Math.Between(450, 1_100)
+      this.syncPresentation()
+    }
   }
 
   private chooseWanderTarget(time: number): void {
@@ -188,6 +202,6 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
 
   private syncPresentation(): void {
     this.setDepth(this.y)
-    this.nameLabel.setPosition(this.x, this.y - 62).setDepth(this.y + 1)
+    this.nameLabel.setPosition(this.x, this.y - 62).setDepth(90_002)
   }
 }

@@ -56,6 +56,8 @@ class Player(Base):
     current_map: Mapped[int | None] = mapped_column(ForeignKey("map_data.id", ondelete="SET NULL"))
     position_x: Mapped[float] = mapped_column(Float, default=0)
     position_y: Mapped[float] = mapped_column(Float, default=0)
+    day_index: Mapped[int] = mapped_column(Integer, default=1)
+    minute_of_day: Mapped[int] = mapped_column(Integer, default=480)
 
 
 class PlayerStoryProgress(Base):

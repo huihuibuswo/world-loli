@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "source_root": "D:\\生成\\images",
+  "note": "Generated sources were normalized non-destructively. Visual QA is still required before runtime integration.",
+  "assets": [
+    {
+      "name": "forest-ancient-moon-tree.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-ancient-moon-tree.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-ancient-moon-tree.png",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "name": "forest-root-obstacle-a.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-root-obstacle-a.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-root-obstacle-a.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-root-obstacle-b.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-root-obstacle-b.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-root-obstacle-b.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-root-obstacle-c.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-root-obstacle-c.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-root-obstacle-c.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-root-obstacle-d.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-root-obstacle-d.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-root-obstacle-d.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-rock-cluster.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-rock-cluster.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-rock-cluster.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-hollow-stump.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-hollow-stump.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-hollow-stump.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-stump-cold.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-stump-cold.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-stump-cold.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-fallen-log.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-fallen-log.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-fallen-log.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-tree-common-a.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-common-a.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-common-a.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "name": "forest-tree-common-b.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-common-b.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-common-b.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "name": "forest-tree-common-c.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-common-c.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-common-c.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "name": "forest-tree-common-d.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-common-d.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-common-d.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "name": "forest-tree-common-e.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-common-e.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-common-e.png",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "name": "forest-foliage-01.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-01.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-01.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-02.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-02.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-02.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-03.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-03.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-03.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-04.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-04.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-04.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-05.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-05.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-05.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-06.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-06.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-06.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-07.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-07.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-07.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-08.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-08.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-08.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-09.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-09.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-09.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-10.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-10.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-10.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-11.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-11.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-11.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-12.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-12.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-12.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-13.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-13.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-13.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-14.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-14.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-14.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-15.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-15.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-15.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-16.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-16.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-16.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-17.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-17.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-17.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-18.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-18.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-18.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-19.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-19.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-19.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-foliage-20.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/foliage/forest-foliage-20.png",
+      "public": "game-client/public/assets/generated/sprites/forest/foliage/forest-foliage-20.png",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "forest-wolf-tracks-broken.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-wolf-tracks-broken.png",
+      "public": "game-client/public/assets/generated/textures/forest/forest-wolf-tracks-broken.png",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "name": "forest-broken-moon-mark-idle.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/effects/forest-broken-moon-mark-idle.png",
+      "public": "game-client/public/assets/generated/sprites/forest/effects/forest-broken-moon-mark-idle.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-broken-moon-mark-active.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/effects/forest-broken-moon-mark-active.png",
+      "public": "game-client/public/assets/generated/sprites/forest/effects/forest-broken-moon-mark-active.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-broken-moon-mist-core-idle.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/effects/forest-broken-moon-mist-core-idle.png",
+      "public": "game-client/public/assets/generated/sprites/forest/effects/forest-broken-moon-mist-core-idle.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-broken-moon-mist-core-active.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/effects/forest-broken-moon-mist-core-active.png",
+      "public": "game-client/public/assets/generated/sprites/forest/effects/forest-broken-moon-mist-core-active.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-entry-marker-left.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-entry-marker-left.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-entry-marker-left.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-entry-marker-right.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-entry-marker-right.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-entry-marker-right.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-01.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-01.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-01.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-02.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-02.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-02.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-03.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-03.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-03.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-04.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-04.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-04.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-05.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-05.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-05.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-ruin-piece-06.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/ruins/forest-ruin-piece-06.png",
+      "public": "game-client/public/assets/generated/sprites/forest/ruins/forest-ruin-piece-06.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-tree-wall-a.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-wall-a.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-wall-a.png",
+      "width": 1024,
+      "height": 512
+    },
+    {
+      "name": "forest-moon-clearing-overlay.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-moon-clearing-overlay.png",
+      "public": "game-client/public/assets/generated/textures/forest/forest-moon-clearing-overlay.png",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "name": "forest-glimmer-particle-1.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-glimmer-particle-1.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-glimmer-particle-1.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "forest-glimmer-particle-2.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-glimmer-particle-2.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-glimmer-particle-2.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "forest-glimmer-particle-3.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-glimmer-particle-3.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-glimmer-particle-3.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "forest-glimmer-particle-4.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-glimmer-particle-4.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-glimmer-particle-4.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "forest-reverse-mist-back.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-reverse-mist-back.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-reverse-mist-back.png",
+      "width": 1024,
+      "height": 512
+    },
+    {
+      "name": "forest-reverse-mist-mid.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-reverse-mist-mid.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-reverse-mist-mid.png",
+      "width": 1024,
+      "height": 512
+    },
+    {
+      "name": "forest-reverse-mist-front.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/effects/forest-reverse-mist-front.png",
+      "public": "game-client/public/assets/generated/textures/forest/effects/forest-reverse-mist-front.png",
+      "width": 1024,
+      "height": 512
+    },
+    {
+      "name": "forest-ground-cold-wet.webp",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-ground-cold-wet.webp",
+      "public": "game-client/public/assets/generated/textures/forest/forest-ground-cold-wet.webp",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "name": "forest-path-crossing.webp",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-path-crossing.webp",
+      "public": "game-client/public/assets/generated/textures/forest/forest-path-crossing.webp",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "name": "forest-path-wet-soil-overlay.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-path-wet-soil-overlay.png",
+      "public": "game-client/public/assets/generated/textures/forest/forest-path-wet-soil-overlay.png",
+      "width": 1024,
+      "height": 384
+    }
+  ]
+}

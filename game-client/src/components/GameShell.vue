@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Coins, Heart, LogOut, Save, Swords } from 'lucide-vue-next'
+import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Coins, Heart, LogOut, Moon, Save, Sun, Sunrise, Sunset, Swords } from 'lucide-vue-next'
 import BattlePanel from '@/components/BattlePanel.vue'
 import CollectionDrawer from '@/components/CollectionDrawer.vue'
 import DialogModal from '@/components/DialogModal.vue'
 import OpeningStoryPanel from '@/components/OpeningStoryPanel.vue'
 import { WorldGame } from '@/game/Game'
 import { gameEvents } from '@/game/events'
+import { formatGameTime } from '@/game/time'
 import { useGameStore } from '@/stores/game'
 
 defineEmits<{ logout: [] }>()
@@ -19,12 +20,16 @@ const nearEvidence = ref<{ evidenceId: string; name: string } | null>(null)
 const collectingPlant = ref<string | null>(null)
 const transitionTarget = ref('')
 const drawerOpen = ref(false)
+const pageActive = ref(!document.hidden && document.hasFocus())
 let world: WorldGame | null = null
 let saveTimer: number | null = null
 
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
 const currentMapName = computed(() => game.map?.map_name || '晨曦村')
+const clockText = computed(() => formatGameTime(game.gameTime.minuteOfDay))
+const phaseIcon = computed(() => ({ dawn: Sunrise, day: Sun, dusk: Sunset, night: Moon })[game.gameTime.phase])
+const phaseLabel = computed(() => ({ dawn: '清晨', day: '白天', dusk: '黄昏', night: '夜晚' })[game.gameTime.phase])
 const openingArrival = computed(() => game.opening?.stage === 'arrival')
 const openingDialogueActive = computed(
   () => Boolean(game.opening?.completion_dialogue?.length),
@@ -43,6 +48,7 @@ function currentWorldInputLock(): boolean {
     || openingDialogueActive.value
     || Boolean(collectingPlant.value)
     || game.mapLoading
+    || !pageActive.value
   )
 }
 
@@ -61,7 +67,7 @@ watch(isBattle, (next) => {
   }
 })
 
-watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival, openingDialogueActive], () => {
+watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival, openingDialogueActive, () => game.mapLoading, pageActive], () => {
   setWorldInputLock(currentWorldInputLock())
 })
 
@@ -134,6 +140,12 @@ const onMoved = ({ x, y }: { x: number; y: number }): void => {
   if (saveTimer) window.clearTimeout(saveTimer)
   saveTimer = window.setTimeout(() => { void game.savePosition(x, y) }, 800)
 }
+const onTimeAdvance = ({ elapsedMs }: { elapsedMs: number }): void => {
+  game.advanceWorldTime(elapsedMs)
+}
+const updatePageActivity = (): void => {
+  pageActive.value = !document.hidden && document.hasFocus()
+}
 
 function direction(x: number, y: number): void { gameEvents.emit('input:direction', { x, y }) }
 function stopDirection(): void { direction(0, 0) }
@@ -156,6 +168,7 @@ onMounted(() => {
       canvasHost.value,
       game.map,
       game.player,
+      game.gameTime,
       initialBattle,
       currentWorldInputLock(),
     )
@@ -169,6 +182,10 @@ onMounted(() => {
   gameEvents.on('portal:near', onPortalNear)
   gameEvents.on('portal:interact', onPortalInteract)
   gameEvents.on('player:moved', onMoved)
+  gameEvents.on('time:advance', onTimeAdvance)
+  document.addEventListener('visibilitychange', updatePageActivity)
+  window.addEventListener('focus', updatePageActivity)
+  window.addEventListener('blur', updatePageActivity)
 })
 
 onBeforeUnmount(() => {
@@ -182,6 +199,10 @@ onBeforeUnmount(() => {
   gameEvents.off('portal:near', onPortalNear)
   gameEvents.off('portal:interact', onPortalInteract)
   gameEvents.off('player:moved', onMoved)
+  gameEvents.off('time:advance', onTimeAdvance)
+  document.removeEventListener('visibilitychange', updatePageActivity)
+  window.removeEventListener('focus', updatePageActivity)
+  window.removeEventListener('blur', updatePageActivity)
   world?.destroy()
 })
 </script>
@@ -194,6 +215,11 @@ onBeforeUnmount(() => {
       <div class="player-chip glass-panel">
         <div class="avatar"><img :src="`/assets/generated/sprites/adventurer-${game.player?.avatar_gender ?? 'female'}.png`" alt=""></div>
         <div class="player-info"><div><strong>{{ game.player?.name }}</strong><span>Lv.{{ game.player?.level }}</span></div><div class="mini-hp"><i :style="{ width: `${hpPercent}%` }" /></div></div>
+      </div>
+      <div class="time-chip glass-panel" :aria-label="`第 ${game.gameTime.dayIndex} 天 ${clockText} ${phaseLabel}`">
+        <component :is="phaseIcon" :size="19" aria-hidden="true" />
+        <span class="time-day">第 {{ game.gameTime.dayIndex }} 天</span>
+        <strong>{{ clockText }}</strong>
       </div>
       <div class="hud-actions glass-panel">
         <span class="currency"><Coins :size="18" />{{ game.player?.gold }}</span>

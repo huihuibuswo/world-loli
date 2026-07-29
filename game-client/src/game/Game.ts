@@ -4,10 +4,12 @@ import { createGameConfig } from '@/game/config/GameConfig'
 import {
   ASSETS_READY_EVENT,
   BATTLE_SCENE_REQUEST_KEY,
+  GAME_TIME_KEY,
   WORLD_INPUT_LOCK_KEY,
   gameEvents,
   type GameEventMap,
 } from '@/game/events'
+import type { GameTimeState } from '@/game/time'
 import { BattleScene } from '@/game/scenes/BattleScene'
 import { BootScene } from '@/game/scenes/BootScene'
 import { PreloadScene } from '@/game/scenes/PreloadScene'
@@ -24,6 +26,7 @@ export class WorldGame {
     parent: HTMLElement,
     map: MapData,
     player: PlayerProfile,
+    initialGameTime: GameTimeState,
     initialBattle: BattleSceneRequest | null = null,
     initialInputLocked = false,
   ) {
@@ -31,6 +34,7 @@ export class WorldGame {
     this.game.registry.set('world-map', map)
     this.game.registry.set('world-player', player)
     this.game.registry.set(WORLD_INPUT_LOCK_KEY, initialInputLocked)
+    this.game.registry.set(GAME_TIME_KEY, initialGameTime)
     if (initialBattle) this.game.registry.set(BATTLE_SCENE_REQUEST_KEY, initialBattle)
     this.game.scene.add('BootScene', BootScene)
     this.game.scene.add('PreloadScene', PreloadScene)
@@ -39,6 +43,7 @@ export class WorldGame {
     this.game.scene.add('UIScene', UIScene)
     gameEvents.on('scene:battle', this.startBattle)
     gameEvents.on('scene:world', this.startWorld)
+    gameEvents.on('time:changed', this.updateGameTime)
     this.game.events.once(ASSETS_READY_EVENT, this.onAssetsReady)
     this.game.scene.start('BootScene')
   }
@@ -70,6 +75,10 @@ export class WorldGame {
     this.game.scene.start('WorldScene')
   }
 
+  private readonly updateGameTime = (gameTime: GameTimeState): void => {
+    this.game.registry.set(GAME_TIME_KEY, gameTime)
+  }
+
   changeMap(map: MapData, player: PlayerProfile): void {
     this.game.registry.set('world-map', map)
     this.game.registry.set('world-player', player)
@@ -87,6 +96,7 @@ export class WorldGame {
     this.game.events.off(ASSETS_READY_EVENT, this.onAssetsReady)
     gameEvents.off('scene:battle', this.startBattle)
     gameEvents.off('scene:world', this.startWorld)
+    gameEvents.off('time:changed', this.updateGameTime)
     this.game.destroy(true)
   }
 }

@@ -101,6 +101,8 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             profile_data = profile.json()["data"]
             assert profile_data["current_map"] is not None
             assert profile_data["avatar_gender"] == "male"
+            assert profile_data["day_index"] == 1
+            assert profile_data["minute_of_day"] == 480
 
             map_response = client.get(
                 f"/api/v1/map/{profile_data['current_map']}", headers=headers_a
@@ -345,6 +347,66 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
             if user_ids:
                 with SessionLocal() as db:
                     db.execute(delete(User).where(User.id.in_(user_ids)))
+                    db.commit()
+
+
+def test_game_time_save_validation_and_persistence() -> None:
+    suffix = uuid4().hex[:10]
+    username = f"time_{suffix}"
+    user_id: int | None = None
+
+    with TestClient(app) as client:
+        try:
+            token, user_id = _register(client, username)
+            headers = _auth(token)
+
+            empty_save = client.post("/api/v1/save", headers=headers)
+            assert empty_save.status_code == 200, empty_save.text
+            assert empty_save.json()["data"]["player"]["day_index"] == 1
+            assert empty_save.json()["data"]["player"]["minute_of_day"] == 480
+
+            saved = client.post(
+                "/api/v1/save",
+                json={"day_index": 4, "minute_of_day": 1439},
+                headers=headers,
+            )
+            assert saved.status_code == 200, saved.text
+            assert saved.json()["data"]["player"]["day_index"] == 4
+            assert saved.json()["data"]["player"]["minute_of_day"] == 1439
+
+            profile = client.get("/api/v1/player/profile", headers=headers)
+            assert profile.status_code == 200
+            assert profile.json()["data"]["day_index"] == 4
+            assert profile.json()["data"]["minute_of_day"] == 1439
+
+            partial = client.post(
+                "/api/v1/save",
+                json={"minute_of_day": 0},
+                headers=headers,
+            )
+            assert partial.status_code == 200
+            assert partial.json()["data"]["player"]["day_index"] == 4
+            assert partial.json()["data"]["player"]["minute_of_day"] == 0
+
+            for invalid in (
+                {"day_index": 0},
+                {"day_index": True},
+                {"minute_of_day": -1},
+                {"minute_of_day": 1440},
+                {"minute_of_day": 480.5},
+            ):
+                response = client.post("/api/v1/save", json=invalid, headers=headers)
+                assert response.status_code == 422, response.text
+
+            with SessionLocal() as db:
+                persisted = db.scalar(select(Player).where(Player.user_id == user_id))
+                assert persisted is not None
+                assert persisted.day_index == 4
+                assert persisted.minute_of_day == 0
+        finally:
+            if user_id is not None:
+                with SessionLocal() as db:
+                    db.execute(delete(User).where(User.id == user_id))
                     db.commit()
 
 

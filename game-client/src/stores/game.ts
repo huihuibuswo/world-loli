@@ -2,6 +2,12 @@ import { computed, ref } from 'vue'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { api, errorMessage, requestData } from '@/api/client'
 import { confirmDialog } from '@/services/dialog'
+import { gameEvents } from '@/game/events'
+import {
+  advanceGameTime,
+  normalizeGameTime,
+  type GameTimeState,
+} from '@/game/time'
 import type {
   BattleData,
   CardData,
@@ -53,10 +59,12 @@ export const useGameStore = defineStore('game', () => {
   const mapLoading = ref(false)
   const error = ref('')
   const notice = ref('')
+  const gameTime = ref<GameTimeState>(normalizeGameTime(undefined, undefined))
 
   const cardById = computed(() => new Map(cards.value.map((card) => [card.id, card])))
   const activeDeck = computed(() => decks.value.find((deck) => deck.is_active) ?? null)
   let noticeTimer: number | null = null
+  let timeRemainderMs = 0
 
   function showNotice(message: string): void {
     notice.value = message
@@ -72,11 +80,37 @@ export const useGameStore = defineStore('game', () => {
     if (index >= 0) spirits.value[index] = nextSpirit
   }
 
-  function normalizePlayer(profile: PlayerProfile): PlayerProfile {
+  function normalizePlayer(profile: PlayerProfile, preserveGameTime = false): PlayerProfile {
+    const normalizedTime = preserveGameTime
+      ? gameTime.value
+      : normalizeGameTime(profile.day_index, profile.minute_of_day)
     return {
       ...profile,
       avatar_gender: profile.avatar_gender === 'male' ? 'male' : 'female',
+      day_index: normalizedTime.dayIndex,
+      minute_of_day: normalizedTime.minuteOfDay,
     }
+  }
+
+  function setGameTimeFromPlayer(profile: PlayerProfile): void {
+    gameTime.value = normalizeGameTime(profile.day_index, profile.minute_of_day)
+    timeRemainderMs = 0
+  }
+
+  function advanceWorldTime(elapsedMs: number): void {
+    const previous = gameTime.value
+    const advanced = advanceGameTime(previous, elapsedMs, timeRemainderMs)
+    timeRemainderMs = advanced.remainderMs
+    if (
+      advanced.state.dayIndex === previous.dayIndex
+      && advanced.state.minuteOfDay === previous.minuteOfDay
+    ) return
+    gameTime.value = advanced.state
+    if (player.value) {
+      player.value.day_index = advanced.state.dayIndex
+      player.value.minute_of_day = advanced.state.minuteOfDay
+    }
+    gameEvents.emit('time:changed', advanced.state)
   }
 
   function applyStoryVisibility(nextMap: MapData): MapData {
@@ -170,6 +204,7 @@ export const useGameStore = defineStore('game', () => {
         requestData<BattleData | null>(api.get('/battle/current')),
       ])
       player.value = normalizePlayer(profile)
+      setGameTimeFromPlayer(player.value)
       opening.value = story
       battle.value = activeBattle
       if (activeBattle) {
@@ -327,7 +362,10 @@ export const useGameStore = defineStore('game', () => {
     error.value = ''
     try {
       await requestData(api.post(`/quests/${questId}/complete`))
-      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
+      player.value = normalizePlayer(
+        await requestData<PlayerProfile>(api.get('/player/profile')),
+        true,
+      )
       await Promise.all([refreshNpcService(), refreshOpening(true)])
       showNotice('任务已完成')
     } catch (cause) {
@@ -533,7 +571,10 @@ export const useGameStore = defineStore('game', () => {
           expected_version: battle.value.version,
         }),
       )
-      player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
+      player.value = normalizePlayer(
+        await requestData<PlayerProfile>(api.get('/player/profile')),
+        true,
+      )
     } catch (cause) {
       error.value = errorMessage(cause)
       await refreshBattle()
@@ -555,7 +596,10 @@ export const useGameStore = defineStore('game', () => {
   async function leaveBattle(): Promise<void> {
     battle.value = null
     sessionStorage.removeItem('world_battle_id')
-    player.value = normalizePlayer(await requestData<PlayerProfile>(api.get('/player/profile')))
+    player.value = normalizePlayer(
+      await requestData<PlayerProfile>(api.get('/player/profile')),
+      true,
+    )
     await Promise.all([refreshCollections(), refreshOpening(true)])
   }
 
@@ -607,7 +651,11 @@ export const useGameStore = defineStore('game', () => {
     actionLoading.value = true
     error.value = ''
     try {
-      await requestData(api.post('/save'))
+      const snapshot = await requestData<{ player: PlayerProfile }>(api.post('/save', {
+        day_index: gameTime.value.dayIndex,
+        minute_of_day: gameTime.value.minuteOfDay,
+      }))
+      player.value = normalizePlayer(snapshot.player, true)
       showNotice('冒险进度已保存')
     } catch (cause) {
       error.value = errorMessage(cause)
@@ -794,6 +842,8 @@ export const useGameStore = defineStore('game', () => {
     npcLastGift.value = null
     npcService.value = null
     opening.value = null
+    gameTime.value = normalizeGameTime(undefined, undefined)
+    timeRemainderMs = 0
     chatLoading.value = false
     mapLoading.value = false
     error.value = ''
@@ -817,6 +867,7 @@ export const useGameStore = defineStore('game', () => {
     npcLastGift,
     npcService,
     opening,
+    gameTime,
     loading,
     actionLoading,
     chatLoading,
@@ -825,6 +876,7 @@ export const useGameStore = defineStore('game', () => {
     notice,
     cardById,
     activeDeck,
+    advanceWorldTime,
     bootstrap,
     openNpc,
     closeDialog,
