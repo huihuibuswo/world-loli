@@ -213,19 +213,21 @@ onBeforeUnmount(() => {
 
     <header v-if="!isBattle" class="world-hud">
       <div class="player-chip glass-panel">
-        <div class="avatar"><img :src="`/assets/generated/sprites/adventurer-${game.player?.avatar_gender ?? 'female'}.png`" alt=""></div>
-        <div class="player-info"><div><strong>{{ game.player?.name }}</strong><span>Lv.{{ game.player?.level }}</span></div><div class="mini-hp"><i :style="{ width: `${hpPercent}%` }" /></div></div>
+        <div class="player-summary">
+          <div class="avatar"><img :src="`/assets/generated/sprites/adventurer-${game.player?.avatar_gender ?? 'female'}.png`" alt=""></div>
+          <div class="player-info"><div><strong>{{ game.player?.name }}</strong><span>Lv.{{ game.player?.level }}</span></div><div class="mini-hp"><i :style="{ width: `${hpPercent}%` }" /></div></div>
+        </div>
+        <div class="hud-actions">
+          <span class="currency"><Coins :size="18" />{{ game.player?.gold }}</span>
+          <button class="icon-button" type="button" aria-label="保存进度" title="保存进度" :disabled="game.actionLoading" @click="game.saveGame"><Save :size="19" /></button>
+          <button class="icon-button" type="button" aria-label="打开冒险图鉴" title="冒险图鉴" @click="drawerOpen = true"><BookOpen :size="19" /></button>
+          <button class="icon-button" type="button" aria-label="退出登录" title="退出登录" @click="$emit('logout')"><LogOut :size="19" /></button>
+        </div>
       </div>
       <div class="time-chip glass-panel" :aria-label="`第 ${game.gameTime.dayIndex} 天 ${clockText} ${phaseLabel}`">
         <component :is="phaseIcon" :size="19" aria-hidden="true" />
         <span class="time-day">第 {{ game.gameTime.dayIndex }} 天</span>
         <strong>{{ clockText }}</strong>
-      </div>
-      <div class="hud-actions glass-panel">
-        <span class="currency"><Coins :size="18" />{{ game.player?.gold }}</span>
-        <button class="icon-button" type="button" aria-label="保存进度" title="保存进度" :disabled="game.actionLoading" @click="game.saveGame"><Save :size="19" /></button>
-        <button class="icon-button" type="button" aria-label="打开冒险图鉴" title="冒险图鉴" @click="drawerOpen = true"><BookOpen :size="19" /></button>
-        <button class="icon-button" type="button" aria-label="退出登录" title="退出登录" @click="$emit('logout')"><LogOut :size="19" /></button>
       </div>
     </header>
 

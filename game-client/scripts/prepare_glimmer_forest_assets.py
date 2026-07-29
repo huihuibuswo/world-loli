@@ -502,6 +502,7 @@ def main() -> None:
 
     clearing = apply_elliptical_fade(
         suppress_white_halo(remove_checker(Image.open(SOURCES["clearing"].path), threshold=12, feather=42)),
+        inner=0.38,
     )
     records.append(save_asset(clearing, "textures/forest/forest-moon-clearing-overlay.png", canvas=(1024, 1024)))
 

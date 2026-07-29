@@ -21,6 +21,7 @@ This directory contains guidelines for frontend development. Fill in each file w
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
 | [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
 | [Game Time Contract](./game-time.md) | Persistent clock, pause, phase, schedule, and save contracts | Active |
+| [Generated Game Assets](./generated-game-assets.md) | Versioned source processing, runtime mirroring, and validation | Active |
 
 ---
 
