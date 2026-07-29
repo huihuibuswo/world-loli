@@ -21,7 +21,7 @@ Rollback point：此阶段只新增源图、脚本和生成资源；删除新增
 - [ ] 修改 `game-client/src/game/entities/NPC.ts`，从静态体改为动态、不可推动、无重力实体。
 - [ ] 保存出生锚点、巡游半径、随机目标、停留时间和卡住检测状态。
 - [ ] 实现 `idle/moving/returning/paused` 状态转换。
-- [ ] 实现 walk/idle texture 切换、水平镜像、标签跟随、深度更新和范围投影。
+- [ ] 实现四方向 walk texture 切换、停止时保留最后朝向帧、静态回退、标签跟随、深度更新和范围投影。
 - [ ] 提供 WorldScene 可调用的暂停/更新接口，保持位置状态只由 NPC 实体拥有。
 
 Rollback point：静态 texture 保持不变；可单独恢复 NPC 类并删除 WorldScene 调用。
@@ -35,6 +35,14 @@ Rollback point：静态 texture 保持不变；可单独恢复 NPC 类并删除 
 - [ ] 验证最近 NPC、交互提示和 `npc:interact` 使用移动后的实时坐标。
 
 ## 5. Verification
+
+### Four-direction extension
+
+- [ ] 保存并语义化命名 24 张 `up/left/right` 源图，不修改用户原图。
+- [ ] 扩展导入脚本，一次生成玩家和 NPC 的 24 张透明 `1024x256` 方向 spritesheet。
+- [ ] 在 `PreloadScene` 集中注册四方向资源和动画，保留旧资源回退。
+- [ ] 玩家和 NPC 根据移动主轴选择 `down/up/left/right`，不再依赖水平镜像。
+- [ ] 露娜右向使用临时翻转源图并保持独立资源 key，记录后续可替换性。
 
 ### Asset checks
 
@@ -65,6 +73,7 @@ npm run build
 - [ ] 验证名称标签和小地图标记持续跟随。
 - [ ] 验证 NPC 对话、职业服务、战斗、植物采集和地图传送无回归。
 - [ ] 在桌面视口截图检查精灵尺寸、背景透明、标签遮挡和小地图定位。
+- [ ] 手动验证玩家与至少 2 名 NPC 四方向移动，确认向上显示背面、左右显示对应侧面、向下显示正面。
 
 ## 6. Adversarial Review Gate
 

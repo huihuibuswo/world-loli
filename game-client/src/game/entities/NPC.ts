@@ -1,21 +1,21 @@
 import Phaser from 'phaser'
 
 type NPCWanderState = 'idle' | 'moving' | 'returning' | 'paused'
+type WalkDirection = 'up' | 'down' | 'left' | 'right'
 
 export class NPC extends Phaser.Physics.Arcade.Sprite {
   readonly wanderRadius = 140
   readonly speed = 45
   private readonly spawn = new Phaser.Math.Vector2()
   private readonly idleTexture: string
-  private readonly walkTexture: string
-  private readonly walkAnimationKey: string
-  private readonly hasWalkAnimation: boolean
+  private readonly walkTexturePrefix: string
   private readonly nameLabel: Phaser.GameObjects.Text
   private wanderState: NPCWanderState = 'idle'
   private target: Phaser.Math.Vector2 | null = null
   private nextDecisionAt = 0
   private lastProgressAt = 0
   private readonly lastProgressPosition = new Phaser.Math.Vector2()
+  private direction: WalkDirection = 'down'
 
   constructor(
     scene: Phaser.Scene,
@@ -31,10 +31,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, texture)
     this.spawn.set(x, y)
     this.idleTexture = texture
-    this.walkTexture = `${texture}-walk`
-    this.walkAnimationKey = `${texture}-walk-cycle`
-    this.hasWalkAnimation = scene.textures.exists(this.walkTexture)
-      && scene.anims.exists(this.walkAnimationKey)
+    this.walkTexturePrefix = `${texture}-walk`
 
     scene.add.existing(this)
     scene.physics.add.existing(this)
@@ -96,8 +93,12 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
 
     direction.normalize().scale(this.speed)
     this.setVelocity(direction.x, direction.y)
-    if (Math.abs(direction.x) > 1) this.setFlipX(direction.x < 0)
-    this.startWalkAnimation()
+    if (Math.abs(direction.x) > Math.abs(direction.y)) {
+      this.direction = direction.x > 0 ? 'right' : 'left'
+    } else {
+      this.direction = direction.y > 0 ? 'down' : 'up'
+    }
+    this.startWalkAnimation(this.direction)
 
     const progress = Phaser.Math.Distance.Between(
       this.x,
@@ -146,19 +147,35 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     this.lastProgressPosition.set(this.x, this.y)
   }
 
-  private startWalkAnimation(): void {
-    if (!this.hasWalkAnimation) return
-    if (this.anims.currentAnim?.key === this.walkAnimationKey && this.anims.isPlaying) return
-    this.setTexture(this.walkTexture, 0).setDisplaySize(100, 100)
+  private startWalkAnimation(direction: WalkDirection): void {
+    const directionalTexture = direction === 'down'
+      ? this.walkTexturePrefix
+      : `${this.walkTexturePrefix}-${direction}`
+    const directionalAnimation = `${directionalTexture}-cycle`
+    const fallbackAnimation = `${this.walkTexturePrefix}-cycle`
+    const texture = this.scene.textures.exists(directionalTexture)
+      && this.scene.anims.exists(directionalAnimation)
+      ? directionalTexture
+      : this.walkTexturePrefix
+    const animation = texture === directionalTexture ? directionalAnimation : fallbackAnimation
+    if (!this.scene.textures.exists(texture) || !this.scene.anims.exists(animation)) {
+      this.stopWalkAnimation(true)
+      return
+    }
+    if (this.anims.currentAnim?.key === animation && this.anims.isPlaying) return
+    this.setFlipX(false)
+    this.setTexture(texture, 0).setDisplaySize(100, 100)
     this.syncCollisionBody()
-    this.play(this.walkAnimationKey)
+    this.play(animation)
   }
 
-  private stopWalkAnimation(): void {
-    if (this.texture.key === this.idleTexture) return
+  private stopWalkAnimation(useStaticFallback = false): void {
     this.stop()
-    this.setTexture(this.idleTexture).setDisplaySize(100, 100)
-    this.syncCollisionBody()
+    if (useStaticFallback && this.texture.key !== this.idleTexture) {
+      this.setFlipX(false)
+      this.setTexture(this.idleTexture).setDisplaySize(100, 100)
+      this.syncCollisionBody()
+    }
   }
 
   private syncCollisionBody(): void {

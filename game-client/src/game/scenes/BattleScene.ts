@@ -1,7 +1,14 @@
 import Phaser from 'phaser'
-import type { PlayerProfile } from '@/api/types'
+import type { MapData, PlayerProfile } from '@/api/types'
 import { CardSpirit } from '@/game/entities/CardSpirit'
 import { gameEvents, type BattleVisualSequence, type BattleVisualStep } from '@/game/events'
+
+const DAWN_VILLAGE_NAME = '晨曦村'
+
+function isDaytime(date = new Date()): boolean {
+  const hour = date.getHours()
+  return hour >= 6 && hour < 18
+}
 
 export class BattleScene extends Phaser.Scene {
   private enemy!: CardSpirit
@@ -15,10 +22,16 @@ export class BattleScene extends Phaser.Scene {
   create(data: { enemyName?: string; enemySprite?: string }): void {
     const { width, height } = this.scale
     const profile = this.registry.get('world-player') as PlayerProfile
+    const map = this.registry.get('world-map') as MapData | undefined
+    const isDawnVillage = map?.map_name === DAWN_VILLAGE_NAME
+    const backgroundTexture = isDawnVillage
+      ? isDaytime() ? 'dawn-village-battle-day' : 'dawn-village-battle-night'
+      : 'moon-arena'
     const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
-    this.add.image(width / 2, height / 2, 'moon-arena').setDisplaySize(width, height)
+    const background = this.add.image(width / 2, height / 2, backgroundTexture)
+    background.setScale(Math.max(width / background.width, height / background.height))
     this.add
-      .text(width / 2, 54, '月影竞技场', {
+      .text(width / 2, 54, isDawnVillage ? '晨曦村演武场' : '月影竞技场', {
         fontFamily: 'ui-rounded, sans-serif',
         fontSize: '30px',
         color: '#fff1bd',

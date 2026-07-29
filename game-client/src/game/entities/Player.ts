@@ -1,16 +1,16 @@
 import Phaser from 'phaser'
 
 export type PlayerState = 'idle' | 'walk' | 'interact' | 'battle' | 'disabled'
+type WalkDirection = 'up' | 'down' | 'left' | 'right'
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   readonly speed = 220
   readonly interactionRange = 104
   state: PlayerState = 'idle'
-  direction: 'up' | 'down' | 'left' | 'right' = 'down'
+  direction: WalkDirection = 'down'
   private virtual = new Phaser.Math.Vector2(0, 0)
   private readonly idleTexture: string
-  private readonly walkTexture: string
-  private readonly walkAnimationKey: string
+  private readonly walkTexturePrefix: string
   private readonly walkDisplaySize: number
 
   constructor(scene: Phaser.Scene, x: number, y: number, avatarGender?: 'female' | 'male') {
@@ -19,8 +19,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, texture)
     const gender = texture === 'player-male' ? 'male' : 'female'
     this.idleTexture = texture
-    this.walkTexture = `player-${gender}-walk`
-    this.walkAnimationKey = `player-${gender}-walk-cycle`
+    this.walkTexturePrefix = `player-${gender}-walk`
     this.walkDisplaySize = gender === 'female' ? 91.5 : 86.5
     scene.add.existing(this)
     scene.physics.add.existing(this)
@@ -55,28 +54,44 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     input.normalize().scale(this.speed)
     this.setVelocity(input.x, input.y)
     this.state = 'walk'
-    this.startWalkAnimation()
     if (Math.abs(input.x) > Math.abs(input.y)) {
       this.direction = input.x > 0 ? 'right' : 'left'
     } else {
       this.direction = input.y > 0 ? 'down' : 'up'
     }
-    this.setFlipX(this.direction === 'left')
+    this.startWalkAnimation(this.direction)
     this.setDepth(this.y)
   }
 
-  private startWalkAnimation(): void {
-    if (this.anims.currentAnim?.key === this.walkAnimationKey && this.anims.isPlaying) return
-    this.setTexture(this.walkTexture, 0).setDisplaySize(this.walkDisplaySize, this.walkDisplaySize)
+  private startWalkAnimation(direction: WalkDirection): void {
+    const directionalTexture = direction === 'down'
+      ? this.walkTexturePrefix
+      : `${this.walkTexturePrefix}-${direction}`
+    const directionalAnimation = `${directionalTexture}-cycle`
+    const fallbackAnimation = `${this.walkTexturePrefix}-cycle`
+    const texture = this.scene.textures.exists(directionalTexture)
+      && this.scene.anims.exists(directionalAnimation)
+      ? directionalTexture
+      : this.walkTexturePrefix
+    const animation = texture === directionalTexture ? directionalAnimation : fallbackAnimation
+    if (!this.scene.textures.exists(texture) || !this.scene.anims.exists(animation)) {
+      this.stopWalkAnimation(true)
+      return
+    }
+    if (this.anims.currentAnim?.key === animation && this.anims.isPlaying) return
+    this.setFlipX(false)
+    this.setTexture(texture, 0).setDisplaySize(this.walkDisplaySize, this.walkDisplaySize)
     this.syncCollisionBody()
-    this.play(this.walkAnimationKey)
+    this.play(animation)
   }
 
-  private stopWalkAnimation(): void {
-    if (this.texture.key === this.idleTexture) return
+  private stopWalkAnimation(useStaticFallback = false): void {
     this.stop()
-    this.setTexture(this.idleTexture).setDisplaySize(84, 84)
-    this.syncCollisionBody()
+    if (useStaticFallback && this.texture.key !== this.idleTexture) {
+      this.setFlipX(false)
+      this.setTexture(this.idleTexture).setDisplaySize(84, 84)
+      this.syncCollisionBody()
+    }
   }
 
   private syncCollisionBody(): void {

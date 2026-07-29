@@ -16,6 +16,8 @@ const NPC_TEXTURE_KEYS = [
   'npc-luna',
 ] as const
 
+const DIRECTIONAL_WALK_DIRECTIONS = ['up', 'left', 'right'] as const
+
 export class PreloadScene extends Phaser.Scene {
   constructor() {
     super('PreloadScene')
@@ -33,6 +35,15 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 627,
       frameHeight: 627,
     })
+    for (const gender of ['female', 'male'] as const) {
+      DIRECTIONAL_WALK_DIRECTIONS.forEach((direction) => {
+        this.load.spritesheet(
+          `player-${gender}-walk-${direction}`,
+          `${root}/sprites/adventurer-${gender}-walk-${direction}-sheet.png`,
+          { frameWidth: 256, frameHeight: 256 },
+        )
+      })
+    }
     this.load.spritesheet('player-female-combat', `${root}/sprites/adventurer-female-combat-sheet.png`, {
       frameWidth: 313,
       frameHeight: 313,
@@ -60,11 +71,20 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('village-inn', `${root}/sprites/village-inn.png`)
     this.load.image('village-cottage-a', `${root}/sprites/village-cottage-a.png`)
     this.load.image('village-cottage-b', `${root}/sprites/village-cottage-b.png`)
+    this.load.image('village-well', `${root}/sprites/village-well.png`)
+    this.load.image('village-cart-supplies', `${root}/sprites/village-cart-supplies.png`)
+    this.load.image('village-fence-segment', `${root}/sprites/village-fence-segment.png`)
     NPC_TEXTURE_KEYS.forEach((key) => {
       this.load.image(key, `${root}/sprites/${key}.png`)
       this.load.spritesheet(`${key}-walk`, `${root}/sprites/${key}-walk-sheet.png`, {
         frameWidth: 256,
         frameHeight: 256,
+      })
+      DIRECTIONAL_WALK_DIRECTIONS.forEach((direction) => {
+        this.load.spritesheet(`${key}-walk-${direction}`, `${root}/sprites/${key}-walk-${direction}-sheet.png`, {
+          frameWidth: 256,
+          frameHeight: 256,
+        })
       })
       this.load.spritesheet(`${key}-combat`, `${root}/sprites/${key}-combat-sheet.png`, {
         frameWidth: 256,
@@ -90,6 +110,8 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('grass-ground', `${root}/textures/grass-ground.webp`)
     this.load.image('dirt-path', `${root}/textures/dirt-path.webp`)
     this.load.image('moon-arena', `${root}/backgrounds/moon-arena.webp`)
+    this.load.image('dawn-village-battle-day', `${root}/backgrounds/dawn-village-battle-day.png`)
+    this.load.image('dawn-village-battle-night', `${root}/backgrounds/dawn-village-battle-night.png`)
   }
 
   create(): void {
@@ -99,6 +121,16 @@ export class PreloadScene extends Phaser.Scene {
         frames: this.anims.generateFrameNumbers(`player-${gender}-walk`, { frames: [0, 1, 2, 3] }),
         frameRate: 9,
         repeat: -1,
+      })
+      DIRECTIONAL_WALK_DIRECTIONS.forEach((direction) => {
+        const texture = `player-${gender}-walk-${direction}`
+        if (!this.textures.exists(texture)) return
+        this.anims.create({
+          key: `${texture}-cycle`,
+          frames: this.anims.generateFrameNumbers(texture, { frames: [0, 1, 2, 3] }),
+          frameRate: 9,
+          repeat: -1,
+        })
       })
       const combatTexture = `player-${gender}-combat`
       const actions = [
@@ -135,6 +167,16 @@ export class PreloadScene extends Phaser.Scene {
           repeat: -1,
         })
       }
+      DIRECTIONAL_WALK_DIRECTIONS.forEach((direction) => {
+        const directionalTexture = `${textureKey}-walk-${direction}`
+        if (!this.textures.exists(directionalTexture)) return
+        this.anims.create({
+          key: `${directionalTexture}-cycle`,
+          frames: this.anims.generateFrameNumbers(directionalTexture, { frames: [0, 1, 2, 3] }),
+          frameRate: 8,
+          repeat: -1,
+        })
+      })
 
       const texture = `${textureKey}-combat`
       if (!this.textures.exists(texture)) return

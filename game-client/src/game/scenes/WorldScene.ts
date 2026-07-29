@@ -38,6 +38,7 @@ type ObstacleLayoutItem = {
   y: number
   texture: string
   size: number
+  displayHeight?: number
   body:
     | { shape: 'circle'; radius: number; offsetX: number; offsetY: number }
     | { shape: 'rect'; width: number; height: number; offsetX: number; offsetY: number }
@@ -50,6 +51,48 @@ const PLANT_SPARKLE_COLORS: Record<MapPlant['rarity'], readonly [number, number]
   uncommon: [0x93c5fd, 0xa78bfa],
   rare: [0xfde68a, 0xf59e0b],
 }
+
+const FOREST_OBSTACLE_LAYOUT: ObstacleLayoutItem[] = [
+  { x: 1180, y: 620, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
+  { x: 1160, y: 300, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
+  { x: 1050, y: 520, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
+  { x: 1270, y: 350, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
+  { x: 1260, y: 820, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1400, y: 410, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1740, y: 680, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1530, y: 1060, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1050, y: 1450, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 520, y: 1260, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1880, y: 1120, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1810, y: 1530, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1510, y: 1850, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1080, y: 1840, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 650, y: 1750, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 220, y: 1580, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+]
+
+const VILLAGE_OBSTACLE_LAYOUT: ObstacleLayoutItem[] = [
+  // House textures contain transparent padding below the visible pixels. These offsets
+  // align each footprint with the actual alpha bounds instead of the 512px canvas edge.
+  { x: 690, y: 430, texture: 'village-chief-house', size: 420, body: { shape: 'rect', width: 330, height: 110, offsetX: 45, offsetY: 246 } },
+  { x: 1110, y: 720, texture: 'village-general-store', size: 330, body: { shape: 'rect', width: 240, height: 92, offsetX: 45, offsetY: 181 } },
+  { x: 390, y: 760, texture: 'village-smithy', size: 350, body: { shape: 'rect', width: 300, height: 110, offsetX: 26, offsetY: 198 } },
+  { x: 820, y: 1110, texture: 'village-inn', size: 320, body: { shape: 'rect', width: 240, height: 96, offsetX: 40, offsetY: 190 } },
+  { x: 430, y: 1160, texture: 'village-cottage-a', size: 280, body: { shape: 'rect', width: 220, height: 88, offsetX: 31, offsetY: 145 } },
+  { x: 1210, y: 1030, texture: 'village-cottage-b', size: 300, body: { shape: 'rect', width: 250, height: 90, offsetX: 26, offsetY: 148 } },
+  { x: 790, y: 790, texture: 'village-well', size: 150, body: { shape: 'circle', radius: 42, offsetX: 33, offsetY: 80 } },
+  { x: 1220, y: 815, texture: 'village-cart-supplies', size: 150, body: { shape: 'rect', width: 100, height: 42, offsetX: 25, offsetY: 99 } },
+  { x: 1410, y: 970, texture: 'village-fence-segment', size: 120, displayHeight: 60, body: { shape: 'rect', width: 104, height: 18, offsetX: 8, offsetY: 35 } },
+  { x: 1410, y: 1140, texture: 'village-fence-segment', size: 120, displayHeight: 60, body: { shape: 'rect', width: 104, height: 18, offsetX: 8, offsetY: 35 } },
+  { x: 1740, y: 1660, texture: 'village-signpost', size: 110, body: { shape: 'rect', width: 44, height: 22, offsetX: 33, offsetY: 84 } },
+  { x: 1400, y: 330, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1760, y: 620, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1900, y: 1030, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1840, y: 1510, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 1500, y: 1870, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 950, y: 1880, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+  { x: 240, y: 1580, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
+]
 
 export class WorldScene extends Phaser.Scene {
   private player!: Player
@@ -90,49 +133,22 @@ export class WorldScene extends Phaser.Scene {
 
     this.drawWorld(width, height, map.map_type)
     const obstacles = this.physics.add.staticGroup()
-    const obstacleLayout: ObstacleLayoutItem[] = [
-      { x: 1180, y: 620, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
-      { x: 1160, y: 300, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
-      { x: 1050, y: 520, texture: 'obstacle', size: 96, body: { shape: 'circle', radius: 28, offsetX: 20, offsetY: 27 } },
-      { x: 1030, y: 1140, texture: 'village-signpost', size: 110, body: { shape: 'rect', width: 44, height: 22, offsetX: 33, offsetY: 84 } },
-      { x: 1270, y: 350, texture: 'forest-stump', size: 96, body: { shape: 'circle', radius: 29, offsetX: 19, offsetY: 27 } },
-      // House textures contain transparent padding below the visible pixels. These offsets
-      // align each footprint with the actual alpha bounds instead of the 512px canvas edge.
-      { x: 650, y: 430, texture: 'village-chief-house', size: 420, body: { shape: 'rect', width: 330, height: 110, offsetX: 45, offsetY: 246 } },
-      { x: 920, y: 710, texture: 'village-general-store', size: 330, body: { shape: 'rect', width: 240, height: 92, offsetX: 45, offsetY: 181 } },
-      { x: 300, y: 750, texture: 'village-smithy', size: 350, body: { shape: 'rect', width: 300, height: 110, offsetX: 26, offsetY: 198 } },
-      { x: 760, y: 1040, texture: 'village-inn', size: 320, body: { shape: 'rect', width: 240, height: 96, offsetX: 40, offsetY: 190 } },
-      { x: 270, y: 1080, texture: 'village-cottage-a', size: 280, body: { shape: 'rect', width: 220, height: 88, offsetX: 31, offsetY: 145 } },
-      { x: 1080, y: 950, texture: 'village-cottage-b', size: 300, body: { shape: 'rect', width: 250, height: 90, offsetX: 26, offsetY: 148 } },
-      { x: 1260, y: 820, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1400, y: 410, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1740, y: 680, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1530, y: 1060, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1050, y: 1450, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 520, y: 1260, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1880, y: 1120, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1810, y: 1530, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1510, y: 1850, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 1080, y: 1840, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 650, y: 1750, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-      { x: 220, y: 1580, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
-    ]
     // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
     const activeObstacleLayout = map.map_type === 'forest'
-      ? obstacleLayout.filter(({ texture }) => ['obstacle', 'forest-stump', 'ancient-forest-tree'].includes(texture))
-      : obstacleLayout
-    activeObstacleLayout.forEach(({ x, y, texture, size, body: bodyConfig }) => {
+      ? FOREST_OBSTACLE_LAYOUT
+      : VILLAGE_OBSTACLE_LAYOUT
+    activeObstacleLayout.forEach(({ x, y, texture, size, displayHeight = size, body: bodyConfig }) => {
       const bodyHalfWidth = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.width / 2
       const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
       const bodyCenterOffsetX = -size / 2 + bodyConfig.offsetX + bodyHalfWidth
-      const bodyCenterOffsetY = -size / 2 + bodyConfig.offsetY + bodyHalfHeight
+      const bodyCenterOffsetY = -displayHeight / 2 + bodyConfig.offsetY + bodyHalfHeight
       const visualX = x - bodyCenterOffsetX
       const visualY = y - bodyCenterOffsetY
       const obstacle = obstacles.create(visualX, visualY, texture) as Phaser.Physics.Arcade.Image
-      obstacle.setDisplaySize(size, size).setDepth(y).refreshBody()
+      obstacle.setDisplaySize(size, displayHeight).setDepth(y).refreshBody()
       const body = obstacle.body as Phaser.Physics.Arcade.StaticBody
       if (bodyConfig.shape === 'circle') {
-        body.setCircle(bodyConfig.radius, size / 2 - bodyConfig.radius, size / 2 - bodyConfig.radius)
+        body.setCircle(bodyConfig.radius, size / 2 - bodyConfig.radius, displayHeight / 2 - bodyConfig.radius)
       } else {
         body.setSize(bodyConfig.width, bodyConfig.height, true)
       }
@@ -607,14 +623,16 @@ export class WorldScene extends Phaser.Scene {
       const bodyHalfHeight = obstacle.body.shape === 'circle'
         ? obstacle.body.radius
         : obstacle.body.height / 2
+      const displayHeight = obstacle.displayHeight ?? obstacle.size
       const visualX = obstacle.x - (-obstacle.size / 2 + obstacle.body.offsetX + bodyHalfWidth)
-      const visualY = obstacle.y - (-obstacle.size / 2 + obstacle.body.offsetY + bodyHalfHeight)
-      const halfSize = obstacle.size / 2
+      const visualY = obstacle.y - (-displayHeight / 2 + obstacle.body.offsetY + bodyHalfHeight)
+      const halfWidth = obstacle.size / 2
+      const halfHeight = displayHeight / 2
       return (
-        plantBounds.left < visualX + halfSize
-        && plantBounds.right > visualX - halfSize
-        && plantBounds.top < visualY + halfSize
-        && plantBounds.bottom > visualY - halfSize
+        plantBounds.left < visualX + halfWidth
+        && plantBounds.right > visualX - halfWidth
+        && plantBounds.top < visualY + halfHeight
+        && plantBounds.bottom > visualY - halfHeight
       )
     })
   }
@@ -623,35 +641,58 @@ export class WorldScene extends Phaser.Scene {
     const ground = this.add.tileSprite(0, 0, width, height, 'grass-ground').setOrigin(0).setDepth(-10)
     if (mapType === 'forest') ground.setTint(0x8bbf8b)
     const path = this.add.tileSprite(0, 0, width, height, 'dirt-path').setOrigin(0).setDepth(-9)
-    const routes = [
-      new Phaser.Curves.Spline([
-        32, 150,
-        128, 145,
-        320, 195,
-        455, 330,
-        510, 520,
-        515, 675,
-        680, 790,
-        875, 880,
-        1040, 1010,
-        1190, 1180,
-        1370, 1320,
-        1510, 1485,
-        1690, 1630,
-        1870, 1770,
-        2048, 1840,
-      ]),
-      new Phaser.Curves.Spline([455, 330, 560, 440, 650, 520]),
-      new Phaser.Curves.Spline([515, 675, 410, 755, 300, 840]),
-      new Phaser.Curves.Spline([680, 790, 800, 800, 920, 800]),
-      new Phaser.Curves.Spline([875, 880, 760, 960, 760, 1110]),
-      new Phaser.Curves.Spline([1040, 1010, 1080, 1060, 1160, 1120]),
-    ]
+    const routes = mapType === 'village'
+      ? [
+          new Phaser.Curves.Spline([
+            32, 150,
+            320, 210,
+            520, 430,
+            690, 620,
+            790, 790,
+            980, 920,
+            1220, 1120,
+            1510, 1450,
+            1740, 1660,
+            1900, 1840,
+            2048, 1840,
+          ]),
+          new Phaser.Curves.Spline([790, 790, 740, 680, 690, 575]),
+          new Phaser.Curves.Spline([790, 790, 590, 825, 390, 875]),
+          new Phaser.Curves.Spline([790, 790, 950, 800, 1110, 825]),
+          new Phaser.Curves.Spline([790, 790, 805, 990, 820, 1210]),
+          new Phaser.Curves.Spline([820, 1210, 625, 1235, 430, 1260]),
+          new Phaser.Curves.Spline([980, 920, 1110, 1025, 1240, 1130]),
+        ]
+      : [
+          new Phaser.Curves.Spline([
+            32, 150,
+            128, 145,
+            320, 195,
+            455, 330,
+            510, 520,
+            515, 675,
+            680, 790,
+            875, 880,
+            1040, 1010,
+            1190, 1180,
+            1370, 1320,
+            1510, 1485,
+            1690, 1630,
+            1870, 1770,
+            2048, 1840,
+          ]),
+          new Phaser.Curves.Spline([455, 330, 560, 440, 650, 520]),
+          new Phaser.Curves.Spline([515, 675, 410, 755, 300, 840]),
+          new Phaser.Curves.Spline([680, 790, 800, 800, 920, 800]),
+          new Phaser.Curves.Spline([875, 880, 760, 960, 760, 1110]),
+          new Phaser.Curves.Spline([1040, 1010, 1080, 1060, 1160, 1120]),
+        ]
     const maskShape = this.make.graphics({ x: 0, y: 0 }, false)
     maskShape.fillStyle(0xffffff)
     routes.forEach((route) =>
       route.getSpacedPoints(120).forEach((point) => maskShape.fillCircle(point.x, point.y, 58)),
     )
+    if (mapType === 'village') maskShape.fillCircle(790, 790, 165)
     path.setMask(maskShape.createGeometryMask())
     if (mapType === 'forest') {
       this.add.rectangle(0, 0, width, height, 0x083d2b, 0.18).setOrigin(0).setDepth(-8)

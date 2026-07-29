@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import argparse
 from collections import deque
+from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageFilter
 
 
 GAME_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_DIR = GAME_ROOT / "art-source" / "generated" / "npc-walk"
+NPC_SOURCE_DIR = GAME_ROOT / "art-source" / "generated" / "npc-walk"
+DIRECTIONAL_SOURCE_DIR = GAME_ROOT / "art-source" / "generated" / "directional-walk"
 OUTPUT_DIR = GAME_ROOT / "public" / "assets" / "generated" / "sprites"
 
 NPC_NAMES = (
@@ -18,14 +22,34 @@ NPC_NAMES = (
     "trainer",
     "luna",
 )
-SOURCE_SIZE = 1024
 FRAME_COUNT = 4
 FRAME_SIZE = 256
+MIN_SOURCE_SIZE = 1024
 CONTENT_MARGIN_X = 10
 CONTENT_TOP = 8
 BASELINE = 248
 BOUNDARY_SEARCH_RADIUS = 96
 MAGENTA_RESIDUE_LIMIT = 64
+
+
+@dataclass(frozen=True)
+class AssetSpec:
+    source_path: Path
+    output_name: str
+    flip_frames_horizontally: bool = False
+
+
+DIRECTIONAL_CHARACTER_KEYS = (
+    "adventurer-female",
+    "adventurer-male",
+    "npc-village-chief",
+    "npc-shopkeeper",
+    "npc-suna",
+    "npc-forest-guide",
+    "npc-trainer",
+    "npc-luna",
+)
+DIRECTIONS = ("up", "left", "right")
 
 
 def is_magenta(pixel: tuple[int, int, int, int]) -> bool:
@@ -131,16 +155,18 @@ def remove_magenta_background(image: Image.Image) -> Image.Image:
 
 def frame_boundaries(image: Image.Image) -> list[int]:
     alpha = image.getchannel("A")
+    width, height = image.size
     counts = []
-    for x in range(SOURCE_SIZE):
-        histogram = alpha.crop((x, 0, x + 1, SOURCE_SIZE)).histogram()
-        counts.append(SOURCE_SIZE - histogram[0])
+    for x in range(width):
+        histogram = alpha.crop((x, 0, x + 1, height)).histogram()
+        counts.append(height - histogram[0])
 
     boundaries = [0]
+    search_radius = max(24, round(width * BOUNDARY_SEARCH_RADIUS / 1024))
     for index in range(1, FRAME_COUNT):
-        nominal = index * SOURCE_SIZE // FRAME_COUNT
-        start = nominal - BOUNDARY_SEARCH_RADIUS
-        end = nominal + BOUNDARY_SEARCH_RADIUS
+        nominal = index * width // FRAME_COUNT
+        start = max(1, nominal - search_radius)
+        end = min(width - 2, nominal + search_radius)
         transparent_runs: list[tuple[int, int]] = []
         run_start: int | None = None
         for x in range(start, end + 1):
@@ -162,7 +188,7 @@ def frame_boundaries(image: Image.Image) -> list[int]:
         else:
             boundary = min(range(start, end + 1), key=lambda x: (counts[x], abs(x - nominal)))
         boundaries.append(boundary)
-    boundaries.append(SOURCE_SIZE)
+    boundaries.append(width)
     return boundaries
 
 
@@ -223,19 +249,22 @@ def remove_small_components(frame: Image.Image) -> Image.Image:
     return cleaned
 
 
-def build_sheet(source_path: Path) -> Image.Image:
+def build_sheet(source_path: Path, flip_frames_horizontally: bool = False) -> Image.Image:
     source = Image.open(source_path).convert("RGBA")
-    if source.size != (SOURCE_SIZE, SOURCE_SIZE):
+    if source.width != source.height or source.width < MIN_SOURCE_SIZE:
         raise ValueError(
-            f"{source_path.name}: expected {SOURCE_SIZE}x{SOURCE_SIZE}, got {source.size}"
+            f"{source_path.name}: expected a square image at least "
+            f"{MIN_SOURCE_SIZE}px wide, got {source.size}"
         )
 
     keyed = remove_magenta_background(source)
     boundaries = frame_boundaries(keyed)
     crops = []
     for index in range(FRAME_COUNT):
-        frame = keyed.crop((boundaries[index], 0, boundaries[index + 1], SOURCE_SIZE))
+        frame = keyed.crop((boundaries[index], 0, boundaries[index + 1], source.height))
         frame = remove_small_components(frame)
+        if flip_frames_horizontally:
+            frame = frame.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         crops.append(content_crop(frame, source_path.name, index))
 
     max_width = max(frame.width for frame in crops)
@@ -286,26 +315,80 @@ def validate_sheet(sheet: Image.Image, output_name: str) -> None:
             )
 
 
-def main() -> None:
-    expected_sources = [SOURCE_DIR / f"npc-{name}-walk-source.png" for name in NPC_NAMES]
+def legacy_asset_specs() -> list[AssetSpec]:
+    return [
+        AssetSpec(
+            NPC_SOURCE_DIR / f"npc-{name}-walk-source.png",
+            f"npc-{name}-walk-sheet.png",
+        )
+        for name in NPC_NAMES
+    ]
+
+
+def directional_asset_specs() -> list[AssetSpec]:
+    specs = []
+    for key in DIRECTIONAL_CHARACTER_KEYS:
+        for direction in DIRECTIONS:
+            # Luna candidate gen_hist_1785229970005_u4wyo faces left. Flip each
+            # panel so action order remains unchanged and the runtime key stays independent.
+            flip = key == "npc-luna" and direction == "right"
+            specs.append(
+                AssetSpec(
+                    DIRECTIONAL_SOURCE_DIR / f"{key}-walk-{direction}-source.png",
+                    f"{key}-walk-{direction}-sheet.png",
+                    flip,
+                )
+            )
+    return specs
+
+
+def validate_sources(specs: list[AssetSpec], source_dir: Path) -> None:
+    expected_sources = [spec.source_path for spec in specs]
     missing = [path.name for path in expected_sources if not path.is_file()]
     if missing:
-        raise FileNotFoundError(f"missing NPC walk sources in {SOURCE_DIR}: {', '.join(missing)}")
+        raise FileNotFoundError(f"missing walk sources in {source_dir}: {', '.join(missing)}")
     expected_names = {path.name for path in expected_sources}
-    unexpected = sorted(path.name for path in SOURCE_DIR.glob("*.png") if path.name not in expected_names)
+    unexpected = sorted(path.name for path in source_dir.glob("*.png") if path.name not in expected_names)
     if unexpected:
-        raise ValueError(f"unexpected NPC walk sources in {SOURCE_DIR}: {', '.join(unexpected)}")
+        raise ValueError(f"unexpected walk sources in {source_dir}: {', '.join(unexpected)}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Import generated four-frame walk assets.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--legacy-only", action="store_true", help="generate only existing down-facing NPC sheets")
+    mode.add_argument("--directional-only", action="store_true", help="generate only up/left/right sheets")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    specs: list[AssetSpec] = []
+    if not args.directional_only:
+        legacy_specs = legacy_asset_specs()
+        validate_sources(legacy_specs, NPC_SOURCE_DIR)
+        specs.extend(legacy_specs)
+    if not args.legacy_only and (args.directional_only or DIRECTIONAL_SOURCE_DIR.is_dir()):
+        directional_specs = directional_asset_specs()
+        validate_sources(directional_specs, DIRECTIONAL_SOURCE_DIR)
+        specs.extend(directional_specs)
 
     generated: list[tuple[Path, str, Image.Image]] = []
-    for source_path in expected_sources:
-        output_name = source_path.name.replace("-source.png", "-sheet.png")
-        sheet = build_sheet(source_path)
-        validate_sheet(sheet, output_name)
-        generated.append((source_path, output_name, sheet))
+    for spec in specs:
+        sheet = build_sheet(spec.source_path, spec.flip_frames_horizontally)
+        validate_sheet(sheet, spec.output_name)
+        generated.append((spec.source_path, spec.output_name, sheet))
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     for source_path, output_name, sheet in generated:
-        sheet.save(OUTPUT_DIR / output_name, optimize=True)
+        encoded = BytesIO()
+        sheet.save(encoded, format="PNG", optimize=True)
+        output_path = OUTPUT_DIR / output_name
+        output_bytes = encoded.getvalue()
+        if output_path.is_file() and output_path.read_bytes() == output_bytes:
+            print(f"unchanged {source_path.name} -> {output_name}")
+            continue
+        output_path.write_bytes(output_bytes)
         print(f"imported {source_path.name} -> {output_name}")
 
 
