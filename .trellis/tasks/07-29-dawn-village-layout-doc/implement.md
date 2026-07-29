@@ -2,28 +2,27 @@
 
 ## Checklist
 
-- [ ] Import the three supplied source images non-destructively.
-- [ ] Remove magenta chroma key and validate alpha output.
-- [ ] Add runtime preload keys for well, cart, and fence.
-- [ ] Refactor `WorldScene.ts` into map-type-specific layouts.
-- [ ] Apply approved building, prop, tree, plaza, and road coordinates.
-- [ ] Add a new SQL migration for village NPC and collectible coordinates.
-- [ ] Verify portal data and story gates are unchanged.
-- [ ] Run frontend type-check, lint, and build.
-- [ ] Run targeted backend/database tests.
-- [ ] Start the app and capture desktop/mobile screenshots for visual QA.
-- [ ] Update the optimization document if implementation calibration changes coordinates.
+- [x] Import the three supplied source images non-destructively.
+- [x] Remove magenta chroma key and validate alpha output.
+- [x] Add runtime preload keys for well, cart, and fence.
+- [x] Refactor `WorldScene.ts` into map-type-specific layouts.
+- [x] Apply approved building, prop, tree, plaza, and road coordinates.
+- [x] Add a new SQL migration for village NPC and collectible coordinates.
+- [x] Verify portal data and story gates are unchanged.
+- [x] Run frontend type-check and build; confirm the project has no lint script.
+- [x] Run the targeted map/API flow tests in the local API container.
+- [x] Start the app and inspect desktop/mobile screenshots for visual QA.
+- [x] Update the optimization document with implementation calibration changes.
 
 ## Validation Commands
 
 ```powershell
 Set-Location game-client
-npm run type-check
-npm run lint
+npm run typecheck
 npm run build
 
 Set-Location ..\server
-python -m pytest tests/test_api_flow.py tests/test_opening_story.py
+docker compose exec -T api pytest tests/test_api_flow.py -q
 ```
 
 ## Risk Points

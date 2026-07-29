@@ -4,6 +4,7 @@
 
 - Frontend scene owner: `game-client/src/game/scenes/WorldScene.ts`.
 - Asset preload owner: `game-client/src/game/scenes/PreloadScene.ts`.
+- Canvas scaling owners: `game-client/src/game/config/GameConfig.ts` and `game-client/src/styles.css`.
 - Runtime map object owner: a new append-only SQL migration under `server/database/`.
 - Final assets: `game-client/public/assets/generated/sprites/`.
 - User source images remain untouched outside the workspace.
@@ -23,6 +24,7 @@
 - Keep buildings clustered around a central plaza and retain the northwest-to-southeast route.
 - Remove village forest stumps/rocks and reduce ancient trees to a perimeter belt.
 - Draw a dedicated circular plaza mask around `(790,790)` in addition to road splines.
+- Use Phaser `ENVELOP` scaling without CSS width/height overrides so portrait screens crop horizontally instead of stretching the village.
 
 ## Data Flow
 

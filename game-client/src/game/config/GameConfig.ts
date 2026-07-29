@@ -17,7 +17,7 @@ export function createGameConfig(parent: HTMLElement): Phaser.Types.Core.GameCon
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
     },
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.ENVELOP,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
