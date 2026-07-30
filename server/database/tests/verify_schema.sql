@@ -253,11 +253,11 @@ BEGIN
     FROM players WHERE name = 'schema_owner_a';
 
     INSERT INTO player_story_progress (player_id, story_key, stage)
-    VALUES (owner_a_player_id, 'opening_moon_scar', 'prepare');
+    VALUES (owner_a_player_id, 'opening_moon_scar', 'meet_chief');
 
     BEGIN
         INSERT INTO player_story_progress (player_id, story_key, stage)
-        VALUES (owner_a_player_id, 'opening_moon_scar', 'prepare');
+        VALUES (owner_a_player_id, 'opening_moon_scar', 'meet_chief');
         RAISE EXCEPTION 'duplicate player/story progress was unexpectedly accepted';
     EXCEPTION
         WHEN unique_violation THEN
