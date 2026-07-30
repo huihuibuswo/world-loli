@@ -170,6 +170,88 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
                 "forest_dream_01": ("遗迹附近的隐蔽空地", 980, 420),
             }
 
+            assert forest_data["map"]["resource"]["region_key"] == "glimmer_forest_part_1"
+            assert forest_data["map"]["resource"]["region_name"] == "微光森林·部分1：月痕前庭"
+            current_region_map = forest_data["map"]
+            forward_regions = [
+                ("微光森林·银雾溪谷", "glimmer_forest_part_2"),
+                ("微光森林·盘根遗迹", "glimmer_forest_part_3"),
+                ("微光森林·夜萤幽径", "glimmer_forest_part_4"),
+                ("微光森林·断月深林", "glimmer_forest_part_5"),
+            ]
+            for expected_map_name, expected_region_key in forward_regions:
+                forward_portal = next(
+                    item
+                    for item in current_region_map["resource"]["objects"]
+                    if item["type"] == "map_portal"
+                    and item["target_map_name"] == expected_map_name
+                )
+                entered_region = client.post(
+                    "/api/v1/map/enter",
+                    json={"map_id": forward_portal["target_map_id"]},
+                    headers=headers_a,
+                )
+                assert entered_region.status_code == 200, entered_region.text
+                entered_region_data = entered_region.json()["data"]
+                assert entered_region_data["map"]["map_name"] == expected_map_name
+                assert entered_region_data["map"]["resource"]["region_key"] == expected_region_key
+                assert entered_region_data["position_x"] == forward_portal["spawn_x"]
+                assert entered_region_data["position_y"] == forward_portal["spawn_y"]
+                reverse_entry_portal = next(
+                    item
+                    for item in entered_region_data["map"]["resource"]["objects"]
+                    if item["type"] == "map_portal"
+                    and item["target_map_id"] == current_region_map["id"]
+                )
+                assert (
+                    (entered_region_data["position_x"] - reverse_entry_portal["x"]) ** 2
+                    + (entered_region_data["position_y"] - reverse_entry_portal["y"]) ** 2
+                ) > 104**2
+                current_region_map = entered_region_data["map"]
+
+            skip_to_part_1 = client.post(
+                "/api/v1/map/enter",
+                json={"map_id": forest_data["map"]["id"]},
+                headers=headers_a,
+            )
+            assert skip_to_part_1.status_code == 403
+
+            reverse_regions = [
+                "微光森林·夜萤幽径",
+                "微光森林·盘根遗迹",
+                "微光森林·银雾溪谷",
+                "微光森林",
+            ]
+            for expected_map_name in reverse_regions:
+                source_region_map = current_region_map
+                reverse_portal = next(
+                    item
+                    for item in current_region_map["resource"]["objects"]
+                    if item["type"] == "map_portal"
+                    and item["target_map_name"] == expected_map_name
+                )
+                entered_region = client.post(
+                    "/api/v1/map/enter",
+                    json={"map_id": reverse_portal["target_map_id"]},
+                    headers=headers_a,
+                )
+                assert entered_region.status_code == 200, entered_region.text
+                entered_region_data = entered_region.json()["data"]
+                current_region_map = entered_region_data["map"]
+                assert current_region_map["map_name"] == expected_map_name
+                assert entered_region_data["position_x"] == reverse_portal["spawn_x"]
+                assert entered_region_data["position_y"] == reverse_portal["spawn_y"]
+                return_portal = next(
+                    item
+                    for item in current_region_map["resource"]["objects"]
+                    if item["type"] == "map_portal"
+                    and item["target_map_id"] == source_region_map["id"]
+                )
+                assert (
+                    (entered_region_data["position_x"] - return_portal["x"]) ** 2
+                    + (entered_region_data["position_y"] - return_portal["y"]) ** 2
+                ) > 104**2
+
             stale_location = client.post(
                 "/api/v1/player/location",
                 json={"map_id": profile_data["current_map"], "position_x": 128, "position_y": 128},
@@ -179,8 +261,8 @@ def test_complete_demo_backend_flow(monkeypatch) -> None:
 
             forest_portal = next(
                 item
-                for item in forest_data["map"]["resource"]["objects"]
-                if item["type"] == "map_portal"
+                for item in current_region_map["resource"]["objects"]
+                if item["type"] == "map_portal" and item["target_map_name"] == "晨曦村"
             )
             assert forest_portal["target_map_name"] == "晨曦村"
             return_village = client.post(

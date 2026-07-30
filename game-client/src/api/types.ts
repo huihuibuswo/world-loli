@@ -70,6 +70,8 @@ export interface MapData {
   map_type: string
   level_limit: number
   resource: {
+    region_key?: string
+    region_name?: string
     spawn?: { x: number; y: number }
     bounds?: { min_x: number; min_y: number; max_x: number; max_y: number }
     objects?: MapObject[]

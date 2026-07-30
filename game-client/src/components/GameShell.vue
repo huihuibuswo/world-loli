@@ -26,7 +26,7 @@ let saveTimer: number | null = null
 
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
-const currentMapName = computed(() => game.map?.map_name || '晨曦村')
+const currentMapName = computed(() => game.map?.resource.region_name || game.map?.map_name || '晨曦村')
 const clockText = computed(() => formatGameTime(game.gameTime.minuteOfDay))
 const phaseIcon = computed(() => ({ dawn: Sunrise, day: Sun, dusk: Sunset, night: Moon })[game.gameTime.phase])
 const phaseLabel = computed(() => ({ dawn: '清晨', day: '白天', dusk: '黄昏', night: '夜晚' })[game.gameTime.phase])

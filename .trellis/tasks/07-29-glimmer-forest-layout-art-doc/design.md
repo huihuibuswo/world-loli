@@ -73,3 +73,44 @@
 ## 回滚
 
 回滚时可分别移除版本化 `glimmer-forest-v1` 资产、预加载键和 `WorldScene` 的森林分支；村庄资源与布局保持独立，不需要整体回退地图系统。
+
+## 多区域运行时扩展
+
+### 数据流
+
+```text
+024_glimmer_forest_regions.sql
+  -> map_data.resource_json(region_key, region_name, bounds, spawn, objects)
+  -> GET /map/{id} 或 POST /map/enter
+  -> MapData.resource
+  -> GameShell 地图标题 + WorldScene 区域配置选择
+  -> Phaser 地表、路线、碰撞体、装饰、特效和传送标记
+```
+
+API 保持透传 `resource_json`，不在 Python 服务层复制区域判断。数据库拥有地图连通关系，前端拥有纯视觉布局；`region_key` 是两者唯一共享的区域标识。
+
+### 地图身份与兼容
+
+- 部分1数据库名继续为 `微光森林`，新增 `region_name = 微光森林·部分1：月痕前庭`。
+- 部分2至5使用独立地图名；开局服务、植物与剧情 SQL 仍只匹配部分1。
+- 客户端对缺失或未知 `region_key` 的 `forest` 地图回退到部分1，兼容旧数据库和迁移未完成的本地环境。
+
+### 前端配置边界
+
+- 新建单一 `forestRegions.ts`，集中定义区域键、地表、路线、碰撞物、静态装饰、叠层特效和传送标记纹理。
+- `WorldScene` 继续负责 Phaser 对象创建、深度、物理体和 reduced-motion；不把 Phaser 实例写入配置文件。
+- `PreloadScene` 只注册五区域实际使用的版本化运行时资产。
+- 部分1现有布局迁移到同一配置入口，但保留已有坐标、剧情证据位置和用户未提交的村庄路牌删除改动。
+
+### 数据库迁移
+
+- 新增连续迁移 `024_glimmer_forest_regions.sql`。
+- 迁移使用 `ON CONFLICT (map_name) DO UPDATE`，随后以确定性 JSON 重建新增区域；部分1仅替换门户并保留非门户对象。
+- 相邻地图门户成对创建；每个来源门户的 `spawn_x/spawn_y` 指向目标地图安全落点。
+- `verify_schema.sql` 验证五个区域键和相邻双向边；API 流程测试实际走完部分1至5再原路返回。
+
+### 降级与性能
+
+- 大地表使用 tileSprite；完整盆地/庭院使用单张地面叠层，不重复平铺。
+- 软特效限制在局部 Sprite/TileSprite，reduced-motion 下保留静态 Alpha、不创建无限 tween。
+- 首版不加载全部 113 个成品，只加载区域配置实际引用的纹理。

@@ -329,6 +329,96 @@ BEGIN
 END
 $verify_opening_story$;
 
+DO $verify_glimmer_forest_regions$
+DECLARE
+    region_count INTEGER;
+    region_edge_count INTEGER;
+BEGIN
+    SELECT COUNT(*)
+    INTO region_count
+    FROM map_data
+    WHERE resource_json->>'region_key' LIKE 'glimmer_forest_part_%';
+
+    IF region_count <> 5 THEN
+        RAISE EXCEPTION 'glimmer forest region count must be 5, got %', region_count;
+    END IF;
+
+    IF EXISTS (
+        SELECT resource_json->>'region_key'
+        FROM map_data
+        WHERE resource_json->>'region_key' LIKE 'glimmer_forest_part_%'
+        GROUP BY resource_json->>'region_key'
+        HAVING COUNT(*) <> 1
+    ) THEN
+        RAISE EXCEPTION 'glimmer forest region keys must be unique';
+    END IF;
+
+    IF EXISTS (
+        SELECT expected.region_key
+        FROM unnest(ARRAY[
+            'glimmer_forest_part_1',
+            'glimmer_forest_part_2',
+            'glimmer_forest_part_3',
+            'glimmer_forest_part_4',
+            'glimmer_forest_part_5'
+        ]) AS expected(region_key)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM map_data
+            WHERE resource_json->>'region_key' = expected.region_key
+        )
+    ) THEN
+        RAISE EXCEPTION 'glimmer forest region key set is incomplete';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM map_data
+        WHERE map_name = '微光森林'
+          AND resource_json->>'region_key' = 'glimmer_forest_part_1'
+          AND resource_json->>'region_name' = '微光森林·部分1：月痕前庭'
+    ) THEN
+        RAISE EXCEPTION 'glimmer forest part 1 compatibility identity is missing';
+    END IF;
+
+    SELECT COUNT(*)
+    INTO region_edge_count
+    FROM map_data AS source_map,
+         LATERAL jsonb_array_elements(COALESCE(source_map.resource_json->'objects', '[]'::JSONB)) AS portal
+    JOIN map_data AS target_map
+      ON target_map.id = (portal->>'target_map_id')::INTEGER
+    WHERE source_map.resource_json->>'region_key' LIKE 'glimmer_forest_part_%'
+      AND portal->>'type' = 'map_portal'
+      AND target_map.resource_json->>'region_key' LIKE 'glimmer_forest_part_%';
+
+    IF region_edge_count <> 8 THEN
+        RAISE EXCEPTION 'glimmer forest internal directed edge count must be 8, got %', region_edge_count;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM map_data AS source_map,
+             LATERAL jsonb_array_elements(COALESCE(source_map.resource_json->'objects', '[]'::JSONB)) AS portal
+        JOIN map_data AS target_map
+          ON target_map.id = (portal->>'target_map_id')::INTEGER
+        WHERE source_map.resource_json->>'region_key' LIKE 'glimmer_forest_part_%'
+          AND portal->>'type' = 'map_portal'
+          AND target_map.resource_json->>'region_key' LIKE 'glimmer_forest_part_%'
+          AND EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(COALESCE(target_map.resource_json->'objects', '[]'::JSONB)) AS reverse_portal
+              WHERE reverse_portal->>'type' = 'map_portal'
+                AND (reverse_portal->>'target_map_id')::BIGINT = source_map.id
+                AND power((portal->>'spawn_x')::DOUBLE PRECISION - (reverse_portal->>'x')::DOUBLE PRECISION, 2)
+                  + power((portal->>'spawn_y')::DOUBLE PRECISION - (reverse_portal->>'y')::DOUBLE PRECISION, 2)
+                    <= power(104::DOUBLE PRECISION, 2)
+          )
+    ) THEN
+        RAISE EXCEPTION 'glimmer forest spawn point is inside the reverse portal interaction range';
+    END IF;
+END
+$verify_glimmer_forest_regions$;
+
 DO $verify_battle_balance$
 DECLARE
     hp_default TEXT;

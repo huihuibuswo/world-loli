@@ -4,6 +4,11 @@ import { GAME_TIME_KEY, gameEvents, WORLD_INPUT_LOCK_KEY } from '@/game/events'
 import { NPC } from '@/game/entities/NPC'
 import { Player } from '@/game/entities/Player'
 import {
+  getForestRegionConfig,
+  type ForestObstacleLayoutItem,
+  type ForestRegionConfig,
+} from '@/game/forestRegions'
+import {
   getEnvironmentStyle,
   isMinuteInRange,
   normalizeGameTime,
@@ -39,16 +44,7 @@ type MapEvidence = {
 
 type WorldBounds = { min_x: number; min_y: number; max_x: number; max_y: number }
 
-type ObstacleLayoutItem = {
-  x: number
-  y: number
-  texture: string
-  size: number
-  displayHeight?: number
-  body:
-    | { shape: 'circle'; radius: number; offsetX: number; offsetY: number }
-    | { shape: 'rect'; width: number; height: number; offsetX: number; offsetY: number }
-}
+type ObstacleLayoutItem = ForestObstacleLayoutItem
 
 type ReservedPlantArea = { x: number; y: number; radius: number }
 type NpcSchedule = { availableFrom?: number; availableUntil?: number; critical: boolean }
@@ -58,29 +54,6 @@ const PLANT_SPARKLE_COLORS: Record<MapPlant['rarity'], readonly [number, number]
   uncommon: [0x93c5fd, 0xa78bfa],
   rare: [0xfde68a, 0xf59e0b],
 }
-
-const FOREST_OBSTACLE_LAYOUT: ObstacleLayoutItem[] = [
-  { x: 620, y: 440, texture: 'forest-ancient-moon-tree', size: 620, body: { shape: 'rect', width: 200, height: 80, offsetX: 210, offsetY: 430 } },
-  { x: 250, y: 300, texture: 'forest-tree-common-a', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 720, y: 180, texture: 'forest-tree-common-b', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 1230, y: 260, texture: 'forest-tree-common-c', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 1740, y: 330, texture: 'forest-tree-common-d', size: 390, body: { shape: 'rect', width: 88, height: 58, offsetX: 151, offsetY: 300 } },
-  { x: 1870, y: 760, texture: 'forest-tree-common-e', size: 370, body: { shape: 'rect', width: 84, height: 56, offsetX: 143, offsetY: 285 } },
-  { x: 1760, y: 1260, texture: 'forest-tree-common-a', size: 350, body: { shape: 'rect', width: 80, height: 52, offsetX: 135, offsetY: 270 } },
-  { x: 1510, y: 1780, texture: 'forest-tree-common-b', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 1030, y: 1860, texture: 'forest-tree-common-c', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 560, y: 1810, texture: 'forest-tree-common-d', size: 390, body: { shape: 'rect', width: 88, height: 58, offsetX: 151, offsetY: 300 } },
-  { x: 180, y: 1590, texture: 'forest-tree-common-e', size: 360, body: { shape: 'rect', width: 82, height: 54, offsetX: 139, offsetY: 276 } },
-  { x: 210, y: 1040, texture: 'forest-tree-common-a', size: 350, body: { shape: 'rect', width: 80, height: 52, offsetX: 135, offsetY: 270 } },
-  { x: 1200, y: 720, texture: 'forest-root-obstacle-a', size: 220, body: { shape: 'rect', width: 160, height: 62, offsetX: 30, offsetY: 94 } },
-  { x: 1460, y: 920, texture: 'forest-root-obstacle-b', size: 220, body: { shape: 'rect', width: 160, height: 62, offsetX: 30, offsetY: 94 } },
-  { x: 760, y: 1210, texture: 'forest-root-obstacle-c', size: 220, body: { shape: 'rect', width: 160, height: 62, offsetX: 30, offsetY: 94 } },
-  { x: 410, y: 1470, texture: 'forest-root-obstacle-d', size: 220, body: { shape: 'rect', width: 160, height: 62, offsetX: 30, offsetY: 94 } },
-  { x: 1180, y: 1520, texture: 'forest-rock-cluster', size: 170, body: { shape: 'circle', radius: 48, offsetX: 37, offsetY: 74 } },
-  { x: 360, y: 760, texture: 'forest-hollow-stump', size: 170, body: { shape: 'circle', radius: 46, offsetX: 39, offsetY: 76 } },
-  { x: 1550, y: 520, texture: 'forest-stump-cold', size: 150, body: { shape: 'circle', radius: 42, offsetX: 33, offsetY: 66 } },
-  { x: 930, y: 1450, texture: 'forest-fallen-log', size: 230, body: { shape: 'rect', width: 178, height: 62, offsetX: 26, offsetY: 112 } },
-]
 
 const VILLAGE_OBSTACLE_LAYOUT: ObstacleLayoutItem[] = [
   // House textures contain transparent padding below the visible pixels. These offsets
@@ -95,7 +68,6 @@ const VILLAGE_OBSTACLE_LAYOUT: ObstacleLayoutItem[] = [
   { x: 1220, y: 815, texture: 'village-cart-supplies', size: 150, body: { shape: 'rect', width: 100, height: 42, offsetX: 25, offsetY: 99 } },
   { x: 1410, y: 970, texture: 'village-fence-segment', size: 120, displayHeight: 60, body: { shape: 'rect', width: 104, height: 18, offsetX: 8, offsetY: 35 } },
   { x: 1410, y: 1140, texture: 'village-fence-segment', size: 120, displayHeight: 60, body: { shape: 'rect', width: 104, height: 18, offsetX: 8, offsetY: 35 } },
-  { x: 1740, y: 1660, texture: 'village-signpost', size: 110, body: { shape: 'rect', width: 44, height: 22, offsetX: 33, offsetY: 84 } },
   { x: 1400, y: 330, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
   { x: 1760, y: 620, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
   { x: 1900, y: 1030, texture: 'ancient-forest-tree', size: 320, body: { shape: 'rect', width: 100, height: 60, offsetX: 110, offsetY: 238 } },
@@ -118,6 +90,7 @@ export class WorldScene extends Phaser.Scene {
   private environmentLights: Phaser.GameObjects.Arc[] = []
   private environmentObjects: Phaser.GameObjects.GameObject[] = []
   private mapType = 'village'
+  private forestRegion: ForestRegionConfig | null = null
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private wasd!: Record<string, Phaser.Input.Keyboard.Key>
   private interactKey!: Phaser.Input.Keyboard.Key
@@ -147,46 +120,50 @@ export class WorldScene extends Phaser.Scene {
     const map = this.registry.get('world-map') as MapData
     const profile = this.registry.get('world-player') as PlayerProfile
     this.mapType = map.map_type
+    this.forestRegion = map.map_type === 'forest'
+      ? getForestRegionConfig(map.resource.region_key)
+      : null
     const bounds = map.resource.bounds ?? { min_x: 0, min_y: 0, max_x: 2048, max_y: 2048 }
     const width = bounds.max_x - bounds.min_x
     const height = bounds.max_y - bounds.min_y
     this.physics.world.setBounds(bounds.min_x, bounds.min_y, width, height)
     this.cameras.main.setBounds(bounds.min_x, bounds.min_y, width, height)
 
-    this.drawWorld(width, height, map.map_type)
+    this.drawWorld(width, height, map.map_type, this.forestRegion)
     this.createEnvironmentEffects(map.map_type)
     const obstacles = this.physics.add.staticGroup()
     // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
-    const activeObstacleLayout = map.map_type === 'forest'
-      ? FOREST_OBSTACLE_LAYOUT
+    const activeObstacleLayout = map.map_type === 'forest' && this.forestRegion
+      ? this.forestRegion.obstacles
       : VILLAGE_OBSTACLE_LAYOUT
-    activeObstacleLayout.forEach(({ x, y, texture, size, displayHeight = size, body: bodyConfig }) => {
+    activeObstacleLayout.forEach(({ x, y, texture, size, displayHeight = size, angle = 0, body: bodyConfig }) => {
       const bodyHalfWidth = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.width / 2
       const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
       const bodyCenterOffsetX = -size / 2 + bodyConfig.offsetX + bodyHalfWidth
       const bodyCenterOffsetY = -displayHeight / 2 + bodyConfig.offsetY + bodyHalfHeight
-      const visualX = x - bodyCenterOffsetX
-      const visualY = y - bodyCenterOffsetY
+      const angleRadians = Phaser.Math.DegToRad(angle)
+      const rotatedBodyCenterOffsetX = bodyCenterOffsetX * Math.cos(angleRadians) - bodyCenterOffsetY * Math.sin(angleRadians)
+      const rotatedBodyCenterOffsetY = bodyCenterOffsetX * Math.sin(angleRadians) + bodyCenterOffsetY * Math.cos(angleRadians)
+      const visualX = x - rotatedBodyCenterOffsetX
+      const visualY = y - rotatedBodyCenterOffsetY
       const obstacle = obstacles.create(visualX, visualY, texture) as Phaser.Physics.Arcade.Image
-      obstacle.setDisplaySize(size, displayHeight).setDepth(y).refreshBody()
+      obstacle.setDisplaySize(size, displayHeight).setAngle(angle).setDepth(y).refreshBody()
       const body = obstacle.body as Phaser.Physics.Arcade.StaticBody
       if (bodyConfig.shape === 'circle') {
         body.setCircle(bodyConfig.radius, size / 2 - bodyConfig.radius, displayHeight / 2 - bodyConfig.radius)
       } else {
-        body.setSize(bodyConfig.width, bodyConfig.height, true)
+        const swapsAxes = Math.abs(Math.round(angle / 90)) % 2 === 1
+        body.setSize(
+          swapsAxes ? bodyConfig.height : bodyConfig.width,
+          swapsAxes ? bodyConfig.width : bodyConfig.height,
+          true,
+        )
       }
       // reset() safely reindexes the static body at the footprint center. Restoring the image
       // afterward is intentional: a StaticBody does not follow its Game Object automatically.
       body.reset(x, y)
       obstacle.setPosition(visualX, visualY)
     })
-    if (map.map_type === 'forest') {
-      this.add.image(620, 474, 'forest-broken-moon-mark')
-        .setDisplaySize(118, 118)
-        .setAlpha(0.46)
-        .setDepth(441)
-    }
-
     const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
     this.player = new Player(this, profile.position_x, profile.position_y, avatarGender)
     this.physics.add.collider(this.player, obstacles)
@@ -229,7 +206,7 @@ export class WorldScene extends Phaser.Scene {
     })
     this.portals.forEach((portal) => {
       const markerTexture = map.map_type === 'forest'
-        ? 'forest-entry-marker-left'
+        ? this.forestPortalTexture(portal, width)
         : 'village-signpost'
       const markerSize = map.map_type === 'forest' ? 132 : 92
       this.add.circle(portal.x, portal.y, 54, 0x38bdf8, 0.16)
@@ -756,56 +733,43 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
-  private drawWorld(width: number, height: number, mapType: string): void {
-    const groundTexture = mapType === 'forest' ? 'forest-ground-cold-wet' : 'grass-ground'
+  private forestPortalTexture(portal: MapPortal, worldWidth: number): string {
+    if (portal.targetMapName === '晨曦村') return 'forest-entry-marker-left'
+    return portal.x < worldWidth / 2
+      ? 'forest-region-exit-left'
+      : 'forest-region-exit-right'
+  }
+
+  private drawWorld(
+    width: number,
+    height: number,
+    mapType: string,
+    forestRegion: ForestRegionConfig | null,
+  ): void {
+    const groundTexture = forestRegion?.groundTexture ?? 'grass-ground'
     this.add.tileSprite(0, 0, width, height, groundTexture).setOrigin(0).setDepth(-10)
-    const routes = mapType === 'village'
-      ? [
-          new Phaser.Curves.Spline([
-            32, 150,
-            320, 210,
-            520, 430,
-            690, 620,
-            790, 790,
-            980, 920,
-            1220, 1120,
-            1510, 1450,
-            1740, 1660,
-            1900, 1840,
-            2048, 1840,
-          ]),
-          new Phaser.Curves.Spline([790, 790, 740, 680, 690, 575]),
-          new Phaser.Curves.Spline([790, 790, 590, 825, 390, 875]),
-          new Phaser.Curves.Spline([790, 790, 950, 800, 1110, 825]),
-          new Phaser.Curves.Spline([790, 790, 805, 990, 820, 1210]),
-          new Phaser.Curves.Spline([820, 1210, 625, 1235, 430, 1260]),
-          new Phaser.Curves.Spline([980, 920, 1110, 1025, 1240, 1130]),
-        ]
-      : [
-          new Phaser.Curves.Spline([
-            32, 150,
-            128, 145,
-            320, 195,
-            455, 330,
-            510, 520,
-            515, 675,
-            680, 790,
-            875, 880,
-            1040, 1010,
-            1190, 1180,
-            1370, 1320,
-            1510, 1485,
-            1690, 1630,
-            1870, 1770,
-            2048, 1840,
-          ]),
-          new Phaser.Curves.Spline([455, 330, 560, 440, 650, 520]),
-          new Phaser.Curves.Spline([515, 675, 410, 755, 300, 840]),
-          new Phaser.Curves.Spline([680, 790, 800, 800, 920, 800]),
-          new Phaser.Curves.Spline([875, 880, 760, 960, 760, 1110]),
-          new Phaser.Curves.Spline([1040, 1010, 1080, 1060, 1160, 1120]),
-        ]
     if (mapType === 'village') {
+      const routes = [
+        new Phaser.Curves.Spline([
+          32, 150,
+          320, 210,
+          520, 430,
+          690, 620,
+          790, 790,
+          980, 920,
+          1220, 1120,
+          1510, 1450,
+          1740, 1660,
+          1900, 1840,
+          2048, 1840,
+        ]),
+        new Phaser.Curves.Spline([790, 790, 740, 680, 690, 575]),
+        new Phaser.Curves.Spline([790, 790, 590, 825, 390, 875]),
+        new Phaser.Curves.Spline([790, 790, 950, 800, 1110, 825]),
+        new Phaser.Curves.Spline([790, 790, 805, 990, 820, 1210]),
+        new Phaser.Curves.Spline([820, 1210, 625, 1235, 430, 1260]),
+        new Phaser.Curves.Spline([980, 920, 1110, 1025, 1240, 1130]),
+      ]
       const path = this.add.tileSprite(0, 0, width, height, 'dirt-path').setOrigin(0).setDepth(-9)
       const maskShape = this.make.graphics({ x: 0, y: 0 }, false)
       maskShape.fillStyle(0xffffff)
@@ -817,48 +781,55 @@ export class WorldScene extends Phaser.Scene {
       return
     }
 
-    routes.forEach((route, routeIndex) => {
-      const divisions = Math.max(2, Math.ceil(route.getLength() / (routeIndex === 0 ? 155 : 125)))
+    if (!forestRegion) return
+    forestRegion.routes.forEach((layout) => {
+      const route = new Phaser.Curves.Spline(layout.points)
+      const divisions = Math.max(2, Math.ceil(route.getLength() / 145))
       const points = route.getSpacedPoints(divisions)
       points.forEach((point, index) => {
         const previous = points[Math.max(0, index - 1)]
         const next = points[Math.min(points.length - 1, index + 1)]
         const angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.Between(previous.x, previous.y, next.x, next.y))
         this.add.image(point.x, point.y, 'forest-path-wet-soil-overlay')
-          .setDisplaySize(routeIndex === 0 ? 260 : 210, routeIndex === 0 ? 98 : 78)
+          .setDisplaySize(layout.width, layout.height)
           .setAngle(angle)
-          .setAlpha(routeIndex === 0 ? 0.92 : 0.82)
+          .setAlpha(layout.alpha)
           .setDepth(-9)
       })
     })
 
-    this.add.image(620, 520, 'forest-moon-clearing-overlay')
-      .setDisplaySize(820, 820)
-      .setDepth(-8)
-
-    const mistBack = this.add.tileSprite(0, 0, width, height, 'forest-reverse-mist-back')
-      .setOrigin(0)
-      .setAlpha(0.11)
-      .setDepth(-7)
-    const mistMid = this.add.tileSprite(0, 0, width, height, 'forest-reverse-mist-mid')
-      .setOrigin(0)
-      .setAlpha(0.065)
-      .setDepth(-6)
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.tweens.add({
-        targets: mistBack,
-        tilePositionX: 1024,
-        tilePositionY: 260,
-        duration: 24_000,
-        repeat: -1,
-      })
-      this.tweens.add({
-        targets: mistMid,
-        tilePositionX: 1024,
-        tilePositionY: 340,
-        duration: 17_000,
-        repeat: -1,
-      })
-    }
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    forestRegion.decorations.forEach((layout) => {
+      const decoration = layout.tile
+        ? this.add.tileSprite(layout.x, layout.y, layout.width, layout.height, layout.texture)
+        : this.add.image(layout.x, layout.y, layout.texture).setDisplaySize(layout.width, layout.height)
+      decoration
+        .setAlpha(layout.alpha ?? 1)
+        .setAngle(layout.angle ?? 0)
+        .setDepth(layout.depth ?? layout.y)
+      this.environmentObjects.push(decoration)
+      if (layout.additive) decoration.setBlendMode(Phaser.BlendModes.ADD)
+      if (prefersReducedMotion || !layout.motion) return
+      if (layout.motion.type === 'tile' && decoration instanceof Phaser.GameObjects.TileSprite) {
+        this.tweens.add({
+          targets: decoration,
+          tilePositionX: layout.motion.x,
+          tilePositionY: layout.motion.y,
+          duration: layout.motion.duration,
+          repeat: -1,
+        })
+        return
+      }
+      if (layout.motion.type === 'pulse') {
+        this.tweens.add({
+          targets: decoration,
+          alpha: { from: layout.motion.from, to: layout.motion.to },
+          duration: layout.motion.duration,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1,
+        })
+      }
+    })
   }
 }

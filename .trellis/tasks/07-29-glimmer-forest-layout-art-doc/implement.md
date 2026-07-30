@@ -48,3 +48,15 @@
 - 资产变更限定在版本化 `glimmer-forest-v1` 美术源和 `public/assets/generated` 的森林子目录，用户原图保持不变。
 - 代码变更限定在资产准备脚本、`PreloadScene.ts` 和 `WorldScene.ts` 的森林分支；村庄布局与资源保持独立。
 - 回滚时先移除森林预加载与森林渲染分支，再移除版本化生成资产，不修改服务端数据。
+
+## 部分2至5运行时实现
+
+- [x] 新增 `024_glimmer_forest_regions.sql`，创建部分2至5、标记部分1并建立相邻双向门户。
+- [x] 扩展 `verify_schema.sql` 与 API 流程测试，验证五区域身份、连通关系、出生点和非相邻跳转拒绝。
+- [x] 扩展 `MapData.resource` 类型，加入 `region_key` 与 `region_name`。
+- [x] 新建森林区域配置模块，集中五套地表、路线、碰撞、装饰、特效和传送标记选择。
+- [x] 在 `PreloadScene.ts` 注册区域配置实际引用的版本化资产。
+- [x] 改造 `WorldScene.ts` 按 `region_key` 绘制区域，同时保留部分1剧情对象、植物避障和 reduced-motion 行为。
+- [x] 在 `GameShell.vue` 优先显示 `resource.region_name`，不修改数据库精确地图名。
+- [x] 执行客户端 type-check/build、后端全量 27 项测试、schema 验证和五地图浏览器截图验收。
+- [x] 对抗检查：未知 region_key 回退、出生点碰撞、反向门户连跳、前景遮挡、黑底/洋红边、透明叠层性能。
