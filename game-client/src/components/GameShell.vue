@@ -19,10 +19,14 @@ const nearPlant = ref<{ nodeId: string; name: string; rarity: string } | null>(n
 const nearEvidence = ref<{ evidenceId: string; name: string } | null>(null)
 const collectingPlant = ref<string | null>(null)
 const transitionTarget = ref('')
+const transitionActive = ref(false)
 const drawerOpen = ref(false)
 const pageActive = ref(!document.hidden && document.hasFocus())
 let world: WorldGame | null = null
 let saveTimer: number | null = null
+
+const MAP_TRANSITION_MIN_MS = 420
+const MAP_TRANSITION_SETTLE_MS = 180
 
 const hpPercent = computed(() => game.player ? Math.max(0, game.player.hp / 100 * 100) : 0)
 const isBattle = computed(() => Boolean(game.battle))
@@ -48,6 +52,7 @@ function currentWorldInputLock(): boolean {
     || openingDialogueActive.value
     || Boolean(collectingPlant.value)
     || game.mapLoading
+    || transitionActive.value
     || !pageActive.value
   )
 }
@@ -67,7 +72,7 @@ watch(isBattle, (next) => {
   }
 })
 
-watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival, openingDialogueActive, () => game.mapLoading, pageActive], () => {
+watch([() => Boolean(game.dialogNpc), drawerOpen, openingArrival, openingDialogueActive, () => game.mapLoading, transitionActive, pageActive], () => {
   setWorldInputLock(currentWorldInputLock())
 })
 
@@ -121,18 +126,24 @@ const onPlantInteract = async ({ nodeId }: { nodeId: string; name: string }): Pr
   }
 }
 const onPortalInteract = async ({ mapId, name }: { mapId: number; name: string }): Promise<void> => {
-  if (game.mapLoading) return
+  if (game.mapLoading || transitionActive.value) return
   if (saveTimer) {
     window.clearTimeout(saveTimer)
     saveTimer = null
   }
   transitionTarget.value = name
+  transitionActive.value = true
   setWorldInputLock(true)
+  const startedAt = performance.now()
   try {
+    await nextTick()
     await game.enterMap(mapId)
     if (game.map && game.player) world?.changeMap(game.map, game.player)
+    const remaining = Math.max(0, MAP_TRANSITION_MIN_MS - (performance.now() - startedAt))
+    await new Promise<void>((resolve) => window.setTimeout(resolve, remaining + MAP_TRANSITION_SETTLE_MS))
   } catch { /* store presents the error */ }
   finally {
+    transitionActive.value = false
     setWorldInputLock(currentWorldInputLock())
   }
 }
@@ -282,10 +293,17 @@ onBeforeUnmount(() => {
       @battle="beginBattle"
     />
     <CollectionDrawer v-if="drawerOpen" @close="drawerOpen = false" />
-    <div v-if="game.mapLoading" class="map-transition" role="status" aria-live="polite">
-      <div class="loader" />
-      <strong>正在前往{{ transitionTarget }}</strong>
-    </div>
+    <Teleport to="body">
+      <Transition name="map-transition">
+        <div v-if="transitionActive" class="map-transition" role="status" aria-live="polite" aria-busy="true">
+          <div class="map-transition-content">
+            <div class="loader" aria-hidden="true" />
+            <span>正在前往</span>
+            <strong>{{ transitionTarget || '新的区域' }}</strong>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
     <p v-if="game.error" class="toast error" role="alert">{{ game.error }}</p>
     <p v-if="game.notice" class="toast" role="status">{{ game.notice }}</p>
   </section>
