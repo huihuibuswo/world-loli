@@ -22,6 +22,7 @@ export type ForestGroundLayer = {
   tile?: boolean
   width?: number
   height?: number
+  tilePosition?: ForestPoint
   depthRole: 'ground-decal' | 'underlay'
 }
 
@@ -45,6 +46,8 @@ export type ForestProp = {
   angle?: number
   alpha?: number
   additive?: boolean
+  minimapVisible?: boolean
+  depth?: number
   depthRole: ForestDepthRole
   alphaFootpoint?: {
     sourceHeight: number
@@ -303,11 +306,18 @@ export function resolveForestVisibleFootY(visual: ForestProp): number | undefine
 }
 
 export function resolveForestVisualDepth(visual: ForestProp): number {
+  if (visual.depth !== undefined) return visual.depth
   if (visual.depthRole === 'ground-decal') return -8
   if (visual.depthRole === 'underlay') return -6
   if (visual.depthRole === 'effect') return 7_000
   if (visual.depthRole === 'foreground') return 8_000
   return resolveForestVisibleFootY(visual) ?? visual.y
+}
+
+export function isForestVisualVisibleOnMinimap(visual: ForestProp): boolean {
+  return visual.minimapVisible !== false
+    && visual.depthRole !== 'effect'
+    && visual.depthRole !== 'foreground'
 }
 
 type ForestVisualMap = ReadonlyMap<string, ForestProp>
@@ -336,16 +346,64 @@ const PART_1_COLLIDERS: ForestCollider[] = [
 ]
 
 const PART_2_PATHS = [
-  path('p2-main', 'main', [[280, 1700], [470, 1540], [660, 1380], [820, 1190], [1030, 1040], [1220, 850], [1420, 660], [1640, 430], [1840, 260]], 260, 0.82),
-  path('p2-wetland', 'branch', [[660, 1380], [520, 1120], [500, 820], [620, 760]], 190, 0.64),
+  path('p2-main', 'main', [[280, 1700], [500, 1510], [710, 1330], [870, 1160], [1030, 1040], [1180, 900], [1420, 660], [1650, 430], [1840, 260]], 260, 0.76),
+  path('p2-wetland', 'branch', [[710, 1330], [560, 1180], [470, 960], [500, 820], [540, 720], [700, 640], [900, 720], [1180, 900]], 190, 0.62),
 ]
-const p2Banks = [[250, 470, 24], [520, 620, 28], [760, 770, 31], [1280, 1130, 28], [1610, 1320, 22], [210, 680, 24], [500, 830, 29], [760, 990, 32], [1420, 1450, 27], [1760, 1590, 18]].map(([x, y, angle], index) => prop(`p2-bank-${index + 1}`, `forest-region-part-2-bank-${String(index + 1).padStart(2, '0')}`, x, y, 270, 190, 'ground-decal', angle))
-const p2Foliage = [[300, 760], [560, 930], [720, 600], [1260, 1320], [1540, 1180], [1780, 1480]].map(([x, y], index) => prop(`p2-foliage-${index + 1}`, `forest-region-part-2-foliage-${String(index + 1).padStart(2, '0')}`, x, y, 120, 120, 'underlay'))
+
+const part2WaterSegment = (id: string, x: number, y: number, width: number, height: number, angle: number, alpha: number): ForestProp => ({
+  ...prop(id, 'forest-region-part-2-water-flow', x, y, width, height, 'ground-decal', angle),
+  alpha,
+  depth: -6.8,
+})
+const PART_2_WATER_SEGMENTS: ForestProp[] = [
+  part2WaterSegment('p2-water-01', 235, 585, 330, 220, 28, 0.7),
+  part2WaterSegment('p2-water-02', 500, 710, 350, 225, 24, 0.68),
+  part2WaterSegment('p2-water-03', 765, 845, 360, 230, 31, 0.7),
+  part2WaterSegment('p2-water-04', 1030, 1020, 370, 240, 35, 0.72),
+  part2WaterSegment('p2-water-05', 1320, 1210, 400, 245, 32, 0.7),
+  part2WaterSegment('p2-water-06', 1635, 1400, 410, 240, 25, 0.68),
+  part2WaterSegment('p2-water-07', 1900, 1515, 320, 220, 16, 0.66),
+]
+
+const PART_2_BANKS: ForestProp[] = [
+  prop('p2-bank-01', 'forest-region-part-2-bank-01', 300, 610, 300, 180, 'ground-decal', 24),
+  prop('p2-bank-02', 'forest-region-part-2-bank-02', 760, 845, 300, 190, 'ground-decal', 28),
+  prop('p2-bank-03', 'forest-region-part-2-bank-03', 1320, 1200, 320, 230, 'ground-decal', 18),
+  prop('p2-bank-04', 'forest-region-part-2-bank-04', 1640, 1390, 310, 220, 'ground-decal', 18),
+  prop('p2-bank-05', 'forest-region-part-2-bank-05', 1900, 1500, 280, 180, 'ground-decal', 8),
+  prop('p2-bank-06', 'forest-region-part-2-bank-06', 160, 560, 190, 260, 'ground-decal', 18),
+  prop('p2-bank-07', 'forest-region-part-2-bank-07', 540, 720, 320, 170, 'ground-decal', -24),
+  prop('p2-bank-09', 'forest-region-part-2-bank-09', 1030, 1040, 390, 190, 'ground-decal', -42),
+  prop('p2-bank-10', 'forest-region-part-2-bank-10', 620, 760, 250, 200, 'ground-decal', -10),
+].map((item) => ({ ...item, depth: -6.6 }))
+
+const PART_2_FOLIAGE: ForestProp[] = [
+  prop('p2-foliage-01', 'forest-region-part-2-foliage-01', 260, 780, 90, 150, 'underlay', -8),
+  prop('p2-foliage-02', 'forest-region-part-2-foliage-02', 340, 400, 95, 155, 'underlay', 7),
+  prop('p2-foliage-03', 'forest-region-part-2-foliage-03', 1360, 1540, 145, 110, 'underlay', -12),
+  prop('p2-foliage-04', 'forest-region-part-2-foliage-04', 1220, 1320, 100, 160, 'underlay', 9),
+  prop('p2-foliage-05', 'forest-region-part-2-foliage-05', 1510, 1160, 150, 120, 'underlay', -6),
+  prop('p2-foliage-06', 'forest-region-part-2-foliage-06', 1770, 1640, 90, 155, 'underlay', 11),
+].map((item) => ({ ...item, minimapVisible: false }))
+
+const PART_2_BRIDGES: ForestLandmark[] = [
+  prop('p2-main-bridge', 'forest-region-part-2-bridge-diagonal', 1030, 1040, 430, 286, 'underlay', -6),
+  prop('p2-shoal-bridge', 'forest-region-part-2-bridge-horizontal', 540, 720, 360, 240, 'underlay', -24),
+]
+
 const PART_2_COLLIDERS: ForestCollider[] = [
-  rect('p2-water-n1', 'north bank 1', 330, 555, 250, 54, 'water'), rect('p2-water-n2', 'north bank 2', 590, 690, 250, 54, 'water'), rect('p2-water-n3', 'north bank 3', 790, 820, 190, 52, 'water'),
-  rect('p2-water-n4', 'north bank 4', 1280, 1160, 230, 52, 'water'), rect('p2-water-n5', 'north bank 5', 1530, 1320, 240, 52, 'water'), rect('p2-water-n6', 'north bank 6', 1810, 1480, 260, 52, 'water'),
-  rect('p2-water-s1', 'south bank 1', 250, 725, 220, 54, 'water'), rect('p2-water-s2', 'south bank 2', 520, 865, 230, 54, 'water'), rect('p2-water-s3', 'south bank 3', 760, 1010, 180, 52, 'water'),
-  rect('p2-water-s4', 'south bank 4', 1370, 1390, 230, 52, 'water'), rect('p2-water-s5', 'south bank 5', 1650, 1530, 240, 52, 'water'), rect('p2-water-s6', 'south bank 6', 1930, 1600, 210, 52, 'water'),
+  rect('p2-water-block-01', 'water block 01', 190, 555, 170, 150, 'water'),
+  rect('p2-water-block-02', 'water block 02', 335, 635, 170, 150, 'water'),
+  rect('p2-water-block-03', 'water block 03', 700, 805, 160, 150, 'water'),
+  rect('p2-water-block-04', 'water block 04', 825, 875, 160, 150, 'water'),
+  rect('p2-water-block-05', 'water block 05', 890, 930, 140, 140, 'water'),
+  rect('p2-water-block-06', 'water block 06', 1190, 1130, 160, 160, 'water'),
+  rect('p2-water-block-07', 'water block 07', 1310, 1210, 170, 160, 'water'),
+  rect('p2-water-block-08', 'water block 08', 1440, 1295, 170, 160, 'water'),
+  rect('p2-water-block-09', 'water block 09', 1570, 1370, 170, 155, 'water'),
+  rect('p2-water-block-10', 'water block 10', 1700, 1440, 180, 150, 'water'),
+  rect('p2-water-block-11', 'water block 11', 1830, 1490, 180, 145, 'water'),
+  rect('p2-water-block-12', 'water block 12', 1960, 1530, 180, 140, 'water'),
 ]
 
 const PART_3_PATHS = [
@@ -488,20 +546,28 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
     key: 'glimmer_forest_part_2',
     groundLayers: [
       { id: 'p2-ground', texture: 'forest-region-part-2-ground-1', tile: true, depthRole: 'underlay' },
-      { id: 'p2-ground-variant', texture: 'forest-region-part-2-ground-2', tile: true, alpha: 0.3, depthRole: 'underlay' },
-      { id: 'p2-macro', texture: 'forest-region-part-2-macro', width: 2048, height: 2048, alpha: 0.34, depthRole: 'ground-decal' },
-      { id: 'p2-stream', texture: 'forest-region-part-2-water-flow', x: 1040, y: 1040, angle: 28, width: 2100, height: 260, alpha: 0.82, depthRole: 'ground-decal' },
+      { id: 'p2-ground-variant', texture: 'forest-region-part-2-ground-2', tile: true, tilePosition: point(384, 256), alpha: 0.22, depthRole: 'underlay' },
+      { id: 'p2-macro', texture: 'forest-region-part-2-macro', width: 2048, height: 2048, alpha: 0.24, depthRole: 'ground-decal' },
     ],
     paths: PART_2_PATHS,
-    props: [...p2Banks, ...p2Foliage],
+    props: [...PART_2_WATER_SEGMENTS, ...PART_2_BANKS, ...PART_2_FOLIAGE],
     colliders: PART_2_COLLIDERS,
-    landmarks: [prop('p2-main-bridge', 'forest-region-part-2-bridge-diagonal', 1030, 1040, 430, 286, 'canopy', -6), prop('p2-shoal-bridge', 'forest-region-part-2-bridge-horizontal', 540, 720, 360, 240, 'canopy')],
+    landmarks: PART_2_BRIDGES,
     effects: [
-      { ...prop('p2-mist-fall', 'forest-region-part-2-reverse-mist-fall', 1710, 390, 520, 300, 'effect'), alpha: 0.5, additive: true, motion: { type: 'pulse', from: 0.32, to: 0.58, duration: 3600 } },
-      { ...prop('p2-reflection', 'forest-region-part-2-wetland-reflection', 1050, 1080, 1080, 420, 'effect'), alpha: 0.32, additive: true },
+      { ...prop('p2-mist-fall', 'forest-region-part-2-reverse-mist-fall', 1710, 390, 520, 300, 'effect'), alpha: 0.38, additive: true, minimapVisible: false, motion: { type: 'pulse', from: 0.32, to: 0.5, duration: 3600 } },
+      { ...prop('p2-reflection-01', 'forest-region-part-2-wetland-reflection', 430, 690, 280, 105, 'effect', 24), alpha: 0.18, additive: true, minimapVisible: false },
+      { ...prop('p2-reflection-02', 'forest-region-part-2-wetland-reflection', 790, 880, 320, 110, 'effect', 31), alpha: 0.2, additive: true, minimapVisible: false },
+      { ...prop('p2-reflection-03', 'forest-region-part-2-wetland-reflection', 1320, 1210, 360, 115, 'effect', 32), alpha: 0.18, additive: true, minimapVisible: false },
+      { ...prop('p2-reflection-04', 'forest-region-part-2-wetland-reflection', 1740, 1460, 300, 100, 'effect', 21), alpha: 0.16, additive: true, minimapVisible: false },
     ],
     foreground: [],
-    safeZones: commonPartZones(2),
+    safeZones: [
+      ...commonPartZones(2),
+      zone('p2-main-bridge-southwest', 'performance', 900, 1160, 220, 180),
+      zone('p2-main-bridge-northeast', 'performance', 1160, 900, 220, 180),
+      zone('p2-shoal-bridge-south', 'performance', 500, 820, 190, 160),
+      zone('p2-shoal-bridge-north', 'performance', 700, 640, 190, 160),
+    ],
   }),
   glimmer_forest_part_3: region({
     key: 'glimmer_forest_part_3',

@@ -7,6 +7,7 @@ import { Player } from '@/game/entities/Player'
 import { resolveMinimapLayout } from '@/game/minimapLayout'
 import {
   getForestRegionConfig,
+  isForestVisualVisibleOnMinimap,
   resolveForestVisualDepth,
   validateForestRegionConfig,
   type ForestCollider,
@@ -969,6 +970,9 @@ export class WorldScene extends Phaser.Scene {
         .setAlpha(layout.alpha ?? 1)
         .setAngle(positioned.angle ?? 0)
         .setDepth(-10 + index * 0.35)
+      if (ground instanceof Phaser.GameObjects.TileSprite && layout.tilePosition) {
+        ground.setTilePosition(layout.tilePosition.x, layout.tilePosition.y)
+      }
       this.environmentObjects.push(ground)
     })
 
@@ -991,7 +995,7 @@ export class WorldScene extends Phaser.Scene {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ;[...forestRegion.props, ...forestRegion.landmarks].forEach((layout) => {
-      this.createForestVisual(layout)
+      this.createForestVisual(layout, !isForestVisualVisibleOnMinimap(layout))
     })
     forestRegion.effects.forEach((layout) => {
       const object = this.createForestVisual(layout, true)
