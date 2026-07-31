@@ -40,13 +40,28 @@ services:
 
   api:
     build:
-      context: .
+      context: ../server-rust
     container_name: world-api
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      BIND_ADDRESS: 0.0.0.0:8000
     ports:
       - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api-python:
+    profiles: ["python-fallback"]
+    image: world-loli-api-python:pre-rust-cutover-20260730
+    container_name: world-api-python
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${PYTHON_FALLBACK_PORT:-8001}:8000"
     depends_on:
       migrate:
         condition: service_completed_successfully
