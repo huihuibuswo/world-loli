@@ -7,6 +7,7 @@ import { Player } from '@/game/entities/Player'
 import { resolveMinimapLayout } from '@/game/minimapLayout'
 import {
   getForestRegionConfig,
+  resolveForestVisualDepth,
   validateForestRegionConfig,
   type ForestCollider,
   type ForestEffect,
@@ -594,7 +595,7 @@ export class WorldScene extends Phaser.Scene {
         compact: window.innerWidth <= 640,
       })
       minimap.setViewport(layout.cameraX, layout.cameraY, layout.cameraWidth, layout.cameraHeight)
-      minimap.setZoom(Math.min(layout.cameraWidth / width, layout.cameraHeight / height) * 0.94)
+      minimap.setZoom(Math.min(layout.cameraWidth / width, layout.cameraHeight / height))
       minimap.setVisible(true)
       return true
     }
@@ -858,11 +859,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private forestDepth(layout: ForestProp): number {
-    if (layout.depthRole === 'ground-decal') return -8
-    if (layout.depthRole === 'underlay') return -6
-    if (layout.depthRole === 'effect') return 7_000
-    if (layout.depthRole === 'foreground') return 8_000
-    return layout.y
+    return resolveForestVisualDepth(layout)
   }
 
   private createForestVisual(

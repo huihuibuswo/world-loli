@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
+import { resolveActorFootDepth } from '../src/game/depthSorting.ts'
 import {
   FOREST_REGION_ASSET_ROOT,
   FOREST_REGION_ASSETS,
@@ -10,6 +11,8 @@ import {
   FOREST_REGIONS,
   FOREST_REGION_RUNTIME_ASSETS,
   getForestRegionConfig,
+  resolveForestVisibleFootY,
+  resolveForestVisualDepth,
   validateForestRegionConfig,
 } from '../src/game/forestRegions.ts'
 import { resolveMinimapLayout } from '../src/game/minimapLayout.ts'
@@ -143,6 +146,66 @@ test('safe zones remain clear and water banks are visual-only props', () => {
     const region = FOREST_REGIONS[key]
     assert.equal(validateForestRegionConfig(region).filter((problem) => problem.includes('safe zone')).length, 0)
   })
+})
+
+test('visual colliders across all forest regions do not extend below alpha footpoints', () => {
+  FOREST_REGION_KEYS.forEach((key) => {
+    const region = FOREST_REGIONS[key]
+    const visuals = new Map([...region.props, ...region.landmarks].map((item) => [item.id, item]))
+
+    region.colliders.forEach((collider) => {
+      if (!collider.visualRef) return
+      const visual = visuals.get(collider.visualRef)
+      assert.ok(visual, `${key}/${collider.visualRef}`)
+      const visibleFootY = resolveForestVisibleFootY(visual)
+      assert.notEqual(visibleFootY, undefined, `${key}/${collider.visualRef}`)
+      const halfHeight = collider.shape === 'circle' ? collider.radius ?? 0 : (collider.height ?? 0) / 2
+      assert.ok(
+        collider.y + halfHeight <= visibleFootY! + 0.01,
+        `${key}/${collider.id} extends below ${collider.visualRef} visible footpoint`,
+      )
+    })
+  })
+})
+
+test('all sortable forest props have alpha footpoints', () => {
+  FOREST_REGION_KEYS.forEach((key) => {
+    const sortable = [...FOREST_REGIONS[key].props, ...FOREST_REGIONS[key].landmarks]
+      .filter((item) => item.depthRole === 'world' || item.depthRole === 'canopy')
+    sortable.forEach((item) => assert.ok(item.alphaFootpoint, `${key}/${item.id}`))
+  })
+})
+
+test('rock collider covers the wider visible base instead of only its center', () => {
+  const rock = FOREST_REGIONS.glimmer_forest_part_1.colliders.find((item) => item.id === 'p1-rock-body')!
+  assert.equal(rock.shape, 'rect')
+  assert.equal(rock.width, 120)
+  assert.equal(rock.height, 62)
+})
+
+test('actor sorting uses the collision foot rather than the sprite center', () => {
+  assert.equal(resolveActorFootDepth(1_500, 17, 20), 1_537)
+  assert.equal(resolveActorFootDepth(1_500, 34, 18), 1_552)
+})
+
+test('forest visual depth uses the same visible footpoint as collision sorting', () => {
+  const part1 = FOREST_REGIONS.glimmer_forest_part_1
+  const visual = part1.props.find((item) => item.id === 'p1-tree-a1')!
+  const visibleFootY = resolveForestVisibleFootY(visual)!
+  const visualDepth = resolveForestVisualDepth(visual)
+  const playerAboveDepth = visibleFootY - 1
+  const playerBelowDepth = visibleFootY + 1
+
+  assert.equal(visualDepth, visibleFootY)
+  assert.ok(visibleFootY < visual.y)
+  assert.ok(playerAboveDepth < visualDepth, 'the prop must cover a player above its visible footpoint')
+  assert.ok(playerBelowDepth > visualDepth, 'the player must cover the prop below its visible footpoint')
+
+  assert.equal(resolveForestVisualDepth({ ...visual, alphaFootpoint: undefined }), visual.y)
+  assert.equal(resolveForestVisualDepth({ ...visual, depthRole: 'ground-decal' }), -8)
+  assert.equal(resolveForestVisualDepth({ ...visual, depthRole: 'underlay' }), -6)
+  assert.equal(resolveForestVisualDepth({ ...visual, depthRole: 'effect' }), 7_000)
+  assert.equal(resolveForestVisualDepth({ ...visual, depthRole: 'foreground' }), 8_000)
 })
 
 test('falls back to part 1 for an absent or unknown persisted region key', () => {

@@ -46,6 +46,10 @@ export type ForestProp = {
   alpha?: number
   additive?: boolean
   depthRole: ForestDepthRole
+  alphaFootpoint?: {
+    sourceHeight: number
+    alphaBottom: number
+  }
 }
 
 export type ForestCollider = {
@@ -200,6 +204,50 @@ for (let index = 1; index <= 5; index += 1) {
 }
 
 const point = (x: number, y: number): ForestPoint => ({ x, y })
+const FOREST_ALPHA_FOOTPOINTS: Readonly<Record<string, ForestProp['alphaFootpoint']>> = {
+  'forest-ancient-moon-tree': { sourceHeight: 1024, alphaBottom: 846 },
+  'forest-tree-common-a': { sourceHeight: 640, alphaBottom: 572 },
+  'forest-tree-common-b': { sourceHeight: 640, alphaBottom: 589 },
+  'forest-tree-common-c': { sourceHeight: 640, alphaBottom: 582 },
+  'forest-tree-common-d': { sourceHeight: 640, alphaBottom: 556 },
+  'forest-tree-common-e': { sourceHeight: 640, alphaBottom: 566 },
+  'forest-root-obstacle-a': { sourceHeight: 512, alphaBottom: 471 },
+  'forest-root-obstacle-b': { sourceHeight: 512, alphaBottom: 475 },
+  'forest-root-obstacle-c': { sourceHeight: 512, alphaBottom: 463 },
+  'forest-root-obstacle-d': { sourceHeight: 512, alphaBottom: 453 },
+  'forest-rock-cluster': { sourceHeight: 512, alphaBottom: 465 },
+  'forest-hollow-stump': { sourceHeight: 512, alphaBottom: 447 },
+  'forest-stump-cold': { sourceHeight: 512, alphaBottom: 414 },
+  'forest-fallen-log': { sourceHeight: 512, alphaBottom: 426 },
+  'forest-region-part-2-bridge-horizontal': { sourceHeight: 438, alphaBottom: 426 },
+  'forest-region-part-2-bridge-diagonal': { sourceHeight: 438, alphaBottom: 426 },
+  'forest-region-part-3-ruin-01': { sourceHeight: 262, alphaBottom: 250 },
+  'forest-region-part-3-ruin-02': { sourceHeight: 248, alphaBottom: 236 },
+  'forest-region-part-3-ruin-03': { sourceHeight: 235, alphaBottom: 223 },
+  'forest-region-part-3-ruin-04': { sourceHeight: 253, alphaBottom: 241 },
+  'forest-region-part-3-ruin-05': { sourceHeight: 251, alphaBottom: 239 },
+  'forest-region-part-3-ruin-06': { sourceHeight: 188, alphaBottom: 176 },
+  'forest-region-part-3-ruin-07': { sourceHeight: 254, alphaBottom: 242 },
+  'forest-region-part-3-ruin-08': { sourceHeight: 77, alphaBottom: 65 },
+  'forest-region-part-3-ruin-09': { sourceHeight: 204, alphaBottom: 192 },
+  'forest-region-part-3-ruin-10': { sourceHeight: 291, alphaBottom: 279 },
+  'forest-region-part-3-root-arch': { sourceHeight: 734, alphaBottom: 722 },
+  'forest-region-part-3-root-gate-open': { sourceHeight: 638, alphaBottom: 626 },
+  'forest-region-part-3-clue-idle': { sourceHeight: 335, alphaBottom: 323 },
+  'forest-region-part-3-clue-active': { sourceHeight: 335, alphaBottom: 323 },
+  'forest-region-part-4-corridor-left-45': { sourceHeight: 709, alphaBottom: 697 },
+  'forest-region-part-4-corridor-right-45': { sourceHeight: 406, alphaBottom: 394 },
+  'forest-region-part-5-wall-01': { sourceHeight: 812, alphaBottom: 800 },
+  'forest-region-part-5-wall-02': { sourceHeight: 807, alphaBottom: 795 },
+  'forest-region-part-5-wall-03': { sourceHeight: 805, alphaBottom: 793 },
+  'forest-region-part-5-tree-01': { sourceHeight: 440, alphaBottom: 428 },
+  'forest-region-part-5-tree-02': { sourceHeight: 444, alphaBottom: 432 },
+  'forest-region-part-5-tree-03': { sourceHeight: 502, alphaBottom: 490 },
+  'forest-region-part-5-tree-04': { sourceHeight: 440, alphaBottom: 428 },
+  'forest-region-part-5-tree-05': { sourceHeight: 437, alphaBottom: 425 },
+  'forest-region-part-5-landmark': { sourceHeight: 716, alphaBottom: 704 },
+  'forest-region-part-5-stable-exit': { sourceHeight: 536, alphaBottom: 524 },
+}
 const path = (id: string, role: ForestPath['role'], coordinates: readonly [number, number][], width: number, alpha = 0.72): ForestPath => ({
   id,
   role,
@@ -218,6 +266,7 @@ const prop = (id: string, texture: string, x: number, y: number, width: number, 
   depthRole,
   angle,
   origin: ['ground-decal', 'underlay', 'effect', 'foreground'].includes(depthRole) ? point(0.5, 0.5) : point(0.5, 1),
+  alphaFootpoint: FOREST_ALPHA_FOOTPOINTS[texture],
 })
 const rect = (id: string, debugLabel: string, x: number, y: number, width: number, height: number, role: ForestCollider['role'], visualRef?: string): ForestCollider => ({ id, debugLabel, shape: 'rect', x, y, width, height, role, visualRef })
 const circle = (id: string, debugLabel: string, x: number, y: number, radius: number, role: ForestCollider['role'], visualRef?: string): ForestCollider => ({ id, debugLabel, shape: 'circle', x, y, radius, role, visualRef })
@@ -237,17 +286,53 @@ const PART_1_PROPS: ForestProp[] = [
   prop('p1-tree-e1', 'forest-tree-common-e', 1880, 820, 350, 370), prop('p1-tree-e2', 'forest-tree-common-e', 210, 1580, 360, 380),
   prop('p1-root-a', 'forest-root-obstacle-a', 1160, 650, 200, 180), prop('p1-root-b', 'forest-root-obstacle-b', 1510, 870, 210, 190),
   prop('p1-root-c', 'forest-root-obstacle-c', 700, 1240, 200, 180), prop('p1-root-d', 'forest-root-obstacle-d', 420, 1390, 210, 190),
-  prop('p1-rock', 'forest-rock-cluster', 1160, 1560, 150, 150), prop('p1-hollow', 'forest-hollow-stump', 350, 790, 150, 150),
+  prop('p1-rock', 'forest-rock-cluster', 1160, 1560, 150, 150), prop('p1-hollow', 'forest-hollow-stump', 320, 790, 150, 150),
   prop('p1-stump', 'forest-stump-cold', 1570, 540, 140, 140), prop('p1-log', 'forest-fallen-log', 900, 1500, 210, 160),
 ]
 
+const PART_1_LANDMARKS: ForestLandmark[] = [
+  { ...prop('p1-ancient-tree', 'forest-ancient-moon-tree', 620, 440, 570, 620, 'canopy'), interactionClearance: { width: 260, height: 220 } },
+  { ...prop('p1-clearing', 'forest-moon-clearing-overlay', 620, 520, 700, 620, 'ground-decal'), origin: point(0.5, 0.5) },
+  { ...prop('p1-moon-mark', 'forest-broken-moon-mark', 620, 474, 118, 118, 'underlay'), additive: true, alpha: 0.46, origin: point(0.5, 0.5) },
+]
+
+export function resolveForestVisibleFootY(visual: ForestProp): number | undefined {
+  if (!visual.alphaFootpoint) return undefined
+  const { sourceHeight, alphaBottom } = visual.alphaFootpoint
+  return visual.y - visual.height * (1 - alphaBottom / sourceHeight)
+}
+
+export function resolveForestVisualDepth(visual: ForestProp): number {
+  if (visual.depthRole === 'ground-decal') return -8
+  if (visual.depthRole === 'underlay') return -6
+  if (visual.depthRole === 'effect') return 7_000
+  if (visual.depthRole === 'foreground') return 8_000
+  return resolveForestVisibleFootY(visual) ?? visual.y
+}
+
+type ForestVisualMap = ReadonlyMap<string, ForestProp>
+function requireVisibleVisual(visuals: ForestVisualMap, id: string): ForestProp {
+  const visual = visuals.get(id)
+  if (!visual || resolveForestVisibleFootY(visual) === undefined) throw new Error(`Missing visual footprint: ${id}`)
+  return visual
+}
+function circleAtVisibleFoot(visuals: ForestVisualMap, id: string, debugLabel: string, visualId: string, radius: number, role: ForestCollider['role'], x?: number): ForestCollider {
+  const visual = requireVisibleVisual(visuals, visualId)
+  return circle(id, debugLabel, x ?? visual.x, resolveForestVisibleFootY(visual)! - radius, radius, role, visualId)
+}
+function rectAtVisibleFoot(visuals: ForestVisualMap, id: string, debugLabel: string, visualId: string, width: number, height: number, role: ForestCollider['role'], x?: number): ForestCollider {
+  const visual = requireVisibleVisual(visuals, visualId)
+  return rect(id, debugLabel, x ?? visual.x, resolveForestVisibleFootY(visual)! - height / 2, width, height, role, visualId)
+}
+
+const part1VisualsById = new Map([...PART_1_PROPS, ...PART_1_LANDMARKS].map((item) => [item.id, item]))
 const PART_1_COLLIDERS: ForestCollider[] = [
   rect('p1-ancient-trunk', 'ancient moon tree trunk', 620, 260, 116, 76, 'landmark', 'p1-ancient-tree'),
-  ...PART_1_PROPS.filter((item) => item.id.startsWith('p1-tree')).map((item) => circle(`${item.id}-trunk`, `${item.id} trunk`, item.x, item.y - 18, 34, 'trunk', item.id)),
-  rect('p1-root-a-body', 'northeast root A', 1160, 650, 132, 46, 'boundary', 'p1-root-a'), rect('p1-root-b-body', 'northeast root B', 1510, 870, 138, 48, 'boundary', 'p1-root-b'),
-  rect('p1-root-c-body', 'investigation root C', 700, 1240, 130, 44, 'boundary', 'p1-root-c'), rect('p1-root-d-body', 'investigation root D', 420, 1390, 136, 46, 'boundary', 'p1-root-d'),
-  circle('p1-rock-body', 'rock cluster base', 1160, 1560, 38, 'landmark', 'p1-rock'), circle('p1-hollow-body', 'hollow stump base', 350, 790, 34, 'landmark', 'p1-hollow'),
-  circle('p1-stump-body', 'cold stump base', 1570, 540, 32, 'landmark', 'p1-stump'), rect('p1-log-body', 'fallen log body', 900, 1500, 154, 42, 'boundary', 'p1-log'),
+  ...PART_1_PROPS.filter((item) => item.id.startsWith('p1-tree')).map((item) => circleAtVisibleFoot(part1VisualsById, `${item.id}-trunk`, `${item.id} trunk`, item.id, 34, 'trunk')),
+  rectAtVisibleFoot(part1VisualsById, 'p1-root-a-body', 'northeast root A', 'p1-root-a', 132, 46, 'boundary'), rectAtVisibleFoot(part1VisualsById, 'p1-root-b-body', 'northeast root B', 'p1-root-b', 138, 48, 'boundary'),
+  rectAtVisibleFoot(part1VisualsById, 'p1-root-c-body', 'investigation root C', 'p1-root-c', 130, 44, 'boundary'), rectAtVisibleFoot(part1VisualsById, 'p1-root-d-body', 'investigation root D', 'p1-root-d', 136, 46, 'boundary'),
+  rectAtVisibleFoot(part1VisualsById, 'p1-rock-body', 'rock cluster base', 'p1-rock', 120, 62, 'landmark'), circleAtVisibleFoot(part1VisualsById, 'p1-hollow-body', 'hollow stump base', 'p1-hollow', 34, 'landmark'),
+  circleAtVisibleFoot(part1VisualsById, 'p1-stump-body', 'cold stump base', 'p1-stump', 32, 'landmark'), rectAtVisibleFoot(part1VisualsById, 'p1-log-body', 'fallen log body', 'p1-log', 154, 42, 'boundary'),
 ]
 
 const PART_2_PATHS = [
@@ -269,14 +354,23 @@ const PART_3_PATHS = [
 ]
 const ruinPositions = [[500, 1190], [470, 920], [620, 680], [840, 520], [1220, 520], [1450, 690], [1580, 940], [1500, 1240], [1200, 1460], [760, 1440]]
 const PART_3_PROPS = ruinPositions.map(([x, y], index) => prop(`p3-ruin-${index + 1}`, `forest-region-part-3-ruin-${String(index + 1).padStart(2, '0')}`, x, y, index % 3 === 0 ? 240 : 210, index % 3 === 0 ? 230 : 190))
+const PART_3_LANDMARKS: ForestLandmark[] = [
+  { ...prop('p3-root-arch', 'forest-region-part-3-root-arch', 1030, 680, 600, 600, 'canopy'), interactionClearance: { width: 180, height: 220 } },
+  prop('p3-root-gate', 'forest-region-part-3-root-gate-open', 1770, 350, 440, 440, 'canopy'),
+  prop('p3-clue-idle', 'forest-region-part-3-clue-idle', 680, 1060, 190, 190),
+  prop('p3-clue-active', 'forest-region-part-3-clue-active', 1430, 980, 190, 190),
+]
+const part3VisualsById = new Map([...PART_3_PROPS, ...PART_3_LANDMARKS].map((item) => [item.id, item]))
 const PART_3_COLLIDERS: ForestCollider[] = [
-  circle('p3-ruin-1-body', 'west entrance pillar', 500, 1190, 30, 'ruin', 'p3-ruin-1'), rect('p3-ruin-2-body', 'west low wall', 470, 920, 104, 38, 'ruin', 'p3-ruin-2'),
-  circle('p3-ruin-3-body', 'northwest rubble', 620, 680, 28, 'ruin', 'p3-ruin-3'), rect('p3-ruin-4-body', 'north wall left', 840, 520, 112, 38, 'ruin', 'p3-ruin-4'),
-  rect('p3-ruin-5-body', 'north wall right', 1220, 520, 112, 38, 'ruin', 'p3-ruin-5'), circle('p3-ruin-6-body', 'northeast pillar', 1450, 690, 30, 'ruin', 'p3-ruin-6'),
-  rect('p3-ruin-7-body', 'east low wall', 1580, 940, 106, 38, 'ruin', 'p3-ruin-7'), circle('p3-ruin-8-body', 'southeast rubble', 1500, 1240, 28, 'ruin', 'p3-ruin-8'),
-  rect('p3-ruin-9-body', 'south low wall', 1200, 1460, 108, 38, 'ruin', 'p3-ruin-9'), circle('p3-ruin-10-body', 'southwest pillar', 760, 1440, 30, 'ruin', 'p3-ruin-10'),
-  rect('p3-arch-left', 'root arch left foot', 930, 680, 58, 82, 'landmark', 'p3-root-arch'), rect('p3-arch-right', 'root arch right foot', 1130, 680, 58, 82, 'landmark', 'p3-root-arch'),
-  rect('p3-gate-left', 'exit gate left foot', 1600, 350, 48, 72, 'landmark', 'p3-root-gate'), rect('p3-gate-right', 'exit gate right foot', 1720, 350, 48, 72, 'landmark', 'p3-root-gate'),
+  circleAtVisibleFoot(part3VisualsById, 'p3-ruin-1-body', 'west entrance pillar', 'p3-ruin-1', 30, 'ruin'), rectAtVisibleFoot(part3VisualsById, 'p3-ruin-2-body', 'west low wall', 'p3-ruin-2', 104, 38, 'ruin'),
+  circleAtVisibleFoot(part3VisualsById, 'p3-ruin-3-body', 'northwest rubble', 'p3-ruin-3', 28, 'ruin'), rectAtVisibleFoot(part3VisualsById, 'p3-ruin-4-body', 'north wall left', 'p3-ruin-4', 112, 38, 'ruin'),
+  rectAtVisibleFoot(part3VisualsById, 'p3-ruin-5-body', 'north wall right', 'p3-ruin-5', 112, 38, 'ruin'), circleAtVisibleFoot(part3VisualsById, 'p3-ruin-6-body', 'northeast pillar', 'p3-ruin-6', 30, 'ruin'),
+  rectAtVisibleFoot(part3VisualsById, 'p3-ruin-7-body', 'east low wall', 'p3-ruin-7', 106, 38, 'ruin'), circleAtVisibleFoot(part3VisualsById, 'p3-ruin-8-body', 'southeast rubble', 'p3-ruin-8', 28, 'ruin'),
+  rectAtVisibleFoot(part3VisualsById, 'p3-ruin-9-body', 'south low wall', 'p3-ruin-9', 108, 38, 'ruin'), circleAtVisibleFoot(part3VisualsById, 'p3-ruin-10-body', 'southwest pillar', 'p3-ruin-10', 30, 'ruin'),
+  rectAtVisibleFoot(part3VisualsById, 'p3-arch-left', 'root arch left foot', 'p3-root-arch', 58, 82, 'landmark', 930), rectAtVisibleFoot(part3VisualsById, 'p3-arch-right', 'root arch right foot', 'p3-root-arch', 58, 82, 'landmark', 1130),
+  rectAtVisibleFoot(part3VisualsById, 'p3-gate-left', 'exit gate left foot', 'p3-root-gate', 48, 72, 'landmark', 1600), rectAtVisibleFoot(part3VisualsById, 'p3-gate-right', 'exit gate right foot', 'p3-root-gate', 48, 72, 'landmark', 1720),
+  rectAtVisibleFoot(part3VisualsById, 'p3-clue-idle-body', 'idle clue slab base', 'p3-clue-idle', 84, 34, 'landmark'),
+  rectAtVisibleFoot(part3VisualsById, 'p3-clue-active-body', 'active clue slab base', 'p3-clue-active', 84, 34, 'landmark'),
 ]
 
 const PART_4_PATHS = [
@@ -287,7 +381,17 @@ const corridorPositions = [[360, 1540], [590, 1320], [790, 1110], [1040, 860], [
 const PART_4_PROPS = corridorPositions.map(([x, y], index) => prop(`p4-corridor-${index + 1}`, `forest-region-part-4-corridor-${index < 6 ? 'left' : 'right'}-${[45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45][index]}`, x, y, 330, 310, 'canopy'))
 const pathMarkerPositions = [[300, 1680], [500, 1490], [700, 1320], [920, 1110], [1160, 900], [1370, 730], [1580, 540], [1780, 340]]
 const falseMarkerPositions = [[1080, 1140], [1190, 1230], [1300, 1320], [1410, 1390], [1490, 1430], [1350, 1450]]
-const PART_4_COLLIDERS = corridorPositions.map(([x, y], index) => rect(`p4-boundary-${index + 1}`, `tree corridor boundary ${index + 1}`, x + (index < 6 ? -78 : 78), y, 72, 96, 'boundary'))
+const part4VisualsById = new Map(PART_4_PROPS.map((item) => [item.id, item]))
+const PART_4_COLLIDERS = corridorPositions.map(([x], index) => rectAtVisibleFoot(
+  part4VisualsById,
+  `p4-boundary-${index + 1}`,
+  `tree corridor boundary ${index + 1}`,
+  `p4-corridor-${index + 1}`,
+  72,
+  96,
+  'boundary',
+  x + (index < 6 ? -78 : 78),
+))
 
 const PART_5_PATHS = [
   path('p5-entry', 'main', [[280, 1700], [470, 1530], [650, 1410], [820, 1320], [920, 1240], [1040, 1120]], 260, 0.68),
@@ -298,11 +402,16 @@ const PART_5_PROPS = [
   prop('p5-wall-1', 'forest-region-part-5-wall-01', 430, 330, 520, 430, 'canopy'), prop('p5-wall-2', 'forest-region-part-5-wall-02', 1024, 250, 620, 460, 'canopy'), prop('p5-wall-3', 'forest-region-part-5-wall-03', 1610, 330, 520, 430, 'canopy'),
   ...treePositions.map(([x, y], index) => prop(`p5-tree-${index + 1}`, `forest-region-part-5-tree-${String(index + 1).padStart(2, '0')}`, x, y, 330, 390)),
 ]
+const PART_5_LANDMARKS: ForestLandmark[] = [
+  prop('p5-landmark', 'forest-region-part-5-landmark', 1040, 1120, 520, 520),
+  prop('p5-stable-exit', 'forest-region-part-5-stable-exit', 330, 1680, 270, 270, 'canopy'),
+]
+const part5VisualsById = new Map([...PART_5_PROPS, ...PART_5_LANDMARKS].map((item) => [item.id, item]))
 const PART_5_COLLIDERS: ForestCollider[] = [
-  rect('p5-north-boundary-1', 'north tree wall left', 430, 250, 420, 58, 'boundary'), rect('p5-north-boundary-2', 'north tree wall center', 1024, 190, 520, 58, 'boundary'), rect('p5-north-boundary-3', 'north tree wall right', 1610, 250, 420, 58, 'boundary'),
-  ...treePositions.map(([x, y], index) => circle(`p5-tree-${index + 1}-trunk`, `inward tree ${index + 1} trunk`, x, y - 16, [34, 38, 35, 37, 36][index], 'trunk', `p5-tree-${index + 1}`)),
-  rect('p5-landmark-root-left', 'central landmark left root', 740, 1120, 70, 80, 'landmark'),
-  rect('p5-landmark-root-right', 'central landmark right root', 1340, 1120, 70, 80, 'landmark'),
+  rectAtVisibleFoot(part5VisualsById, 'p5-north-boundary-1', 'north tree wall left', 'p5-wall-1', 420, 58, 'boundary'), rectAtVisibleFoot(part5VisualsById, 'p5-north-boundary-2', 'north tree wall center', 'p5-wall-2', 520, 58, 'boundary'), rectAtVisibleFoot(part5VisualsById, 'p5-north-boundary-3', 'north tree wall right', 'p5-wall-3', 420, 58, 'boundary'),
+  ...treePositions.map((_, index) => circleAtVisibleFoot(part5VisualsById, `p5-tree-${index + 1}-trunk`, `inward tree ${index + 1} trunk`, `p5-tree-${index + 1}`, [34, 38, 35, 37, 36][index], 'trunk')),
+  rectAtVisibleFoot(part5VisualsById, 'p5-landmark-root-left', 'central landmark left root', 'p5-landmark', 70, 80, 'landmark', 740),
+  rectAtVisibleFoot(part5VisualsById, 'p5-landmark-root-right', 'central landmark right root', 'p5-landmark', 70, 80, 'landmark', 1340),
 ]
 
 function legacyObstacleItems(props: readonly ForestProp[], colliders: readonly ForestCollider[]): ForestObstacleLayoutItem[] {
@@ -367,11 +476,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
     paths: PART_1_PATHS,
     props: PART_1_PROPS,
     colliders: PART_1_COLLIDERS,
-    landmarks: [
-      { ...prop('p1-ancient-tree', 'forest-ancient-moon-tree', 620, 440, 570, 620, 'canopy'), interactionClearance: { width: 260, height: 220 } },
-      { ...prop('p1-clearing', 'forest-moon-clearing-overlay', 620, 520, 700, 620, 'ground-decal'), origin: point(0.5, 0.5) },
-      { ...prop('p1-moon-mark', 'forest-broken-moon-mark', 620, 474, 118, 118, 'underlay'), additive: true, alpha: 0.46, origin: point(0.5, 0.5) },
-    ],
+    landmarks: PART_1_LANDMARKS,
     effects: [
       { ...prop('p1-mist-back', 'forest-reverse-mist-back', 1024, 1024, 2048, 2048, 'effect'), alpha: 0.11, motion: { type: 'tile', x: 1024, y: 260, duration: 24_000 } },
       { ...prop('p1-mist-mid', 'forest-reverse-mist-mid', 1024, 1024, 2048, 2048, 'effect'), alpha: 0.065, motion: { type: 'tile', x: 1024, y: 340, duration: 17_000 } },
@@ -409,12 +514,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
     paths: PART_3_PATHS,
     props: PART_3_PROPS,
     colliders: PART_3_COLLIDERS,
-    landmarks: [
-      { ...prop('p3-root-arch', 'forest-region-part-3-root-arch', 1030, 680, 600, 600, 'canopy'), interactionClearance: { width: 180, height: 220 } },
-      prop('p3-root-gate', 'forest-region-part-3-root-gate-open', 1770, 350, 440, 440, 'canopy'),
-      prop('p3-clue-idle', 'forest-region-part-3-clue-idle', 680, 1060, 190, 190),
-      prop('p3-clue-active', 'forest-region-part-3-clue-active', 1430, 980, 190, 190),
-    ],
+    landmarks: PART_3_LANDMARKS,
     effects: [],
     foreground: [],
     safeZones: [...commonPartZones(3), zone('p3-courtyard-clear', 'performance', 1030, 1040, 420, 360)],
@@ -456,7 +556,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
     paths: PART_5_PATHS,
     props: PART_5_PROPS,
     colliders: PART_5_COLLIDERS,
-    landmarks: [prop('p5-landmark', 'forest-region-part-5-landmark', 1040, 1120, 520, 520), prop('p5-stable-exit', 'forest-region-part-5-stable-exit', 330, 1680, 270, 270, 'canopy')],
+    landmarks: PART_5_LANDMARKS,
     effects: [
       { ...prop('p5-basin-mist', 'forest-region-part-5-basin-mist', 1040, 1120, 760, 620, 'effect'), alpha: 0.5 },
       { ...prop('p5-response-idle', 'forest-region-part-5-response-idle', 1040, 1120, 620, 620, 'effect'), alpha: 0.5, additive: true },

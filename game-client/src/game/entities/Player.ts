@@ -1,7 +1,11 @@
 import Phaser from 'phaser'
+import { resolveActorFootDepth } from '@/game/depthSorting'
 
 export type PlayerState = 'idle' | 'walk' | 'interact' | 'battle' | 'disabled'
 type WalkDirection = 'up' | 'down' | 'left' | 'right'
+
+const PLAYER_COLLISION_RADIUS = 20
+const PLAYER_COLLISION_CENTER_Y_OFFSET = 17
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   readonly speed = 220
@@ -24,9 +28,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this)
     scene.physics.add.existing(this)
     this.setCollideWorldBounds(true)
-    this.setDepth(y)
     this.setDisplaySize(84, 84)
     this.syncCollisionBody()
+    this.syncDepth()
   }
 
   setVirtualDirection(x: number, y: number): void {
@@ -48,7 +52,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.setVelocity(0)
       this.state = 'idle'
       this.stopWalkAnimation()
-      this.setDepth(this.y)
+      this.syncDepth()
       return
     }
     input.normalize().scale(this.speed)
@@ -60,7 +64,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.direction = input.y > 0 ? 'down' : 'up'
     }
     this.startWalkAnimation(this.direction)
-    this.setDepth(this.y)
+    this.syncDepth()
   }
 
   private startWalkAnimation(direction: WalkDirection): void {
@@ -98,9 +102,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const frameWidth = this.frame.realWidth
     const frameHeight = this.frame.realHeight
     const scale = Math.abs(this.scaleX)
-    const radius = 20 / scale
+    const radius = PLAYER_COLLISION_RADIUS / scale
     const offsetX = frameWidth / 2 - radius
-    const offsetY = frameHeight / 2 + 17 / scale - radius
+    const offsetY = frameHeight / 2 + PLAYER_COLLISION_CENTER_Y_OFFSET / scale - radius
     this.setCircle(radius, offsetX, offsetY)
+  }
+
+  private syncDepth(): void {
+    this.setDepth(resolveActorFootDepth(
+      this.y,
+      PLAYER_COLLISION_CENTER_Y_OFFSET,
+      PLAYER_COLLISION_RADIUS,
+    ))
   }
 }

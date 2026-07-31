@@ -37,6 +37,38 @@ The script owns background removal, atlas slicing, Alpha restoration, sizing, na
 - Narrative landmarks and repeatable environment props use separate texture keys and layout roles.
 - Animated transparent layers must retain a static readable state when `prefers-reduced-motion: reduce` is active.
 
+## Collider Footpoint Contract
+
+Environment props rendered with `origin: { x: 0.5, y: 1 }` use the texture canvas bottom as their Phaser anchor. That anchor is not the visible footpoint when the PNG contains transparent padding below its Alpha bounds.
+
+Store the decoded source height and Alpha bounding-box bottom for collision-bearing assets, then convert the visible footpoint into world coordinates:
+
+```ts
+const visibleFootY = prop.y - prop.height * (1 - alphaBottom / sourceHeight)
+const colliderCenterY = visibleFootY - colliderHeight / 2
+```
+
+For circular bodies, subtract the radius instead of half the height. The collider bottom may end above the visible footpoint to keep decorative root tips walkable, but it must not extend below the visible Alpha footpoint.
+
+Y-sort depth for `world` and `canopy` props must use this same visible Alpha footpoint. Comparing the player foot position against the transparent canvas bottom causes the prop to cover the player after the player has already walked below its visible base. Props without Alpha footpoint metadata may fall back to their layout `y`; fixed `ground-decal`, `underlay`, `effect`, and `foreground` layers keep their explicit depth bands.
+
+Player and NPC Y-sort depth must use the bottom of their movement collision body, not the sprite center. The ordering comparison is therefore foot-to-foot: actor collision foot against prop visible Alpha footpoint. Using `actor.y` makes a character remain behind a prop for roughly half the character height after visually walking below it.
+
+Wrong:
+
+```ts
+// prop.y is the transparent canvas bottom, not the visible root base.
+rect('root-body', 'root', prop.x, prop.y, 132, 46, 'boundary', prop.id)
+```
+
+Correct:
+
+```ts
+rect('root-body', 'root', prop.x, visibleFootY - 23, 132, 46, 'boundary', prop.id)
+```
+
+Regression tests must resolve every collision `visualRef` across all map regions and assert that the collider bottom is at or above the referenced prop's visible Alpha footpoint. Browser QA must also inspect `?debug-colliders=1` because a numerically valid body can still cover the wrong semantic part of the artwork. Wide solid bases such as rock clusters should use a rectangle sized to the physical base instead of a small center circle.
+
 ## Validation
 
 Before accepting a generated asset batch:

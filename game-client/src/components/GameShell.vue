@@ -242,7 +242,9 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <aside v-if="!isBattle" class="minimap-frame" role="img" :aria-label="`${currentMapName}小地图`" />
+    <aside v-if="!isBattle" class="minimap-frame" role="img" :aria-label="`${currentMapName}小地图`">
+      <span class="minimap-title" :title="currentMapName">{{ currentMapName }}</span>
+    </aside>
 
     <OpeningStoryPanel
       v-if="!isBattle && game.opening"

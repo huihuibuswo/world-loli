@@ -1,7 +1,11 @@
 import Phaser from 'phaser'
+import { resolveActorFootDepth } from '@/game/depthSorting'
 
 type NPCWanderState = 'idle' | 'moving' | 'returning' | 'paused'
 type WalkDirection = 'up' | 'down' | 'left' | 'right'
+
+const NPC_COLLISION_RADIUS = 18
+const NPC_COLLISION_CENTER_Y_OFFSET = 34
 
 export class NPC extends Phaser.Physics.Arcade.Sprite {
   readonly wanderRadius = 140
@@ -194,14 +198,18 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
 
   private syncCollisionBody(): void {
     const scale = Math.abs(this.scaleX)
-    const radius = 18 / scale
+    const radius = NPC_COLLISION_RADIUS / scale
     const offsetX = this.frame.realWidth / 2 - radius
-    const offsetY = this.frame.realHeight / 2 + 34 / scale - radius
+    const offsetY = this.frame.realHeight / 2 + NPC_COLLISION_CENTER_Y_OFFSET / scale - radius
     this.setCircle(radius, offsetX, offsetY)
   }
 
   private syncPresentation(): void {
-    this.setDepth(this.y)
+    this.setDepth(resolveActorFootDepth(
+      this.y,
+      NPC_COLLISION_CENTER_Y_OFFSET,
+      NPC_COLLISION_RADIUS,
+    ))
     this.nameLabel.setPosition(this.x, this.y - 62).setDepth(90_002)
   }
 }
