@@ -22,6 +22,7 @@ This directory contains guidelines for frontend development. Fill in each file w
 | [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
 | [Game Time Contract](./game-time.md) | Persistent clock, pause, phase, schedule, and save contracts | Active |
 | [Generated Game Assets](./generated-game-assets.md) | Versioned source processing, runtime mirroring, and validation | Active |
+| [Phaser Overlay Camera Layout](./phaser-camera-layout.md) | DOM-to-Canvas viewport conversion under `Scale.ENVELOP` | Active |
 
 ---
 

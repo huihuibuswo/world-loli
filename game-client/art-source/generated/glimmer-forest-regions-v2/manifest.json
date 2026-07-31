@@ -1,0 +1,3953 @@
+{
+  "version": "glimmer-forest-regions-v2",
+  "source_root": "D:\\生成\\images",
+  "runtime_root": "/assets/generated/environment/glimmer-forest/regions-v2/",
+  "notes": [
+    "V2 preserves V1 and rebuilds from immutable original sources.",
+    "W03, R03, N03, N06, D03, N02, D02, and N07 use connected-component candidates with explicit semantic selection.",
+    "All object sprites use tight RGBA canvases with 12px safety padding and manifest footpoints.",
+    "W02, R05, and D04 are emitted as feathered RGBA decals/effect layers rather than opaque local rectangles."
+  ],
+  "sources": [
+    {
+      "code": "W01",
+      "filename": "gen_hist_1785391592555_f336z.png",
+      "role": "silver-mist valley ground",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "c15fca07eb5aa93e019c338597cbf17cfb9c0d3f2fc32053214441afc7d881c2"
+    },
+    {
+      "code": "W02-flow",
+      "filename": "gen_hist_1785392256296_js21a.png",
+      "role": "stream water flow",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "a7156fe3cf013590db4f7080a24ad5d80823415f08856b4ce25b7433a283bb67"
+    },
+    {
+      "code": "W03",
+      "filename": "gen_hist_1785392075602_mm8dz.png",
+      "role": "stream bank atlas",
+      "mode": "chroma",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "e831bd8cd68bee1010fedf9a581b522dd702f842fe14cfe6fc53fe9384a91515"
+    },
+    {
+      "code": "W04-horizontal",
+      "filename": "gen_hist_1785393390825_xkv7l.png",
+      "role": "horizontal bridge",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "eb4a260face07fb7b1c7482add41a1555c8ba76eb35cc3f45deec482b38c3858"
+    },
+    {
+      "code": "W04-diagonal",
+      "filename": "gen_hist_1785392312528_27tdb.png",
+      "role": "diagonal bridge",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "04fb69791af775d5e44a7ffc8fa69cf46404bc7f7f90599a111ea13caab9ee1e"
+    },
+    {
+      "code": "W05",
+      "filename": "gen_hist_1785394397423_sbmfr.png",
+      "role": "aquatic foliage atlas",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "120be2b04c2afa17528495de273833ba1fc036e37a73b47c3bb31b7505100ae1"
+    },
+    {
+      "code": "W06",
+      "filename": "gen_hist_1785394427127_4ig1f.png",
+      "role": "reverse mist fall",
+      "mode": "mask",
+      "width": 1024,
+      "height": 1536,
+      "image_mode": "RGB",
+      "sha256": "80bba4d76f662eb334591154feb02194afab294181303180990fffe46623299e"
+    },
+    {
+      "code": "W07",
+      "filename": "gen_hist_1785395128336_0pdjl.png",
+      "role": "wetland reflection",
+      "mode": "mask",
+      "width": 1402,
+      "height": 1122,
+      "image_mode": "RGB",
+      "sha256": "fc162f34fecd1fe3127d286474164fb6864cd0b829ecc6f6cd148fcf51e604c4"
+    },
+    {
+      "code": "E01-left",
+      "filename": "gen_hist_1785391445202_6802c.png",
+      "role": "forest exit left",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "82085bafd72ab3d3af0e43cf06d0df1a2a14f682751914e7e430b520d4e9630f"
+    },
+    {
+      "code": "E01-right",
+      "filename": "gen_hist_1785391836632_yufva.png",
+      "role": "forest exit right",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "6da978d0b6f2a19ca3495e8d57b9782fc57539893b220d15b7e3443a6d95c7c2"
+    },
+    {
+      "code": "R01",
+      "filename": "gen_hist_1785396918805_f1qtr.png",
+      "role": "root ruins ground",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "6766ed2d7fc445739d0136b83abcf45f4ef78eb63a653cd3ff32dc2a83fad5ce"
+    },
+    {
+      "code": "R02",
+      "filename": "gen_hist_1785395189480_7h225.png",
+      "role": "giant root arch",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "166dfb437aa14df42ff79ac0da6ce2697f1d32e7ec77a4048d8706b36fa42a71"
+    },
+    {
+      "code": "R03",
+      "filename": "gen_hist_1785395200382_y3jbg.png",
+      "role": "weathered ruin atlas",
+      "mode": "chroma",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "57b25d99fe76f1cfd3b1c77f6648784dbee216415eba21aac2e01ae526c0e38d"
+    },
+    {
+      "code": "R04-open",
+      "filename": "gen_hist_1785396312750_0484h.png",
+      "role": "root gate open",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "0ce58334fc294db52574bf2344c20adf0e70522603affaeabccd00edd6f05f91"
+    },
+    {
+      "code": "R05",
+      "filename": "gen_hist_1785396113838_rjcr0.png",
+      "role": "sunken courtyard",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "9e0fdc0d585e6c6eafbb80be930a9858c8eabc1ae98a909c924fd47af6ed35b8"
+    },
+    {
+      "code": "R06-idle",
+      "filename": "gen_hist_1785396590350_3iedu.png",
+      "role": "ruin clue idle",
+      "mode": "chroma",
+      "width": 1448,
+      "height": 1086,
+      "image_mode": "RGB",
+      "sha256": "329d28070405bba24dc853b110611984563d279761c3aa4f550d520e08a44384"
+    },
+    {
+      "code": "R06-active",
+      "filename": "gen_hist_1785396774182_ik8tl.png",
+      "role": "ruin clue active",
+      "mode": "chroma",
+      "width": 1448,
+      "height": 1086,
+      "image_mode": "RGB",
+      "sha256": "7e1d7f3a554fd35b9a3eef4da0d5880a8aa16d0a80f4502b1836c30a9b7f819d"
+    },
+    {
+      "code": "N01",
+      "filename": "gen_hist_1785396338118_zttlr.png",
+      "role": "night-firefly ground",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "34f853ebe0b6d191eb7c1a722b33f2e40f8b622991b60b642c9317405fcc0833"
+    },
+    {
+      "code": "N02",
+      "filename": "gen_hist_1785396358214_c8jor.png",
+      "role": "tree corridor atlas",
+      "mode": "chroma",
+      "width": 1717,
+      "height": 916,
+      "image_mode": "RGB",
+      "sha256": "0c3ed3b3fc18dad6942413103d39dffcbae1705c860b7f238cc840c720cafe2a"
+    },
+    {
+      "code": "N03",
+      "filename": "gen_hist_1785396633046_r5rrk.png",
+      "role": "glowing path markers",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "df7099efc50e220d31cd091d3f459b1578fa0904d180cd24a558d932becb97ef"
+    },
+    {
+      "code": "N04",
+      "filename": "gen_hist_1785396664736_jcq41.png",
+      "role": "night fireflies",
+      "mode": "mask",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "c987a617109cdda29b8e706f5c15dc2e632f0df0dedb5f019a6796bf9eed9734"
+    },
+    {
+      "code": "N05",
+      "filename": "gen_hist_1785396853656_bhqqx.png",
+      "role": "broken canopy moonlight",
+      "mode": "mask",
+      "width": 1448,
+      "height": 1086,
+      "image_mode": "RGB",
+      "sha256": "19cfe39d873a964ee2a0bd234be47a3793a18b6e247bbeaad0a07acf9dcffd67"
+    },
+    {
+      "code": "N06",
+      "filename": "gen_hist_1785397040712_fknyh.png",
+      "role": "false path markers",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "006fefbffd9c6b8a57d8bae8b79529f00fc84e9d3c46e2355b8be6191e359c85"
+    },
+    {
+      "code": "N07",
+      "filename": "gen_hist_1785396896077_go05n.png",
+      "role": "foreground branches",
+      "mode": "chroma",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "598a9e228d9fcb6dbec15cfbdcc660776bebcbbb8f785f825b9d1eae33a4d2c5"
+    },
+    {
+      "code": "D01",
+      "filename": "gen_hist_1785395140182_kco0o.png",
+      "role": "deep forest ground",
+      "mode": "opaque",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "343cb7b6c5f18b5ce1e881686adfc48997f410774cc906a6722b0b441397900a"
+    },
+    {
+      "code": "D02",
+      "filename": "gen_hist_1785397114321_95zna.png",
+      "role": "broken canopy tree wall",
+      "mode": "chroma",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "a52e0e7e8c3ce60c499dc56184c6398eb8714d74216cc16f7717cf478f7dcd87"
+    },
+    {
+      "code": "D03",
+      "filename": "gen_hist_1785397261629_25j6y.png",
+      "role": "inward leaning trees",
+      "mode": "chroma",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "ad626f804652ead60efc685c67d01b8b3481e201d59451bd4012f72c1d4e441a"
+    },
+    {
+      "code": "D04",
+      "filename": "gen_hist_1785397167726_75s4b.png",
+      "role": "mist convergence basin",
+      "mode": "opaque",
+      "width": 1536,
+      "height": 1024,
+      "image_mode": "RGB",
+      "sha256": "62934526ec64a1d63c486a4ad74a625ef938a07d875db10009da2e902ba947a5"
+    },
+    {
+      "code": "D05",
+      "filename": "gen_hist_1785397215774_wltg2.png",
+      "role": "central stage landmark",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "e71ceb980b6472349484a7c79b6b8266782cb4830fd4676f892c3d4a2d184f2d"
+    },
+    {
+      "code": "D06-idle",
+      "filename": "gen_hist_1785397294592_grl58.png",
+      "role": "broken moon response idle",
+      "mode": "mask",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "4dca51bf5d5abf6abf0295bf5d9430d066fceac8e24cd1245f29e3a8b9cd5162"
+    },
+    {
+      "code": "D06-active",
+      "filename": "gen_hist_1785397428319_r9bvo.png",
+      "role": "broken moon response active",
+      "mode": "mask",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "2e7cbea3fba0e66d2ca1a28606a0ad1d132414f2f8cfa1523c623c5ac30c67d0"
+    },
+    {
+      "code": "D07",
+      "filename": "gen_hist_1785397438984_22efk.png",
+      "role": "stable exit",
+      "mode": "chroma",
+      "width": 1254,
+      "height": 1254,
+      "image_mode": "RGB",
+      "sha256": "64a2a38661f13f6ae989f82a1f3c0f271b58c2e0361f64ece7fab47047f6e8c5"
+    }
+  ],
+  "assets": [
+    {
+      "name": "forest-exit-silver-mist-left.png",
+      "source_codes": [
+        "E01-left"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/common/forest-exit-silver-mist-left.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/common/forest-exit-silver-mist-left.png",
+      "width": 438,
+      "height": 437,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        425
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        424
+      ],
+      "visual_size": [
+        438,
+        437
+      ],
+      "role": "portal-marker",
+      "collision_profile": "portal-base",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5e3fa40d9efe66ab078d5ada71e1c8d382c669b6f2b53b7d2af703591e86c0d5"
+    },
+    {
+      "name": "forest-exit-silver-mist-right.png",
+      "source_codes": [
+        "E01-right"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/common/forest-exit-silver-mist-right.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/common/forest-exit-silver-mist-right.png",
+      "width": 438,
+      "height": 438,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        426
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        425
+      ],
+      "visual_size": [
+        438,
+        438
+      ],
+      "role": "portal-marker",
+      "collision_profile": "portal-base",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1af764a75af39855174d7757e3e043462816471161b984071321c26539752157"
+    },
+    {
+      "name": "part-2-silver-mist-valley-ground-1.png",
+      "source_codes": [
+        "W01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-2-silver-mist-valley-ground-1.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-2-silver-mist-valley-ground-1.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0f39a3bef75937779e08ce7c0c65c990ea2f8bf7091bdc8e0639cf35e0326d54"
+    },
+    {
+      "name": "part-2-silver-mist-valley-ground-2.png",
+      "source_codes": [
+        "W01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-2-silver-mist-valley-ground-2.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-2-silver-mist-valley-ground-2.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "87e230388be77ffa84fd0f6ec5acd74ed5463cf81014cc29c3df0644614596d8"
+    },
+    {
+      "name": "part-2-silver-mist-valley-ground-3.png",
+      "source_codes": [
+        "W01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-2-silver-mist-valley-ground-3.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-2-silver-mist-valley-ground-3.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "c77bf351b2bf4be65c43c9dcf0326ca942f2a6c12987f314521eb5ed35cd9490"
+    },
+    {
+      "name": "part-2-macro-overlay.png",
+      "source_codes": [
+        "W01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-2-macro-overlay.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-2-macro-overlay.png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        512
+      ],
+      "visual_size": [
+        1024,
+        1024
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "330bd6e32c0ab96e6a36d41f2ed35a3c890569c82dbc13f0a33ff40409c5c246",
+      "intentional_padding": "full-map low-frequency overlay"
+    },
+    {
+      "name": "part-3-root-ruins-ground-1.png",
+      "source_codes": [
+        "R01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-3-root-ruins-ground-1.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-3-root-ruins-ground-1.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "8e93ce52b5c02c2cf148bdd7df842c05e74086204eb74515abea2e972bf1163b"
+    },
+    {
+      "name": "part-3-root-ruins-ground-2.png",
+      "source_codes": [
+        "R01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-3-root-ruins-ground-2.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-3-root-ruins-ground-2.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "9672c04f861498bae17e7086233a647e50dc3a5dd6a5474d47dc5c80536d4789"
+    },
+    {
+      "name": "part-3-root-ruins-ground-3.png",
+      "source_codes": [
+        "R01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-3-root-ruins-ground-3.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-3-root-ruins-ground-3.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "abe5e99539aceeb82fda9a0171162e4c5e17d193275718ab9908e45f474ff03c"
+    },
+    {
+      "name": "part-3-macro-overlay.png",
+      "source_codes": [
+        "R01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-3-macro-overlay.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-3-macro-overlay.png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        512
+      ],
+      "visual_size": [
+        1024,
+        1024
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "99fec5d60388817ac3bd1c85bac558eee867d0e6ba2621995604cf1cde2e7ea9",
+      "intentional_padding": "full-map low-frequency overlay"
+    },
+    {
+      "name": "part-4-night-firefly-path-ground-1.png",
+      "source_codes": [
+        "N01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-4-night-firefly-path-ground-1.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-4-night-firefly-path-ground-1.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "ed5114fbec245a233680a380717199c0e9900a05bce5fbb0bdad82ab9f3bffa8"
+    },
+    {
+      "name": "part-4-night-firefly-path-ground-2.png",
+      "source_codes": [
+        "N01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-4-night-firefly-path-ground-2.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-4-night-firefly-path-ground-2.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "ae6266d386d1344da6978d68c401545bf35c5e26638f8e89b3ca8367e1b84fe3"
+    },
+    {
+      "name": "part-4-night-firefly-path-ground-3.png",
+      "source_codes": [
+        "N01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-4-night-firefly-path-ground-3.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-4-night-firefly-path-ground-3.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "e1dae1506c0dd0407b2d2d90771802caee6d9a5fbc58b3a06eadafd6ab44d071"
+    },
+    {
+      "name": "part-4-macro-overlay.png",
+      "source_codes": [
+        "N01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-4-macro-overlay.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-4-macro-overlay.png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        512
+      ],
+      "visual_size": [
+        1024,
+        1024
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "e9c4600a1f47da02113bfc9625969105bcfde9e64a480111dd70b003e13ac0d8",
+      "intentional_padding": "full-map low-frequency overlay"
+    },
+    {
+      "name": "part-5-broken-moon-deep-forest-ground-1.png",
+      "source_codes": [
+        "D01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-5-broken-moon-deep-forest-ground-1.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-5-broken-moon-deep-forest-ground-1.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "355788e80fa73604a4d5f915a12058cd49b982db636346a4995abf65d8e9fc7f"
+    },
+    {
+      "name": "part-5-broken-moon-deep-forest-ground-2.png",
+      "source_codes": [
+        "D01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-5-broken-moon-deep-forest-ground-2.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-5-broken-moon-deep-forest-ground-2.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "f430ef8f91eb44ee9e2b399042f5baba667ab269fc26a5b76ca0473a34af7225"
+    },
+    {
+      "name": "part-5-broken-moon-deep-forest-ground-3.png",
+      "source_codes": [
+        "D01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-5-broken-moon-deep-forest-ground-3.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-5-broken-moon-deep-forest-ground-3.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        256,
+        256
+      ],
+      "visual_size": [
+        512,
+        512
+      ],
+      "role": "ground-tile",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "4ac4fcfaf5393cf4c4c0c885b979811fe3eb01399fa88620516bd51d0cadd9e9"
+    },
+    {
+      "name": "part-5-macro-overlay.png",
+      "source_codes": [
+        "D01"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-5-macro-overlay.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-5-macro-overlay.png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        512
+      ],
+      "visual_size": [
+        1024,
+        1024
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "80406946dffc10af15c0e75b86593582cb0489b32a4ef89a43a327f9e0141efa",
+      "intentional_padding": "full-map low-frequency overlay"
+    },
+    {
+      "name": "stream-bank-01.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-01.png",
+      "width": 462,
+      "height": 241,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        450,
+        229
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        231,
+        228
+      ],
+      "visual_size": [
+        462,
+        241
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "6792641b905c3953e7bddf0c83b9b4ddd5aadd189a725308700b4c569e36137b"
+    },
+    {
+      "name": "stream-bank-02.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-02.png",
+      "width": 437,
+      "height": 245,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        425,
+        233
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        218,
+        232
+      ],
+      "visual_size": [
+        437,
+        245
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b5b9088285ec7cd795fcfc692798bd3637f98123072068f75b65ed220e358bd2"
+    },
+    {
+      "name": "stream-bank-03.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-03.png",
+      "width": 277,
+      "height": 265,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        265,
+        253
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        138,
+        252
+      ],
+      "visual_size": [
+        277,
+        265
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "fbf93c453cdf5256be95866efa850d1ddbfe3c88fb46e73c8eeb072a33d9978d"
+    },
+    {
+      "name": "stream-bank-04.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-04.png",
+      "width": 349,
+      "height": 291,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        337,
+        279
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        174,
+        278
+      ],
+      "visual_size": [
+        349,
+        291
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "43e094b4118958ba5890ebb03314a0beeee772e8d59f905b30beb94209d7f680"
+    },
+    {
+      "name": "stream-bank-05.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-05.png",
+      "width": 401,
+      "height": 284,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        389,
+        272
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        200,
+        271
+      ],
+      "visual_size": [
+        401,
+        284
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "fd0b9791a76f8104d135d2c7168c3eb87d51d4f56782a60a58564ebe76077ccc"
+    },
+    {
+      "name": "stream-bank-06.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-06.png",
+      "width": 188,
+      "height": 271,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        176,
+        259
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        94,
+        258
+      ],
+      "visual_size": [
+        188,
+        271
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "f686927f65eebfd5e8cdbd4c54affa20dee81fa60884629f70ed1145a48f0dc4"
+    },
+    {
+      "name": "stream-bank-07.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-07.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-07.png",
+      "width": 322,
+      "height": 202,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        310,
+        190
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        161,
+        189
+      ],
+      "visual_size": [
+        322,
+        202
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "e7ae70dcec6bd8dd8b9f8a16a8a960dbcf0ce7a8f464e12aff30f105b5066fc6"
+    },
+    {
+      "name": "stream-bank-08.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-08.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-08.png",
+      "width": 297,
+      "height": 192,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        285,
+        180
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        148,
+        179
+      ],
+      "visual_size": [
+        297,
+        192
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b79a27660a4a161c5bc901e2a98ecf404988ca3c4686b549e890b1fab5022660"
+    },
+    {
+      "name": "stream-bank-09.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-09.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-09.png",
+      "width": 335,
+      "height": 191,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        323,
+        179
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        168,
+        178
+      ],
+      "visual_size": [
+        335,
+        191
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "7017c0dafe95ec598b6ffab95370b0a1d14a5119c863524c865105ce10f5a870"
+    },
+    {
+      "name": "stream-bank-10.png",
+      "source_codes": [
+        "W03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/stream-bank/stream-bank-10.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/stream-bank/stream-bank-10.png",
+      "width": 322,
+      "height": 253,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        310,
+        241
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        161,
+        240
+      ],
+      "visual_size": [
+        322,
+        253
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "f2ffccc173ade7934cc7ee05ff3f7b082e0ca95cf9a71c602f824e928f62c702"
+    },
+    {
+      "name": "fallen-log-bridge-horizontal.png",
+      "source_codes": [
+        "W04-horizontal"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/fallen-log-bridge-horizontal.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/fallen-log-bridge-horizontal.png",
+      "width": 438,
+      "height": 438,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        426
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        425
+      ],
+      "visual_size": [
+        438,
+        438
+      ],
+      "role": "landmark",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "26f36bfbd307aef36d6af332cf0498da9ec4c8a00331361dbac034de68f4135c"
+    },
+    {
+      "name": "fallen-log-bridge-diagonal.png",
+      "source_codes": [
+        "W04-diagonal"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/fallen-log-bridge-diagonal.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/fallen-log-bridge-diagonal.png",
+      "width": 438,
+      "height": 438,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        426
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        425
+      ],
+      "visual_size": [
+        438,
+        438
+      ],
+      "role": "landmark",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "732dc1d5642bd0d5bcfb5d78b4ae5911ceb49802c4f1dfab0d7d54c98cf4c609"
+    },
+    {
+      "name": "aquatic-foliage-01.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-01.png",
+      "width": 248,
+      "height": 376,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        236,
+        364
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        124,
+        363
+      ],
+      "visual_size": [
+        248,
+        376
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "3668d52e6a7773b61cb6b3da7e04163a8b15a5ffda01da71e240497c81e7beff"
+    },
+    {
+      "name": "aquatic-foliage-02.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-02.png",
+      "width": 267,
+      "height": 395,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        255,
+        383
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        134,
+        382
+      ],
+      "visual_size": [
+        267,
+        395
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "16e657e03f1690a77800421d865d5600ece6cc0107c81198e49f679c313ce482"
+    },
+    {
+      "name": "aquatic-foliage-03.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-03.png",
+      "width": 218,
+      "height": 278,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        206,
+        266
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        109,
+        265
+      ],
+      "visual_size": [
+        218,
+        278
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "a7a20bd1b0fec2d9f48e508ffaa9d9b15e92969c389140c21ea8633dbde1af66"
+    },
+    {
+      "name": "aquatic-foliage-04.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-04.png",
+      "width": 270,
+      "height": 300,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        258,
+        288
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        135,
+        287
+      ],
+      "visual_size": [
+        270,
+        300
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5ed41a9fc2eed432e74da724ee22de69fdcec476415eb875e82c5ba1cd033c08"
+    },
+    {
+      "name": "aquatic-foliage-05.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-05.png",
+      "width": 265,
+      "height": 222,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        253,
+        210
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        132,
+        209
+      ],
+      "visual_size": [
+        265,
+        222
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5e133f159938bbaecc802e626342ed1c60bdcf9cab1c72a926ddacf8d996979f"
+    },
+    {
+      "name": "aquatic-foliage-06.png",
+      "source_codes": [
+        "W05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-2/aquatic-foliage/aquatic-foliage-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-2/aquatic-foliage/aquatic-foliage-06.png",
+      "width": 271,
+      "height": 288,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        259,
+        276
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        136,
+        275
+      ],
+      "visual_size": [
+        271,
+        288
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "45ade5286592b8c354f4607b4833f3ebcc347e2bc20e10642b1f63f4e9ad4509"
+    },
+    {
+      "name": "part-2-stream-water-flow.png",
+      "source_codes": [
+        "W02-flow"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-2-stream-water-flow.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-2-stream-water-flow.png",
+      "width": 1024,
+      "height": 384,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1024,
+        384
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        192
+      ],
+      "visual_size": [
+        1024,
+        384
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "87981cde380be26ab4aa05608a6a9cea0d1c6ba38a5bc1f20d3ece581f95e648",
+      "intentional_padding": "soft water-path edge"
+    },
+    {
+      "name": "reverse-mist-fall.png",
+      "source_codes": [
+        "W06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-2/reverse-mist-fall.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-2/reverse-mist-fall.png",
+      "width": 300,
+      "height": 438,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        288,
+        426
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        150,
+        425
+      ],
+      "visual_size": [
+        300,
+        438
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "ae5e21aa932d3fd7f192b433b62d54b73d1119f54677e4c6f61f43f55294aa33"
+    },
+    {
+      "name": "wetland-reflection.png",
+      "source_codes": [
+        "W07"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-2/wetland-reflection.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-2/wetland-reflection.png",
+      "width": 900,
+      "height": 360,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        46,
+        60,
+        827,
+        329
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        450,
+        180
+      ],
+      "visual_size": [
+        900,
+        360
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "bd6e8cfd0e9e1c9f4c9b8bdbf154f863d36076c96811aaa05e43b15baf29fa47",
+      "intentional_padding": "masked to stream corridor"
+    },
+    {
+      "name": "giant-root-arch.png",
+      "source_codes": [
+        "R02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/giant-root-arch.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/giant-root-arch.png",
+      "width": 732,
+      "height": 734,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        720,
+        722
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        366,
+        721
+      ],
+      "visual_size": [
+        732,
+        734
+      ],
+      "role": "landmark",
+      "collision_profile": "root-arch-feet",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "f957b9f9804c66a6796c5a12d0c5e5df6c6fb31715b74ab048ce4c23b29d2073"
+    },
+    {
+      "name": "weathered-ruin-01.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-01.png",
+      "width": 347,
+      "height": 262,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        335,
+        250
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        174,
+        249
+      ],
+      "visual_size": [
+        347,
+        262
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-pillar",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1b91492486632d9aee0b1000f10f9c98a02a3c4108094932dc2d370f28e7a06f"
+    },
+    {
+      "name": "weathered-ruin-02.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-02.png",
+      "width": 198,
+      "height": 248,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        186,
+        236
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        99,
+        235
+      ],
+      "visual_size": [
+        198,
+        248
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-low-wall",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "eedde24e565cb8eabc177598ed7059e66e6bcc0b2d4305847d1e0a3fcca626e1"
+    },
+    {
+      "name": "weathered-ruin-03.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-03.png",
+      "width": 364,
+      "height": 235,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        352,
+        223
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        182,
+        222
+      ],
+      "visual_size": [
+        364,
+        235
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-rubble",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1b7adf5293aa5d9445427499bf61c83fcce09da58b3c21b3f65366361e29f318"
+    },
+    {
+      "name": "weathered-ruin-04.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-04.png",
+      "width": 238,
+      "height": 253,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        226,
+        241
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        119,
+        240
+      ],
+      "visual_size": [
+        238,
+        253
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-low-wall",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "fbca88d4a6d7309ac61159687bf0600b8703ee408e049c582cb02e098a7b602a"
+    },
+    {
+      "name": "weathered-ruin-05.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-05.png",
+      "width": 273,
+      "height": 251,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        261,
+        239
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        136,
+        238
+      ],
+      "visual_size": [
+        273,
+        251
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-low-wall",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "cde1fe01226afc42db2f70ad8a090ae7e2e3ed00c0d6961b53258e984aa37efe"
+    },
+    {
+      "name": "weathered-ruin-06.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-06.png",
+      "width": 322,
+      "height": 188,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        310,
+        176
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        161,
+        175
+      ],
+      "visual_size": [
+        322,
+        188
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-pillar",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "8b33da341ad0d7e165f3fd9df1a89f7c5ceaf11b984f835294e5d743d2d9e076"
+    },
+    {
+      "name": "weathered-ruin-07.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-07.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-07.png",
+      "width": 296,
+      "height": 254,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        284,
+        242
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        148,
+        241
+      ],
+      "visual_size": [
+        296,
+        254
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-low-wall",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "d45765b85ba1f58405f65ef76d4754158fbe18da11eccc981b481092739a854f"
+    },
+    {
+      "name": "weathered-ruin-08.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-08.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-08.png",
+      "width": 112,
+      "height": 77,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        100,
+        65
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        56,
+        64
+      ],
+      "visual_size": [
+        112,
+        77
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-rubble",
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "af051bd30b52d793e748e43ed34a21ffb40370de71b2f97eab675eb6511d04c5"
+    },
+    {
+      "name": "weathered-ruin-09.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-09.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-09.png",
+      "width": 360,
+      "height": 204,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        348,
+        192
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        180,
+        191
+      ],
+      "visual_size": [
+        360,
+        204
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-low-wall",
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "fc8a88db438e243cdd31f998e3131bd359c90153ae04f434252667a0b7390630"
+    },
+    {
+      "name": "weathered-ruin-10.png",
+      "source_codes": [
+        "R03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/weathered-ruins/weathered-ruin-10.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/weathered-ruins/weathered-ruin-10.png",
+      "width": 352,
+      "height": 291,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        340,
+        279
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        176,
+        278
+      ],
+      "visual_size": [
+        352,
+        291
+      ],
+      "role": "world-ruin",
+      "collision_profile": "ruin-pillar",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "d17a9688d5e22e17dbc44b2bfb7e23804a35481edf15c57f16716e7cead043ea"
+    },
+    {
+      "name": "root-gate-open.png",
+      "source_codes": [
+        "R04-open"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/root-gate-open.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/root-gate-open.png",
+      "width": 638,
+      "height": 638,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        626,
+        626
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        319,
+        625
+      ],
+      "visual_size": [
+        638,
+        638
+      ],
+      "role": "landmark",
+      "collision_profile": "root-gate-feet",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1d368e3c1826c5ed7e9582eb1013f6f0b49e7a850f56a4e91f00d9a336f3f932"
+    },
+    {
+      "name": "part-3-sunken-courtyard.png",
+      "source_codes": [
+        "R05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-3-sunken-courtyard.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-3-sunken-courtyard.png",
+      "width": 820,
+      "height": 760,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        820,
+        760
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        410,
+        380
+      ],
+      "visual_size": [
+        820,
+        760
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "8d163564a71e017c55a299403f7590ee81c881f15e1bd05ffdcdec94d1c7bd83",
+      "intentional_padding": "112px feathered courtyard edge"
+    },
+    {
+      "name": "ruin-clue-slab-idle.png",
+      "source_codes": [
+        "R06-idle"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/ruin-clue-slab-idle.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/ruin-clue-slab-idle.png",
+      "width": 438,
+      "height": 335,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        323
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        322
+      ],
+      "visual_size": [
+        438,
+        335
+      ],
+      "role": "landmark",
+      "collision_profile": "clue-slab-base",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b5db8b93e6f8049f4df7d869616b77577267adb1b3247ebb25a65bc8d1f2bd03"
+    },
+    {
+      "name": "ruin-clue-slab-active.png",
+      "source_codes": [
+        "R06-active"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-3/ruin-clue-slab-active.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-3/ruin-clue-slab-active.png",
+      "width": 438,
+      "height": 335,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        323
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        322
+      ],
+      "visual_size": [
+        438,
+        335
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b2b78d4091a07c42d6458ea6c1c28cf0fbd60866ac7fc38c2dd74df8c9d4c3be"
+    },
+    {
+      "name": "tree-corridor-left-0.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-left-0.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-left-0.png",
+      "width": 550,
+      "height": 522,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        538,
+        510
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        275,
+        509
+      ],
+      "visual_size": [
+        550,
+        522
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "2d50fc7047858f567b5c12b4d84746cfd86004dad27bfe6764c7da503a63a744"
+    },
+    {
+      "name": "tree-corridor-left-45.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-left-45.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-left-45.png",
+      "width": 697,
+      "height": 709,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        685,
+        697
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        348,
+        696
+      ],
+      "visual_size": [
+        697,
+        709
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "4440c4a390a8383c9449dddb8779bb506e580e275c8decde3e962cac565e2f40"
+    },
+    {
+      "name": "tree-corridor-left-90.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-left-90.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-left-90.png",
+      "width": 522,
+      "height": 550,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        510,
+        538
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        261,
+        537
+      ],
+      "visual_size": [
+        522,
+        550
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0a21c78d93460272acf41ef41e70039178e26bef4c4bfa88c060cfb9696c5efd"
+    },
+    {
+      "name": "tree-corridor-left-135.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-left-135.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-left-135.png",
+      "width": 709,
+      "height": 697,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        697,
+        685
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        354,
+        684
+      ],
+      "visual_size": [
+        709,
+        697
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "00a2a35128d7c498b58c202162d59048eda59dca500b6f0a6cd28cea77fa79c2"
+    },
+    {
+      "name": "tree-corridor-straight-0.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-straight-0.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-straight-0.png",
+      "width": 472,
+      "height": 664,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        460,
+        652
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        236,
+        651
+      ],
+      "visual_size": [
+        472,
+        664
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "fdc9f4f043d8e1e5851e3614c2ae378dc2eb63924038c3e25eea2157bf907110"
+    },
+    {
+      "name": "tree-corridor-straight-45.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-straight-45.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-straight-45.png",
+      "width": 406,
+      "height": 764,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        394,
+        752
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        203,
+        751
+      ],
+      "visual_size": [
+        406,
+        764
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "fad01711db0259bbaa298a34f33f44a8374c7ef8f273b2f700dd83461d2a8b3e"
+    },
+    {
+      "name": "tree-corridor-straight-90.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-straight-90.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-straight-90.png",
+      "width": 664,
+      "height": 472,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        652,
+        460
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        332,
+        459
+      ],
+      "visual_size": [
+        664,
+        472
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "93438a53c9241636f87620f02b5fb02b93c4556a8c8f913fd96492923da23418"
+    },
+    {
+      "name": "tree-corridor-straight-135.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-straight-135.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-straight-135.png",
+      "width": 764,
+      "height": 406,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        752,
+        394
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        382,
+        393
+      ],
+      "visual_size": [
+        764,
+        406
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "301f769f2fdd5966441b2e0fd5faa9680aa4932389ddad03ef3ba35e29e407d1"
+    },
+    {
+      "name": "tree-corridor-right-0.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-right-0.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-right-0.png",
+      "width": 472,
+      "height": 664,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        460,
+        652
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        236,
+        651
+      ],
+      "visual_size": [
+        472,
+        664
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "7b08479c274fd96dde07446036103a8eaa80d29ced2291b5cedd8a73405a8232"
+    },
+    {
+      "name": "tree-corridor-right-45.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-right-45.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-right-45.png",
+      "width": 764,
+      "height": 406,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        752,
+        394
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        382,
+        393
+      ],
+      "visual_size": [
+        764,
+        406
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "96c93e50ffbaf9739833fc3315c753e86798ae73a549cc252ece938124d02df2"
+    },
+    {
+      "name": "tree-corridor-right-90.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-right-90.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-right-90.png",
+      "width": 664,
+      "height": 472,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        652,
+        460
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        332,
+        459
+      ],
+      "visual_size": [
+        664,
+        472
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "7165f9ef7bf1350fba10640414d219b1ed61c3ec41ff47c0115244beeb3c8fed"
+    },
+    {
+      "name": "tree-corridor-right-135.png",
+      "source_codes": [
+        "N02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/tree-corridor-right-135.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/tree-corridor-right-135.png",
+      "width": 406,
+      "height": 764,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        394,
+        752
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        203,
+        751
+      ],
+      "visual_size": [
+        406,
+        764
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1204df7ded888726038033394566314ed30557ec45c2fd58d221844373b378e4"
+    },
+    {
+      "name": "glowing-path-marker-01.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-01.png",
+      "width": 248,
+      "height": 292,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        236,
+        280
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        124,
+        279
+      ],
+      "visual_size": [
+        248,
+        292
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "e95f8554c96547be89c4886bf8c38bdee47af86dc048b9642c8d32afe2cafa6a"
+    },
+    {
+      "name": "glowing-path-marker-02.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-02.png",
+      "width": 272,
+      "height": 256,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        260,
+        244
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        136,
+        243
+      ],
+      "visual_size": [
+        272,
+        256
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0b5867444414fa9b8045905eab8ea6aa29d1cf48b85ce92535bcc7cf801a8701"
+    },
+    {
+      "name": "glowing-path-marker-03.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-03.png",
+      "width": 280,
+      "height": 268,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        268,
+        256
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        140,
+        255
+      ],
+      "visual_size": [
+        280,
+        268
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "a739e4a4db9c92b1a97f333220c156df47b122be662edd5a250afeaf091c46a3"
+    },
+    {
+      "name": "glowing-path-marker-04.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-04.png",
+      "width": 264,
+      "height": 260,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        252,
+        248
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        132,
+        247
+      ],
+      "visual_size": [
+        264,
+        260
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "ede373804a26d31124160174387054083096d4bcedaac881609ce19ee6bafbd2"
+    },
+    {
+      "name": "glowing-path-marker-05.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-05.png",
+      "width": 308,
+      "height": 252,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        296,
+        240
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        154,
+        239
+      ],
+      "visual_size": [
+        308,
+        252
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "50179a5ffaceb54b94d593d4203d4805377159116f246723fec09badde05e520"
+    },
+    {
+      "name": "glowing-path-marker-06.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-06.png",
+      "width": 272,
+      "height": 240,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        260,
+        228
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        136,
+        227
+      ],
+      "visual_size": [
+        272,
+        240
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "a69cb0e1a9d39c4e9fcf4016bbab1c9facac9fd6889a3b849fb5a863e9874690"
+    },
+    {
+      "name": "glowing-path-marker-07.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-07.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-07.png",
+      "width": 264,
+      "height": 248,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        252,
+        236
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        132,
+        235
+      ],
+      "visual_size": [
+        264,
+        248
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "95d78a14e7c39e6c533d795120e0b970a61bd93ff04eed92d5594f52b7cf1257"
+    },
+    {
+      "name": "glowing-path-marker-08.png",
+      "source_codes": [
+        "N03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/glowing-path-markers/glowing-path-marker-08.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/glowing-path-markers/glowing-path-marker-08.png",
+      "width": 308,
+      "height": 224,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        296,
+        212
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        154,
+        211
+      ],
+      "visual_size": [
+        308,
+        224
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "dbded781367bd53de1a599ae36594ac8649a83ea77082c8b8b003693ee0db129"
+    },
+    {
+      "name": "false-path-marker-01.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-01.png",
+      "width": 375,
+      "height": 262,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        363,
+        250
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        188,
+        249
+      ],
+      "visual_size": [
+        375,
+        262
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "3b2b6381a3b5275079dacbac128e27c99e3a491cafcb2f83529d0a38471b55e1"
+    },
+    {
+      "name": "false-path-marker-02.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-02.png",
+      "width": 330,
+      "height": 269,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        318,
+        257
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        165,
+        256
+      ],
+      "visual_size": [
+        330,
+        269
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 3,
+      "review": "approved",
+      "sha256": "760bb84e206b7d6d1bb138059be86ead13c37b20217139a114244faaef2e0e23"
+    },
+    {
+      "name": "false-path-marker-03.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-03.png",
+      "width": 438,
+      "height": 260,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        426,
+        248
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        219,
+        247
+      ],
+      "visual_size": [
+        438,
+        260
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 5,
+      "review": "approved",
+      "sha256": "f71c4ff6456864b2674eab9962e990bac47c6f24faf9da3d3e740983028a30ba"
+    },
+    {
+      "name": "false-path-marker-04.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-04.png",
+      "width": 422,
+      "height": 211,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        410,
+        199
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        211,
+        198
+      ],
+      "visual_size": [
+        422,
+        211
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "ae2a51bec3ee170ce9463c4076d2a68ac61d977f6362a98cf8c109fd32444b21"
+    },
+    {
+      "name": "false-path-marker-05.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-05.png",
+      "width": 291,
+      "height": 252,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        279,
+        240
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        146,
+        239
+      ],
+      "visual_size": [
+        291,
+        252
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "55ab2dc62b03860cd5f496dc8d014f5d95f74e2afb715589e11971dfeac45853"
+    },
+    {
+      "name": "false-path-marker-06.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-06.png",
+      "width": 234,
+      "height": 198,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        222,
+        186
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        117,
+        185
+      ],
+      "visual_size": [
+        234,
+        198
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "ba402c078035a417050c6937011391f2fbb3b4ce7faf4111539dc45243fce63b"
+    },
+    {
+      "name": "false-path-marker-07.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-07.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-07.png",
+      "width": 248,
+      "height": 282,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        236,
+        270
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        124,
+        269
+      ],
+      "visual_size": [
+        248,
+        282
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "580f21787fa28d274cd5669471b10d57ef7fd24e8004e88f8f9ac75f763697a1"
+    },
+    {
+      "name": "false-path-marker-08.png",
+      "source_codes": [
+        "N06"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/false-path-markers/false-path-marker-08.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/false-path-markers/false-path-marker-08.png",
+      "width": 222,
+      "height": 222,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        210,
+        210
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        111,
+        209
+      ],
+      "visual_size": [
+        222,
+        222
+      ],
+      "role": "ground-prop",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "45eb45faad33859a8a1d0a2760b8ed814cf056d49548c2c2bdc3a10888000933"
+    },
+    {
+      "name": "night-firefly-group-01.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-01.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "1f88a15b30af523f9a1792bddcd997d5cebd56164c434261c382136ddac2b0af"
+    },
+    {
+      "name": "night-firefly-group-02.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-02.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "41b7f5c621548334ac7b9a6214fc308f160c4d9e8267a800921a0141280eba2a"
+    },
+    {
+      "name": "night-firefly-group-03.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-03.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "26b55f044e2a5e125e774623a57f8c977a3c4915500e6bfd4443d467d8cda3e6"
+    },
+    {
+      "name": "night-firefly-group-04.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-04.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "768c8f2f4e7a40bdea5cbc88d5b00e06618d5be9efdc3186b44e5e879ca0e0f4"
+    },
+    {
+      "name": "night-firefly-group-05.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-05.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "84bf1e8917edf65ec962bbba56cd12248dbd6755d04156c04b81422f53a482de"
+    },
+    {
+      "name": "night-firefly-group-06.png",
+      "source_codes": [
+        "N04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/night-fireflies/night-firefly-group-06.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/night-fireflies/night-firefly-group-06.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0ae4e643793c5187bb45a0a9920b0188ec12ff3df64a9eb8fc0268825f148cd4"
+    },
+    {
+      "name": "broken-canopy-moonlight.png",
+      "source_codes": [
+        "N05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-4/broken-canopy-moonlight.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-4/broken-canopy-moonlight.png",
+      "width": 910,
+      "height": 689,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        898,
+        677
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        455,
+        676
+      ],
+      "visual_size": [
+        910,
+        689
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 10,
+      "review": "approved",
+      "sha256": "6457d3d9faaa3a16f02229ac019930446220c207495b314b5c1263cecb0d0099"
+    },
+    {
+      "name": "foreground-branches-top.png",
+      "source_codes": [
+        "N07"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/foreground-branches-top.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/foreground-branches-top.png",
+      "width": 1025,
+      "height": 380,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        1013,
+        368
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        512,
+        367
+      ],
+      "visual_size": [
+        1025,
+        380
+      ],
+      "role": "foreground",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b35452430f4d00285b6980733f09749041f1ea432daa483aa2b62bfa704ed992"
+    },
+    {
+      "name": "foreground-branches-left.png",
+      "source_codes": [
+        "N07"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/foreground-branches-left.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/foreground-branches-left.png",
+      "width": 495,
+      "height": 629,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        483,
+        617
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        248,
+        616
+      ],
+      "visual_size": [
+        495,
+        629
+      ],
+      "role": "foreground",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "2d481a5beac026cdfd2e901980aec6bd729703b855acb195c5d4e33eeb47049b"
+    },
+    {
+      "name": "foreground-branches-right.png",
+      "source_codes": [
+        "N07"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-4/foreground-branches-right.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-4/foreground-branches-right.png",
+      "width": 508,
+      "height": 622,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        496,
+        610
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        254,
+        609
+      ],
+      "visual_size": [
+        508,
+        622
+      ],
+      "role": "foreground",
+      "collision_profile": null,
+      "component_count": 2,
+      "review": "approved",
+      "sha256": "0d9fc82ab804b97e4bf7a218b6540aeeda56ac77f6b73fbfc9adcdaf5af27c15"
+    },
+    {
+      "name": "broken-canopy-tree-wall-01.png",
+      "source_codes": [
+        "D02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/broken-canopy-tree-wall-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/broken-canopy-tree-wall-01.png",
+      "width": 377,
+      "height": 812,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        365,
+        800
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        188,
+        799
+      ],
+      "visual_size": [
+        377,
+        812
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "557227a0ec53b628f4eb20603ca96049523fdea1b5a17de6495d01b399ffb3de"
+    },
+    {
+      "name": "broken-canopy-tree-wall-02.png",
+      "source_codes": [
+        "D02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/broken-canopy-tree-wall-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/broken-canopy-tree-wall-02.png",
+      "width": 415,
+      "height": 807,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        403,
+        795
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        208,
+        794
+      ],
+      "visual_size": [
+        415,
+        807
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "a550862173772d9d1e41dca4391df75c3674be255d5b29e5a2d484739b0ec9ea"
+    },
+    {
+      "name": "broken-canopy-tree-wall-03.png",
+      "source_codes": [
+        "D02"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/broken-canopy-tree-wall-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/broken-canopy-tree-wall-03.png",
+      "width": 373,
+      "height": 805,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        361,
+        793
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        186,
+        792
+      ],
+      "visual_size": [
+        373,
+        805
+      ],
+      "role": "canopy",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5edda7cd6b53171d3015bb55db4b58e6590e2a249cb6a8d12370d6321ebb9909"
+    },
+    {
+      "name": "inward-leaning-tree-01.png",
+      "source_codes": [
+        "D03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/inward-leaning-tree-01.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/inward-leaning-tree-01.png",
+      "width": 291,
+      "height": 440,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        279,
+        428
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        146,
+        427
+      ],
+      "visual_size": [
+        291,
+        440
+      ],
+      "role": "world-tree",
+      "collision_profile": "tree-01-trunk",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5433a08afe478fafe067a52bd6144ade12702407856938c442c5618aa873b7e5"
+    },
+    {
+      "name": "inward-leaning-tree-02.png",
+      "source_codes": [
+        "D03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/inward-leaning-tree-02.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/inward-leaning-tree-02.png",
+      "width": 331,
+      "height": 444,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        319,
+        432
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        166,
+        431
+      ],
+      "visual_size": [
+        331,
+        444
+      ],
+      "role": "world-tree",
+      "collision_profile": "tree-02-trunk",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0dc9807781e7ae86a792ef9bee989658c9819006ca2a70924a3bf723c3ace874"
+    },
+    {
+      "name": "inward-leaning-tree-03.png",
+      "source_codes": [
+        "D03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/inward-leaning-tree-03.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/inward-leaning-tree-03.png",
+      "width": 330,
+      "height": 502,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        318,
+        490
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        165,
+        489
+      ],
+      "visual_size": [
+        330,
+        502
+      ],
+      "role": "world-tree",
+      "collision_profile": "tree-03-trunk",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "0d46a4fdf9295be3dc2035950986615d8c5a85fa800ddd12b9bd260e1866cdd8"
+    },
+    {
+      "name": "inward-leaning-tree-04.png",
+      "source_codes": [
+        "D03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/inward-leaning-tree-04.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/inward-leaning-tree-04.png",
+      "width": 324,
+      "height": 440,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        312,
+        428
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        162,
+        427
+      ],
+      "visual_size": [
+        324,
+        440
+      ],
+      "role": "world-tree",
+      "collision_profile": "tree-04-trunk",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "47054fda739e59fccdca8faf74b422280cdc665feb5c6052c035895f76707d98"
+    },
+    {
+      "name": "inward-leaning-tree-05.png",
+      "source_codes": [
+        "D03"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/inward-leaning-tree-05.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/inward-leaning-tree-05.png",
+      "width": 284,
+      "height": 437,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        272,
+        425
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        142,
+        424
+      ],
+      "visual_size": [
+        284,
+        437
+      ],
+      "role": "world-tree",
+      "collision_profile": "tree-05-trunk",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "5c6911990698b85ade79043621512689f342f22a81dffdf6b7feefa8dae4de1a"
+    },
+    {
+      "name": "part-5-mist-convergence-basin-edge.png",
+      "source_codes": [
+        "D04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/ground/part-5-mist-convergence-basin-edge.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/ground/part-5-mist-convergence-basin-edge.png",
+      "width": 920,
+      "height": 840,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        920,
+        840
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        460,
+        420
+      ],
+      "visual_size": [
+        920,
+        840
+      ],
+      "role": "ground-decal",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "66990af85f4f52a1fa73eb33a891c1372b21bb7953473c5aabb3737e89408b52",
+      "intentional_padding": "116px feathered basin edge"
+    },
+    {
+      "name": "mist-convergence-basin-mist.png",
+      "source_codes": [
+        "D04"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-5/mist-convergence-basin-mist.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-5/mist-convergence-basin-mist.png",
+      "width": 760,
+      "height": 620,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        760,
+        620
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        380,
+        310
+      ],
+      "visual_size": [
+        760,
+        620
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "42dd20d3dfd7ab43917f3c98d7b490724e9af6594036bbf370bd5aaee5599a67",
+      "intentional_padding": "soft basin mist"
+    },
+    {
+      "name": "central-stage-landmark.png",
+      "source_codes": [
+        "D05"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/central-stage-landmark.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/central-stage-landmark.png",
+      "width": 716,
+      "height": 716,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        704,
+        704
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        358,
+        703
+      ],
+      "visual_size": [
+        716,
+        716
+      ],
+      "role": "landmark",
+      "collision_profile": "central-landmark-roots",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "91a2dad8030d47c618c43d9dadc55f86300d4284672eb3f98d09606eb34bf448"
+    },
+    {
+      "name": "broken-moon-response-idle.png",
+      "source_codes": [
+        "D06-idle"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-5/broken-moon-response-idle.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-5/broken-moon-response-idle.png",
+      "width": 637,
+      "height": 637,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        625,
+        625
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        318,
+        624
+      ],
+      "visual_size": [
+        637,
+        637
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 3,
+      "review": "approved",
+      "sha256": "9af05d0c3ebd4256f01e30b6ea5f2db6484fe42fbfc04e1f6b4fd1b7adecd4c7"
+    },
+    {
+      "name": "broken-moon-response-active.png",
+      "source_codes": [
+        "D06-active"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/effects/part-5/broken-moon-response-active.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/effects/part-5/broken-moon-response-active.png",
+      "width": 730,
+      "height": 730,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        718,
+        718
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "footpoint": [
+        365,
+        717
+      ],
+      "visual_size": [
+        730,
+        730
+      ],
+      "role": "effect",
+      "collision_profile": null,
+      "component_count": 3,
+      "review": "approved",
+      "sha256": "b25c93b157285a035cbe1711baec4af672bb88d59ddec38ac65170f64a7f3ae2"
+    },
+    {
+      "name": "deep-forest-stable-exit.png",
+      "source_codes": [
+        "D07"
+      ],
+      "art_source": "game-client/art-source/generated/glimmer-forest-regions-v2/processed/sprites/part-5/deep-forest-stable-exit.png",
+      "runtime": "/assets/generated/environment/glimmer-forest/regions-v2/sprites/part-5/deep-forest-stable-exit.png",
+      "width": 536,
+      "height": 536,
+      "mode": "RGBA",
+      "alpha_bbox": [
+        12,
+        12,
+        524,
+        524
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "footpoint": [
+        268,
+        523
+      ],
+      "visual_size": [
+        536,
+        536
+      ],
+      "role": "landmark",
+      "collision_profile": "stable-exit-base",
+      "component_count": 1,
+      "review": "approved",
+      "sha256": "b2adaa0fdd0f0ac69336339bd9cd8aac9def763c34c5ba0688fb01985e8b57e3"
+    }
+  ],
+  "validation": {
+    "passed": true,
+    "problem_count": 0,
+    "problems": []
+  }
+}

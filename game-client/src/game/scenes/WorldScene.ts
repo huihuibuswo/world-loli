@@ -1,11 +1,18 @@
 import Phaser from 'phaser'
 import type { MapData, PlayerProfile } from '@/api/types'
+import { GAME_HEIGHT, GAME_WIDTH } from '@/game/config/GameConfig'
 import { GAME_TIME_KEY, gameEvents, WORLD_INPUT_LOCK_KEY } from '@/game/events'
 import { NPC } from '@/game/entities/NPC'
 import { Player } from '@/game/entities/Player'
+import { resolveMinimapLayout } from '@/game/minimapLayout'
 import {
   getForestRegionConfig,
+  validateForestRegionConfig,
+  type ForestCollider,
+  type ForestEffect,
+  type ForestForeground,
   type ForestObstacleLayoutItem,
+  type ForestProp,
   type ForestRegionConfig,
 } from '@/game/forestRegions'
 import {
@@ -48,6 +55,12 @@ type ObstacleLayoutItem = ForestObstacleLayoutItem
 
 type ReservedPlantArea = { x: number; y: number; radius: number }
 type NpcSchedule = { availableFrom?: number; availableUntil?: number; critical: boolean }
+type ForestForegroundRuntime = {
+  object: Phaser.GameObjects.Image
+  baseAlpha: number
+  fadeRadius: number
+  fadedAlpha: number
+}
 
 const PLANT_SPARKLE_COLORS: Record<MapPlant['rarity'], readonly [number, number]> = {
   common: [0xbae6fd, 0xe0f2fe],
@@ -89,6 +102,8 @@ export class WorldScene extends Phaser.Scene {
   private environmentOverlay!: Phaser.GameObjects.Rectangle
   private environmentLights: Phaser.GameObjects.Arc[] = []
   private environmentObjects: Phaser.GameObjects.GameObject[] = []
+  private minimapHiddenObjects: Phaser.GameObjects.GameObject[] = []
+  private forestForegroundObjects: ForestForegroundRuntime[] = []
   private mapType = 'village'
   private forestRegion: ForestRegionConfig | null = null
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
@@ -116,6 +131,8 @@ export class WorldScene extends Phaser.Scene {
     this.npcSchedules.clear()
     this.environmentLights = []
     this.environmentObjects = []
+    this.minimapHiddenObjects = []
+    this.forestForegroundObjects = []
     this.discardNextDelta = true
     const map = this.registry.get('world-map') as MapData
     const profile = this.registry.get('world-player') as PlayerProfile
@@ -123,6 +140,10 @@ export class WorldScene extends Phaser.Scene {
     this.forestRegion = map.map_type === 'forest'
       ? getForestRegionConfig(map.resource.region_key)
       : null
+    if (import.meta.env.DEV && this.forestRegion) {
+      const problems = validateForestRegionConfig(this.forestRegion)
+      if (problems.length > 0) throw new Error(`Invalid forest region layout:\n${problems.join('\n')}`)
+    }
     const bounds = map.resource.bounds ?? { min_x: 0, min_y: 0, max_x: 2048, max_y: 2048 }
     const width = bounds.max_x - bounds.min_x
     const height = bounds.max_y - bounds.min_y
@@ -132,38 +153,11 @@ export class WorldScene extends Phaser.Scene {
     this.drawWorld(width, height, map.map_type, this.forestRegion)
     this.createEnvironmentEffects(map.map_type)
     const obstacles = this.physics.add.staticGroup()
-    // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
     const activeObstacleLayout = map.map_type === 'forest' && this.forestRegion
       ? this.forestRegion.obstacles
       : VILLAGE_OBSTACLE_LAYOUT
-    activeObstacleLayout.forEach(({ x, y, texture, size, displayHeight = size, angle = 0, body: bodyConfig }) => {
-      const bodyHalfWidth = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.width / 2
-      const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
-      const bodyCenterOffsetX = -size / 2 + bodyConfig.offsetX + bodyHalfWidth
-      const bodyCenterOffsetY = -displayHeight / 2 + bodyConfig.offsetY + bodyHalfHeight
-      const angleRadians = Phaser.Math.DegToRad(angle)
-      const rotatedBodyCenterOffsetX = bodyCenterOffsetX * Math.cos(angleRadians) - bodyCenterOffsetY * Math.sin(angleRadians)
-      const rotatedBodyCenterOffsetY = bodyCenterOffsetX * Math.sin(angleRadians) + bodyCenterOffsetY * Math.cos(angleRadians)
-      const visualX = x - rotatedBodyCenterOffsetX
-      const visualY = y - rotatedBodyCenterOffsetY
-      const obstacle = obstacles.create(visualX, visualY, texture) as Phaser.Physics.Arcade.Image
-      obstacle.setDisplaySize(size, displayHeight).setAngle(angle).setDepth(y).refreshBody()
-      const body = obstacle.body as Phaser.Physics.Arcade.StaticBody
-      if (bodyConfig.shape === 'circle') {
-        body.setCircle(bodyConfig.radius, size / 2 - bodyConfig.radius, displayHeight / 2 - bodyConfig.radius)
-      } else {
-        const swapsAxes = Math.abs(Math.round(angle / 90)) % 2 === 1
-        body.setSize(
-          swapsAxes ? bodyConfig.height : bodyConfig.width,
-          swapsAxes ? bodyConfig.width : bodyConfig.height,
-          true,
-        )
-      }
-      // reset() safely reindexes the static body at the footprint center. Restoring the image
-      // afterward is intentional: a StaticBody does not follow its Game Object automatically.
-      body.reset(x, y)
-      obstacle.setPosition(visualX, visualY)
-    })
+    if (this.forestRegion) this.createForestColliders(obstacles, this.forestRegion.colliders)
+    else this.createLegacyObstacles(obstacles, activeObstacleLayout)
     const avatarGender = profile.avatar_gender === 'male' ? 'male' : 'female'
     this.player = new Player(this, profile.position_x, profile.position_y, avatarGender)
     this.physics.add.collider(this.player, obstacles)
@@ -414,6 +408,7 @@ export class WorldScene extends Phaser.Scene {
         )
       }
     })
+    this.updateForestForegrounds()
     this.updateNearbyInteractable()
     if (Phaser.Input.Keyboard.JustDown(this.interactKey)) this.interact()
     if (time - this.lastPositionEmit > 600 && this.player.body?.velocity.lengthSq()) {
@@ -575,23 +570,54 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createMinimap(minX: number, minY: number, width: number, height: number): void {
-    const viewportSize = 150
-    const viewportMargin = 12
-    const viewport = {
-      x: this.scale.width - viewportSize - viewportMargin,
-      y: viewportMargin,
-      width: viewportSize,
-      height: viewportSize,
-    }
     const minimap = this.cameras
-      .add(viewport.x, viewport.y, viewport.width, viewport.height)
+      .add(0, 0, 150, 150)
       .setName('world-minimap')
       .setBounds(minX, minY, width, height)
-      .setBackgroundColor('rgba(0, 0, 0, 0)')
+      .setBackgroundColor('rgba(3, 14, 11, 0.96)')
       .setRoundPixels(true)
-    minimap.setZoom(Math.min(viewport.width / width, viewport.height / height) * 0.94)
+      .setVisible(false)
+
+    const layoutMinimap = (): boolean => {
+      const canvasRect = this.game.canvas.getBoundingClientRect()
+      const scaleX = canvasRect.width / GAME_WIDTH
+      const scaleY = canvasRect.height / GAME_HEIGHT
+      if (canvasRect.width <= 0 || canvasRect.height <= 0 || Math.abs(scaleX - scaleY) > 0.01) return false
+      const layout = resolveMinimapLayout({
+        canvasLeft: canvasRect.left,
+        canvasTop: canvasRect.top,
+        canvasWidth: canvasRect.width,
+        canvasHeight: canvasRect.height,
+        viewportWidth: window.innerWidth,
+        gameWidth: GAME_WIDTH,
+        gameHeight: GAME_HEIGHT,
+        compact: window.innerWidth <= 640,
+      })
+      minimap.setViewport(layout.cameraX, layout.cameraY, layout.cameraWidth, layout.cameraHeight)
+      minimap.setZoom(Math.min(layout.cameraWidth / width, layout.cameraHeight / height) * 0.94)
+      minimap.setVisible(true)
+      return true
+    }
+    let layoutFrame: number | null = null
+    let stopped = false
+    const scheduleMinimapLayout = () => {
+      if (layoutFrame !== null) window.cancelAnimationFrame(layoutFrame)
+      layoutFrame = window.requestAnimationFrame(() => {
+        layoutFrame = window.requestAnimationFrame(() => {
+          layoutFrame = null
+          if (!stopped && !layoutMinimap()) scheduleMinimapLayout()
+        })
+      })
+    }
+    scheduleMinimapLayout()
+    this.scale.on(Phaser.Scale.Events.RESIZE, scheduleMinimapLayout)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      stopped = true
+      if (layoutFrame !== null) window.cancelAnimationFrame(layoutFrame)
+      this.scale.off(Phaser.Scale.Events.RESIZE, scheduleMinimapLayout)
+    })
     minimap.centerOn(minX + width / 2, minY + height / 2)
-    minimap.ignore(this.environmentObjects)
+    minimap.ignore(this.minimapHiddenObjects)
 
     this.playerMapMarker = this.add
       .circle(this.player.x, this.player.y, 38, 0xfef3c7)
@@ -636,6 +662,7 @@ export class WorldScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: false })
       .disableInteractive()
     this.environmentObjects.push(this.environmentOverlay)
+    this.minimapHiddenObjects.push(this.environmentOverlay)
     if (mapType !== 'village') return
     const lightAnchors = [
       { x: 790, y: 790, radius: 105 },
@@ -649,6 +676,96 @@ export class WorldScene extends Phaser.Scene {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setVisible(false))
     this.environmentObjects.push(...this.environmentLights)
+    this.minimapHiddenObjects.push(...this.environmentLights)
+  }
+
+  private createLegacyObstacles(
+    group: Phaser.Physics.Arcade.StaticGroup,
+    layouts: ObstacleLayoutItem[],
+  ): void {
+    // Body offsets describe the footprint inside the displayed texture; layout x/y is the footprint center.
+    layouts.forEach(({ x, y, texture, size, displayHeight = size, angle = 0, body: bodyConfig }) => {
+      const bodyHalfWidth = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.width / 2
+      const bodyHalfHeight = bodyConfig.shape === 'circle' ? bodyConfig.radius : bodyConfig.height / 2
+      const bodyCenterOffsetX = -size / 2 + bodyConfig.offsetX + bodyHalfWidth
+      const bodyCenterOffsetY = -displayHeight / 2 + bodyConfig.offsetY + bodyHalfHeight
+      const angleRadians = Phaser.Math.DegToRad(angle)
+      const rotatedBodyCenterOffsetX = bodyCenterOffsetX * Math.cos(angleRadians) - bodyCenterOffsetY * Math.sin(angleRadians)
+      const rotatedBodyCenterOffsetY = bodyCenterOffsetX * Math.sin(angleRadians) + bodyCenterOffsetY * Math.cos(angleRadians)
+      const visualX = x - rotatedBodyCenterOffsetX
+      const visualY = y - rotatedBodyCenterOffsetY
+      const obstacle = group.create(visualX, visualY, texture) as Phaser.Physics.Arcade.Image
+      obstacle.setDisplaySize(size, displayHeight).setAngle(angle).setDepth(y).refreshBody()
+      const body = obstacle.body as Phaser.Physics.Arcade.StaticBody
+      if (bodyConfig.shape === 'circle') {
+        body.setCircle(bodyConfig.radius, size / 2 - bodyConfig.radius, displayHeight / 2 - bodyConfig.radius)
+      } else {
+        const swapsAxes = Math.abs(Math.round(angle / 90)) % 2 === 1
+        body.setSize(
+          swapsAxes ? bodyConfig.height : bodyConfig.width,
+          swapsAxes ? bodyConfig.width : bodyConfig.height,
+          true,
+        )
+      }
+      body.reset(x, y)
+      obstacle.setPosition(visualX, visualY)
+    })
+  }
+
+  private createForestColliders(
+    group: Phaser.Physics.Arcade.StaticGroup,
+    colliders: readonly ForestCollider[],
+  ): void {
+    const debug = import.meta.env.DEV
+      && new URLSearchParams(window.location.search).get('debug-colliders') === '1'
+    const colors: Record<ForestCollider['role'], number> = {
+      boundary: 0xf97316,
+      trunk: 0x22c55e,
+      ruin: 0xa78bfa,
+      water: 0x38bdf8,
+      landmark: 0xfacc15,
+    }
+
+    colliders.forEach((collider) => {
+      const width = collider.shape === 'circle' ? (collider.radius ?? 1) * 2 : collider.width ?? 1
+      const height = collider.shape === 'circle' ? (collider.radius ?? 1) * 2 : collider.height ?? 1
+      const zone = this.add.zone(collider.x, collider.y, width, height).setOrigin(0.5)
+      this.physics.add.existing(zone, true)
+      const body = zone.body as Phaser.Physics.Arcade.StaticBody
+      if (collider.shape === 'circle') body.setCircle(collider.radius ?? 1)
+      else body.setSize(width, height, true)
+      body.reset(collider.x, collider.y)
+      group.add(zone)
+
+      if (!debug) return
+      const color = colors[collider.role]
+      const outline = collider.shape === 'circle'
+        ? this.add.circle(collider.x, collider.y, collider.radius ?? 1, color, 0.14).setStrokeStyle(2, color, 0.95)
+        : this.add.rectangle(collider.x, collider.y, width, height, color, 0.14).setStrokeStyle(2, color, 0.95)
+      const label = this.add.text(collider.x, collider.y - height / 2 - 5, collider.debugLabel, {
+        fontFamily: 'ui-monospace, monospace',
+        fontSize: '10px',
+        color: '#ffffff',
+        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+        padding: { x: 4, y: 2 },
+      }).setOrigin(0.5, 1)
+      outline.setDepth(99_990)
+      label.setDepth(99_991)
+      this.environmentObjects.push(outline, label)
+      this.minimapHiddenObjects.push(outline, label)
+    })
+  }
+
+  private updateForestForegrounds(): void {
+    this.forestForegroundObjects.forEach(({ object, baseAlpha, fadeRadius, fadedAlpha }) => {
+      const halfWidth = object.displayWidth / 2
+      const halfHeight = object.displayHeight / 2
+      const dx = Math.max(Math.abs(this.player.x - object.x) - halfWidth, 0)
+      const dy = Math.max(Math.abs(this.player.y - object.y) - halfHeight, 0)
+      const distance = Math.hypot(dx, dy)
+      const targetAlpha = distance < fadeRadius ? fadedAlpha : baseAlpha
+      object.setAlpha(Phaser.Math.Linear(object.alpha, targetAlpha, 0.12))
+    })
   }
 
   private resolveVisiblePlantPosition(
@@ -740,15 +857,74 @@ export class WorldScene extends Phaser.Scene {
       : 'forest-region-exit-right'
   }
 
+  private forestDepth(layout: ForestProp): number {
+    if (layout.depthRole === 'ground-decal') return -8
+    if (layout.depthRole === 'underlay') return -6
+    if (layout.depthRole === 'effect') return 7_000
+    if (layout.depthRole === 'foreground') return 8_000
+    return layout.y
+  }
+
+  private createForestVisual(
+    layout: ForestProp | ForestEffect | ForestForeground,
+    hideFromMinimap = false,
+  ): Phaser.GameObjects.Image | Phaser.GameObjects.TileSprite {
+    const tile = 'motion' in layout && layout.motion?.type === 'tile'
+    const object = tile
+      ? this.add.tileSprite(layout.x, layout.y, layout.width, layout.height, layout.texture)
+      : this.add.image(layout.x, layout.y, layout.texture).setDisplaySize(layout.width, layout.height)
+    const centeredByDefault = layout.depthRole === 'ground-decal'
+      || layout.depthRole === 'underlay'
+      || layout.depthRole === 'effect'
+      || layout.depthRole === 'foreground'
+    const origin = layout.origin ?? { x: 0.5, y: centeredByDefault ? 0.5 : 1 }
+    object
+      .setOrigin(origin.x, origin.y)
+      .setAlpha(layout.alpha ?? 1)
+      .setAngle(layout.angle ?? 0)
+      .setDepth(this.forestDepth(layout))
+    if (layout.additive) object.setBlendMode(Phaser.BlendModes.ADD)
+    this.environmentObjects.push(object)
+    if (hideFromMinimap) this.minimapHiddenObjects.push(object)
+    return object
+  }
+
+  private applyForestMotion(
+    object: Phaser.GameObjects.Image | Phaser.GameObjects.TileSprite,
+    layout: ForestEffect,
+    prefersReducedMotion: boolean,
+  ): void {
+    if (prefersReducedMotion || !layout.motion) return
+    if (layout.motion.type === 'tile' && object instanceof Phaser.GameObjects.TileSprite) {
+      this.tweens.add({
+        targets: object,
+        tilePositionX: layout.motion.x,
+        tilePositionY: layout.motion.y,
+        duration: layout.motion.duration,
+        repeat: -1,
+      })
+      return
+    }
+    if (layout.motion.type === 'pulse') {
+      this.tweens.add({
+        targets: object,
+        alpha: { from: layout.motion.from, to: layout.motion.to },
+        duration: layout.motion.duration,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      })
+    }
+  }
+
   private drawWorld(
     width: number,
     height: number,
     mapType: string,
     forestRegion: ForestRegionConfig | null,
   ): void {
-    const groundTexture = forestRegion?.groundTexture ?? 'grass-ground'
-    this.add.tileSprite(0, 0, width, height, groundTexture).setOrigin(0).setDepth(-10)
     if (mapType === 'village') {
+      this.add.tileSprite(0, 0, width, height, 'grass-ground').setOrigin(0).setDepth(-10)
       const routes = [
         new Phaser.Curves.Spline([
           32, 150,
@@ -782,54 +958,57 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (!forestRegion) return
-    forestRegion.routes.forEach((layout) => {
-      const route = new Phaser.Curves.Spline(layout.points)
+    forestRegion.groundLayers.forEach((layout, index) => {
+      const positioned = layout as typeof layout & { x?: number; y?: number; angle?: number }
+      const layerWidth = layout.width ?? width
+      const layerHeight = layout.height ?? height
+      const x = positioned.x ?? width / 2
+      const y = positioned.y ?? height / 2
+      const ground = layout.tile
+        ? this.add.tileSprite(x, y, layerWidth, layerHeight, layout.texture)
+        : this.add.image(x, y, layout.texture).setDisplaySize(layerWidth, layerHeight)
+      ground
+        .setOrigin(0.5)
+        .setAlpha(layout.alpha ?? 1)
+        .setAngle(positioned.angle ?? 0)
+        .setDepth(-10 + index * 0.35)
+      this.environmentObjects.push(ground)
+    })
+
+    forestRegion.paths.forEach((layout) => {
+      const route = new Phaser.Curves.Spline(layout.points.map(({ x, y }) => new Phaser.Math.Vector2(x, y)))
       const divisions = Math.max(2, Math.ceil(route.getLength() / 145))
       const points = route.getSpacedPoints(divisions)
       points.forEach((point, index) => {
         const previous = points[Math.max(0, index - 1)]
         const next = points[Math.min(points.length - 1, index + 1)]
         const angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.Between(previous.x, previous.y, next.x, next.y))
-        this.add.image(point.x, point.y, 'forest-path-wet-soil-overlay')
-          .setDisplaySize(layout.width, layout.height)
+        const pathSegment = this.add.image(point.x, point.y, layout.texture)
+          .setDisplaySize(layout.width, Math.max(64, Math.round(layout.width * 0.36)))
           .setAngle(angle)
           .setAlpha(layout.alpha)
-          .setDepth(-9)
+          .setDepth(-7)
+        this.environmentObjects.push(pathSegment)
       })
     })
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    forestRegion.decorations.forEach((layout) => {
-      const decoration = layout.tile
-        ? this.add.tileSprite(layout.x, layout.y, layout.width, layout.height, layout.texture)
-        : this.add.image(layout.x, layout.y, layout.texture).setDisplaySize(layout.width, layout.height)
-      decoration
-        .setAlpha(layout.alpha ?? 1)
-        .setAngle(layout.angle ?? 0)
-        .setDepth(layout.depth ?? layout.y)
-      this.environmentObjects.push(decoration)
-      if (layout.additive) decoration.setBlendMode(Phaser.BlendModes.ADD)
-      if (prefersReducedMotion || !layout.motion) return
-      if (layout.motion.type === 'tile' && decoration instanceof Phaser.GameObjects.TileSprite) {
-        this.tweens.add({
-          targets: decoration,
-          tilePositionX: layout.motion.x,
-          tilePositionY: layout.motion.y,
-          duration: layout.motion.duration,
-          repeat: -1,
-        })
-        return
-      }
-      if (layout.motion.type === 'pulse') {
-        this.tweens.add({
-          targets: decoration,
-          alpha: { from: layout.motion.from, to: layout.motion.to },
-          duration: layout.motion.duration,
-          ease: 'Sine.easeInOut',
-          yoyo: true,
-          repeat: -1,
-        })
-      }
+    ;[...forestRegion.props, ...forestRegion.landmarks].forEach((layout) => {
+      this.createForestVisual(layout)
+    })
+    forestRegion.effects.forEach((layout) => {
+      const object = this.createForestVisual(layout, true)
+      this.applyForestMotion(object, layout, prefersReducedMotion)
+    })
+    forestRegion.foreground.forEach((layout) => {
+      const object = this.createForestVisual(layout, true)
+      if (!(object instanceof Phaser.GameObjects.Image)) return
+      this.forestForegroundObjects.push({
+        object,
+        baseAlpha: layout.alpha ?? 1,
+        fadeRadius: layout.fadeRadius,
+        fadedAlpha: layout.fadedAlpha,
+      })
     })
   }
 }

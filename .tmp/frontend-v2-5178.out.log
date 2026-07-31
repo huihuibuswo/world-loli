@@ -1,0 +1,21 @@
+
+> world-loli-game-client@0.1.0 dev
+> vite --host 0.0.0.0 --port 5177 --port 5178
+
+
+  [32m[1mVITE[22m v7.3.6[39m  [2mready in [0m[1m469[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5178[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://198.18.0.1:[1m5178[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.101.67:[1m5178[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.32.1:[1m5178[22m/[39m
+[2m11:06:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m11:17:10[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m11:30:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m11:30:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m11:49:30[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m11:58:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m12:01:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m12:02:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m12:04:51[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m
+[2m12:09:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/GameShell.vue[22m

@@ -4,7 +4,7 @@ import {
   BATTLE_SCENE_REQUEST_KEY,
   type GameEventMap,
 } from '@/game/events'
-import { FOREST_REGION_ASSETS } from '@/game/forestRegions'
+import { FOREST_REGION_ASSET_ROOT, FOREST_REGION_RUNTIME_ASSETS } from '@/game/forestRegions'
 
 type BattleSceneRequest = GameEventMap['scene:battle']
 
@@ -85,9 +85,8 @@ export class PreloadScene extends Phaser.Scene {
     ;['a', 'b', 'c', 'd'].forEach((variant) => {
       this.load.image(`forest-root-obstacle-${variant}`, `${root}/sprites/forest/forest-root-obstacle-${variant}.png`)
     })
-    const forestRegionRoot = `${root}/environment/glimmer-forest/regions-v1`
-    Object.entries(FOREST_REGION_ASSETS).forEach(([key, path]) => {
-      this.load.image(key, `${forestRegionRoot}/${path}`)
+    Object.entries(FOREST_REGION_RUNTIME_ASSETS).forEach(([key, path]) => {
+      this.load.image(key, `${FOREST_REGION_ASSET_ROOT}/${path}`)
     })
     this.load.image('village-signpost', `${root}/sprites/village-signpost.png`)
     this.load.image('village-chief-house', `${root}/sprites/village-chief-house.png`)
