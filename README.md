@@ -1,6 +1,6 @@
 # 斗萝大陆（World Loli）
 
-一款基于 Vue 3、Phaser 3 与 FastAPI 构建，以世界探索、NPC 互动、回合制卡牌战斗和卡灵养成为核心的 Web RPG Demo。
+一款基于 Vue 3、Phaser 3 与 Rust/Axum 构建，以世界探索、NPC 互动、回合制卡牌战斗和卡灵养成为核心的 Web RPG Demo。
 
 当前仓库已经打通从注册登录、角色创建、序章演出和地图探索，到 NPC 对话、卡牌战斗、植物采集、卡灵赠礼与存档恢复的完整前后端流程。
 
@@ -24,10 +24,10 @@
 | 模块 | 技术 |
 | --- | --- |
 | 游戏客户端 | Vue 3、TypeScript、Phaser 3、Pinia、Vite |
-| API 服务 | Python、FastAPI、SQLAlchemy |
+| API 服务 | Rust 1.97、Axum、Tokio、SQLx |
 | 数据库 | PostgreSQL 17 |
 | 部署与开发环境 | Docker Compose |
-| 测试 | Pytest、FastAPI TestClient |
+| 测试 | Rust `cargo test`、客户端 Node.js 测试 |
 
 ## 项目结构
 
@@ -42,12 +42,17 @@ world-loli/
 │  ├─ src/game/          # Phaser 场景、实体与配置
 │  ├─ src/stores/        # Pinia 状态管理
 │  └─ tests/             # 客户端纯逻辑测试
-├─ server/               # FastAPI 服务端
-│  ├─ app/api/           # HTTP API 路由
-│  ├─ app/core/          # 配置、安全与响应结构
-│  ├─ app/services/      # 核心业务逻辑
-│  ├─ database/          # 数据库迁移与 Demo 数据
-│  └─ tests/             # API 流程测试
+├─ server-rust/          # 当前默认 Rust API 服务
+│  └─ src/
+│     ├─ api/            # Axum HTTP API 路由
+│     ├─ ai.rs           # OpenAI-compatible AI 客户端
+│     ├─ auth.rs         # 密码与 JWT
+│     ├─ config.rs       # 环境变量配置与校验
+│     └─ state.rs        # SQLx 数据库连接与应用状态
+├─ server/               # Compose、环境配置、迁移与 Python 回退代码
+│  ├─ database/          # PostgreSQL 迁移与 Demo 数据
+│  ├─ docker-compose.yml # 默认构建并运行 server-rust
+│  └─ app/               # 已保留的 FastAPI 兼容回退实现
 └─ doc/                  # 游戏设计与技术设计文档
 ```
 
@@ -58,6 +63,7 @@ world-loli/
 - Docker Desktop（包含 Docker Compose）
 - Node.js 22
 - pnpm
+- Rust 1.97（仅本机开发或测试后端时需要；Docker 启动不需要本机 Rust）
 
 ### 2. 启动服务端
 
@@ -76,7 +82,7 @@ DATABASE_URL=postgresql+psycopg://world:your-local-database-password@postgres:54
 JWT_SECRET=replace-with-a-random-secret-of-at-least-32-characters
 ```
 
-然后启动 PostgreSQL、执行数据库迁移并运行 API：
+然后启动 PostgreSQL、执行数据库迁移并构建运行 Rust API：
 
 ```powershell
 docker compose up --build
@@ -85,7 +91,11 @@ docker compose up --build
 服务启动后可访问：
 
 - API 健康检查：<http://127.0.0.1:8000/health/ready>
-- Swagger 接口文档：<http://127.0.0.1:8000/docs>
+- 业务接口统一前缀：`http://127.0.0.1:8000/api/v1`
+
+Compose 中的 `api` 服务默认构建 `server-rust/`。原 FastAPI 实现仅作为
+`python-fallback` profile 的兼容回退，不参与默认启动。当前 Rust API 暂不提供
+Swagger/OpenAPI 文档页面。
 
 ### 3. 启动游戏客户端
 
@@ -117,22 +127,27 @@ pnpm preview    # 预览生产构建
 
 ### 服务端测试
 
-测试会连接真实数据库，并创建后清理临时测试用户。先确保 Docker Compose 服务已启动，再执行：
+本机安装 Rust 1.97 时可直接运行：
 
 ```powershell
-Set-Location server
-docker compose exec api pytest
+Set-Location server-rust
+cargo test --locked
 ```
 
-当前端到端测试覆盖：
+没有本机 Rust 工具链时，可使用与生产构建一致的 Docker builder 阶段：
 
-- 注册、登录与异常认证
-- 角色资料、地图切换与位置一致性
-- 序章状态流、S0 结束处理与初始任务交付
-- NPC 数据、服务、好感度与独立卡组
-- 完整卡牌战斗、平衡规则、AI 回退与首次胜利奖励
-- 植物采集、库存、每日赠礼限制与卡灵碎片合成
-- 游戏时间默认值、范围校验、保存恢复与旧存档兼容
+```powershell
+Set-Location server-rust
+docker build --target builder -t world-loli-server-test .
+docker run --rm world-loli-server-test cargo test --locked
+```
+
+当前 Rust 测试覆盖：
+
+- 配置校验、数据库 URL 兼容和 AI 地址安全边界
+- OpenAI-compatible 请求、超时、错误诊断与非法响应降级
+- JWT、密码处理、Bearer Token 解析和统一响应结构
+- 敌方卡牌序列、套牌、开场流程、存档与采集等核心规则
 
 ## 配置说明
 
@@ -143,7 +158,7 @@ docker compose exec api pytest
 | `POSTGRES_DB` | PostgreSQL 数据库名 | `world` |
 | `POSTGRES_USER` | PostgreSQL 用户名 | `world` |
 | `POSTGRES_PASSWORD` | PostgreSQL 密码 | 无，必须设置 |
-| `DATABASE_URL` | SQLAlchemy 数据库连接地址 | 无，必须设置 |
+| `DATABASE_URL` | SQLx 数据库连接地址；兼容旧的 `postgresql+psycopg://` 前缀 | 无，必须设置 |
 | `JWT_SECRET` | JWT 签名密钥，至少 32 个字符 | 无，必须设置 |
 | `JWT_ALGORITHM` | JWT 签名算法 | `HS256` |
 | `ACCESS_TOKEN_MINUTES` | 登录令牌有效期（分钟） | `120` |
@@ -238,7 +253,7 @@ NPC 在 80 点好感进入 5 级时获得对应卡灵；怪物胜利固定掉落
 1. 使用下一个连续编号，例如 `012_feature_name.sql`。
 2. 保持迁移可重复执行，或显式处理对象已存在的情况。
 3. 同步更新 `server/database/tests/verify_schema.sql`（如涉及结构约束）。
-4. 运行后端测试验证已有 Demo 流程未被破坏。
+4. 运行 Rust 后端测试，并通过 Compose 启动服务验证迁移和健康检查。
 
 ## 设计文档
 
@@ -275,6 +290,6 @@ NPC 在 80 点好感进入 5 级时获得对应卡灵；怪物胜利固定掉落
 
 ## 当前状态
 
-本项目目前是可本地联调的游戏 Demo，重点验证序章引导、世界探索、动态 NPC、昼夜变化、卡牌战斗和卡灵养成之间的数据闭环。S0 开场演出与晨曦村初始任务链已接入，统一游戏时间可在探索中推进，并在对话、战斗、菜单和页面失焦期间暂停。
+本项目目前是可本地联调的游戏 Demo，默认 API 已切换为 Rust/Axum 实现，FastAPI 代码仅保留为兼容回退。项目重点验证序章引导、世界探索、动态 NPC、昼夜变化、卡牌战斗和卡灵养成之间的数据闭环。S0 开场演出与晨曦村初始任务链已接入，统一游戏时间可在探索中推进，并在对话、战斗、菜单和页面失焦期间暂停。
 
 项目仍处于开发阶段，内容规模、美术一致性、移动端体验与更多剧情场次会继续迭代；当前已实现能力和设计资料以仓库代码、测试及 `doc/` 文档为准。
