@@ -35,6 +35,20 @@ export type ForestPath = {
   alpha: number
 }
 
+export type ForestWaterway = {
+  id: string
+  points: readonly ForestPoint[]
+  width: number
+  texture: string
+  alpha: number
+  tilePosition?: ForestPoint
+  edgeColor: number
+  edgeAlpha: number
+  edgePadding: number
+  depth: number
+  minimapVisible?: boolean
+}
+
 export type ForestProp = {
   id: string
   texture: string
@@ -124,6 +138,7 @@ export type ForestRegionConfig = {
   key: ForestRegionKey
   groundLayers: readonly ForestGroundLayer[]
   paths: readonly ForestPath[]
+  waterways: readonly ForestWaterway[]
   props: readonly ForestProp[]
   colliders: readonly ForestCollider[]
   landmarks: readonly ForestLandmark[]
@@ -350,28 +365,20 @@ const PART_2_PATHS = [
   path('p2-wetland', 'branch', [[710, 1330], [560, 1180], [470, 960], [500, 820], [540, 720], [700, 640], [900, 720], [1180, 900]], 190, 0.62),
 ]
 
-const part2WaterSegment = (id: string, x: number, y: number, width: number, height: number, angle: number, alpha: number): ForestProp => ({
-  ...prop(id, 'forest-region-part-2-water-flow', x, y, width, height, 'ground-decal', angle),
-  alpha,
+const PART_2_WATERWAYS: ForestWaterway[] = [{
+  id: 'p2-waterway',
+  points: [[120, 520], [360, 650], [620, 760], [900, 930], [1160, 1110], [1430, 1290], [1710, 1450], [2020, 1540]].map(([x, y]) => point(x, y)),
+  width: 230,
+  texture: 'forest-region-part-2-water-flow',
+  alpha: 0.58,
+  tilePosition: point(137, 61),
+  edgeColor: 0x1e7182,
+  edgeAlpha: 0.28,
+  edgePadding: 20,
   depth: -6.8,
-})
-const PART_2_WATER_SEGMENTS: ForestProp[] = [
-  part2WaterSegment('p2-water-01', 235, 585, 330, 220, 28, 0.7),
-  part2WaterSegment('p2-water-02', 500, 710, 350, 225, 24, 0.68),
-  part2WaterSegment('p2-water-03', 765, 845, 360, 230, 31, 0.7),
-  part2WaterSegment('p2-water-04', 1030, 1020, 370, 240, 35, 0.72),
-  part2WaterSegment('p2-water-05', 1320, 1210, 400, 245, 32, 0.7),
-  part2WaterSegment('p2-water-06', 1635, 1400, 410, 240, 25, 0.68),
-  part2WaterSegment('p2-water-07', 1900, 1515, 320, 220, 16, 0.66),
-]
+}]
 
 const PART_2_BANKS: ForestProp[] = [
-  prop('p2-bank-01', 'forest-region-part-2-bank-01', 300, 610, 300, 180, 'ground-decal', 24),
-  prop('p2-bank-02', 'forest-region-part-2-bank-02', 760, 845, 300, 190, 'ground-decal', 28),
-  prop('p2-bank-03', 'forest-region-part-2-bank-03', 1320, 1200, 320, 230, 'ground-decal', 18),
-  prop('p2-bank-04', 'forest-region-part-2-bank-04', 1640, 1390, 310, 220, 'ground-decal', 18),
-  prop('p2-bank-05', 'forest-region-part-2-bank-05', 1900, 1500, 280, 180, 'ground-decal', 8),
-  prop('p2-bank-06', 'forest-region-part-2-bank-06', 160, 560, 190, 260, 'ground-decal', 18),
   prop('p2-bank-07', 'forest-region-part-2-bank-07', 540, 720, 320, 170, 'ground-decal', -24),
   prop('p2-bank-09', 'forest-region-part-2-bank-09', 1030, 1040, 390, 190, 'ground-decal', -42),
   prop('p2-bank-10', 'forest-region-part-2-bank-10', 620, 760, 250, 200, 'ground-decal', -10),
@@ -532,6 +539,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
     key: 'glimmer_forest_part_1',
     groundLayers: [{ id: 'p1-ground', texture: 'forest-ground-cold-wet', tile: true, depthRole: 'underlay' }],
     paths: PART_1_PATHS,
+    waterways: [],
     props: PART_1_PROPS,
     colliders: PART_1_COLLIDERS,
     landmarks: PART_1_LANDMARKS,
@@ -550,7 +558,8 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
       { id: 'p2-macro', texture: 'forest-region-part-2-macro', width: 2048, height: 2048, alpha: 0.24, depthRole: 'ground-decal' },
     ],
     paths: PART_2_PATHS,
-    props: [...PART_2_WATER_SEGMENTS, ...PART_2_BANKS, ...PART_2_FOLIAGE],
+    waterways: PART_2_WATERWAYS,
+    props: [...PART_2_BANKS, ...PART_2_FOLIAGE],
     colliders: PART_2_COLLIDERS,
     landmarks: PART_2_BRIDGES,
     effects: [
@@ -578,6 +587,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
       { id: 'p3-courtyard', texture: 'forest-region-part-3-courtyard', x: 1030, y: 1040, width: 760, height: 700, alpha: 0.9, depthRole: 'ground-decal' },
     ],
     paths: PART_3_PATHS,
+    waterways: [],
     props: PART_3_PROPS,
     colliders: PART_3_COLLIDERS,
     landmarks: PART_3_LANDMARKS,
@@ -593,6 +603,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
       { id: 'p4-macro', texture: 'forest-region-part-4-macro', width: 2048, height: 2048, alpha: 0.32, depthRole: 'ground-decal' },
     ],
     paths: PART_4_PATHS,
+    waterways: [],
     props: [
       ...PART_4_PROPS,
       ...pathMarkerPositions.map(([x, y], index) => ({ ...prop(`p4-path-marker-${index + 1}`, `forest-region-part-4-path-${String(index + 1).padStart(2, '0')}`, x, y, 116, 116, 'effect'), additive: true, alpha: 0.82 })),
@@ -620,6 +631,7 @@ export const FOREST_REGIONS: Record<ForestRegionKey, ForestRegionConfig> = {
       { id: 'p5-basin-edge', texture: 'forest-region-part-5-basin-edge', x: 1040, y: 1120, width: 900, height: 820, alpha: 0.88, depthRole: 'ground-decal' },
     ],
     paths: PART_5_PATHS,
+    waterways: [],
     props: PART_5_PROPS,
     colliders: PART_5_COLLIDERS,
     landmarks: PART_5_LANDMARKS,
@@ -639,6 +651,7 @@ const forestRegionRuntimeTextureKeys = new Set<string>([
   'forest-region-exit-right',
   ...Object.values(FOREST_REGIONS).flatMap((region) => [
     ...region.groundLayers,
+    ...region.waterways,
     ...region.props,
     ...region.landmarks,
     ...region.effects,
@@ -658,12 +671,17 @@ function colliderBounds(collider: ForestCollider): { left: number; top: number; 
 
 export function validateForestRegionConfig(config: ForestRegionConfig): string[] {
   const problems: string[] = []
-  const ids = [...config.groundLayers, ...config.paths, ...config.props, ...config.colliders, ...config.landmarks, ...config.effects, ...config.foreground, ...config.safeZones].map((item) => item.id)
+  const ids = [...config.groundLayers, ...config.paths, ...config.waterways, ...config.props, ...config.colliders, ...config.landmarks, ...config.effects, ...config.foreground, ...config.safeZones].map((item) => item.id)
   if (new Set(ids).size !== ids.length) problems.push(`${config.key}: duplicate layout id`)
   config.paths.forEach((item) => {
     const minimum = item.role === 'main' ? 240 : 180
     if (item.width < minimum) problems.push(`${config.key}: ${item.id} width ${item.width} < ${minimum}`)
     if (item.points.length < 2) problems.push(`${config.key}: ${item.id} has fewer than two points`)
+  })
+  config.waterways.forEach((item) => {
+    if (item.points.length < 2) problems.push(`${config.key}: ${item.id} has fewer than two points`)
+    if (item.width <= 0) problems.push(`${config.key}: ${item.id} has invalid width`)
+    if (item.edgePadding < 0) problems.push(`${config.key}: ${item.id} has invalid edge padding`)
   })
   config.colliders.forEach((collider) => {
     if (!collider.debugLabel) problems.push(`${config.key}: ${collider.id} has no debug label`)

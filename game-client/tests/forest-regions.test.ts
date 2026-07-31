@@ -135,6 +135,7 @@ test('defines five V2 region configurations with authoritative layout layers', (
     assert.equal(region.key, key)
     assert.ok(region.groundLayers.length > 0)
     assert.ok(region.paths.length > 0)
+    assert.ok(Array.isArray(region.waterways))
     assert.ok(region.props.length > 0)
     assert.ok(region.colliders.length > 0)
     assert.ok(region.safeZones.length > 0)
@@ -168,8 +169,14 @@ test('main and branch routes meet V2 width and endpoint contracts', () => {
 
 test('safe zones remain clear and water banks are visual-only props', () => {
   const part2 = FOREST_REGIONS.glimmer_forest_part_2
-  assert.equal(part2.props.filter((item) => item.id.startsWith('p2-bank-')).length, 9)
-  assert.equal(part2.props.some((item) => item.id === 'p2-bank-08'), false)
+  assert.deepEqual(
+    part2.props.filter((item) => item.id.startsWith('p2-bank-')).map((item) => item.id).sort(),
+    ['p2-bank-07', 'p2-bank-09', 'p2-bank-10'],
+  )
+  for (const suffix of ['01', '02', '03', '04', '05', '06', '08']) {
+    assert.equal(part2.props.some((item) => item.id === `p2-bank-${suffix}`), false)
+    assert.equal(`forest-region-part-2-bank-${suffix}` in FOREST_REGION_RUNTIME_ASSETS, false)
+  }
   assert.equal(part2.colliders.some((item) => item.visualRef?.startsWith('p2-bank-')), false)
   assert.equal(part2.colliders.filter((item) => item.role === 'water').length, 12)
 
@@ -192,14 +199,36 @@ test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and refl
   assert.equal(macro.alpha, 0.24)
   assert.equal(part2.groundLayers.some((item) => item.texture === 'forest-region-part-2-ground-3'), false)
 
-  const waters = part2.props.filter((item) => item.id.startsWith('p2-water-'))
   const banks = part2.props.filter((item) => item.id.startsWith('p2-bank-'))
   const foliage = part2.props.filter((item) => item.id.startsWith('p2-foliage-'))
   const reflections = part2.effects.filter((item) => item.id.startsWith('p2-reflection-'))
-  assert.equal(waters.length, 7)
-  assert.equal(new Set(waters.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 7)
-  assert.equal(banks.length, 9)
-  assert.equal(new Set(banks.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 9)
+  assert.equal(part2.waterways.length, 1)
+  assert.deepEqual(part2.waterways[0], {
+    id: 'p2-waterway',
+    points: [
+      { x: 120, y: 520 }, { x: 360, y: 650 }, { x: 620, y: 760 }, { x: 900, y: 930 },
+      { x: 1160, y: 1110 }, { x: 1430, y: 1290 }, { x: 1710, y: 1450 }, { x: 2020, y: 1540 },
+    ],
+    width: 230,
+    texture: 'forest-region-part-2-water-flow',
+    alpha: 0.58,
+    tilePosition: { x: 137, y: 61 },
+    edgeColor: 0x1e7182,
+    edgeAlpha: 0.28,
+    edgePadding: 20,
+    depth: -6.8,
+  })
+  assert.equal(part2.props.some((item) => item.texture === 'forest-region-part-2-water-flow'), false)
+  for (let index = 1; index <= 7; index += 1) {
+    const legacyId = `p2-water-${String(index).padStart(2, '0')}`
+    assert.equal(
+      [...part2.groundLayers, ...part2.waterways, ...part2.props, ...part2.landmarks, ...part2.effects]
+        .some((item) => item.id === legacyId),
+      false,
+      legacyId,
+    )
+  }
+  assert.equal(banks.length, 3)
   assert.equal(foliage.length, 6)
   assert.equal(new Set(foliage.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 6)
   assert.equal(reflections.length, 4)
@@ -286,7 +315,7 @@ test('part 2 minimap keeps navigation layers and hides decorative effects and fo
 
   assert.ok(part2.paths.some((item) => item.id === 'p2-main'))
   assert.ok(part2.paths.some((item) => item.id === 'p2-wetland'))
-  assert.equal(part2.props.filter((item) => item.id.startsWith('p2-water-')).every((item) => visibleProps.includes(item.id)), true)
+  assert.equal(part2.waterways.every((item) => item.minimapVisible !== false), true)
   assert.equal(part2.landmarks.every((item) => visibleProps.includes(item.id)), true)
   assert.equal(part2.props.filter((item) => item.id.startsWith('p2-foliage-')).every((item) => hiddenProps.includes(item.id)), true)
   assert.equal(part2.effects.every((item) => hiddenProps.includes(item.id)), true)

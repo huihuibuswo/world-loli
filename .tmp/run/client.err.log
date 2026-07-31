@@ -1,1 +1,63 @@
 $ vite --host 0.0.0.0 --port 5177
+[2m17:32:46[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Transform failed with 1 error:
+D:/project/world-loli/game-client/src/game/forestRegions.ts:377:1: ERROR: Expected "]" but found ")"
+  Plugin: [35mvite:esbuild[39m
+  File: [36mD:/project/world-loli/game-client/src/game/forestRegions.ts[39m:377:1
+[33m  
+  [33mExpected "]" but found ")"[33m
+  375 |    baseAlpha: 0.72,
+  376 |    depth: -6.8,
+  377 |  })]
+      |   ^
+  378 |  
+  379 |  const PART_2_BANKS: ForestProp[] = [
+  [39m
+[2m17:32:46[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Transform failed with 1 error:
+D:/project/world-loli/game-client/src/game/forestRegions.ts:377:1: ERROR: Expected "]" but found ")"
+  Plugin: [35mvite:esbuild[39m
+  File: [36mD:/project/world-loli/game-client/src/game/forestRegions.ts[39m:377:1
+[33m  
+  [33mExpected "]" but found ")"[33m
+  375 |    baseAlpha: 0.72,
+  376 |    depth: -6.8,
+  377 |  })]
+      |   ^
+  378 |  
+  379 |  const PART_2_BANKS: ForestProp[] = [
+  [39m
+[2m17:32:46[22m [31m[1m[vite][22m[39m [31mInternal server error: Transform failed with 1 error:
+D:/project/world-loli/game-client/src/game/forestRegions.ts:377:1: ERROR: Expected "]" but found ")"[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mD:/project/world-loli/game-client/src/game/forestRegions.ts[39m:377:1
+[33m  
+  [33mExpected "]" but found ")"[33m
+  375 |    baseAlpha: 0.72,
+  376 |    depth: -6.8,
+  377 |  })]
+      |   ^
+  378 |  
+  379 |  const PART_2_BANKS: ForestProp[] = [
+  [39m
+      at failureErrorWithLog (D:\project\world-loli\game-client\node_modules\.pnpm\esbuild@0.28.1\node_modules\esbuild\lib\main.js:1748:15)
+      at D:\project\world-loli\game-client\node_modules\.pnpm\esbuild@0.28.1\node_modules\esbuild\lib\main.js:1017:50
+      at responseCallbacks.<computed> (D:\project\world-loli\game-client\node_modules\.pnpm\esbuild@0.28.1\node_modules\esbuild\lib\main.js:884:9)
+      at handleIncomingPacket (D:\project\world-loli\game-client\node_modules\.pnpm\esbuild@0.28.1\node_modules\esbuild\lib\main.js:939:12)
+      at Socket.readFromStdout (D:\project\world-loli\game-client\node_modules\.pnpm\esbuild@0.28.1\node_modules\esbuild\lib\main.js:862:7)
+      at Socket.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:561:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+      at Readable.push (node:internal/streams/readable:392:5)
+      at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
+[2m17:32:47[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Transform failed with 1 error:
+D:/project/world-loli/game-client/src/game/forestRegions.ts:377:1: ERROR: Expected "]" but found ")"
+  Plugin: [35mvite:esbuild[39m
+  File: [36mD:/project/world-loli/game-client/src/game/forestRegions.ts[39m:377:1
+[33m  
+  [33mExpected "]" but found ")"[33m
+  375 |    baseAlpha: 0.72,
+  376 |    depth: -6.8,
+  377 |  })]
+      |   ^
+  378 |  
+  379 |  const PART_2_BANKS: ForestProp[] = [
+  [39m

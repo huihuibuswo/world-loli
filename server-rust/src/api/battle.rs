@@ -1017,6 +1017,11 @@ async fn choose_enemy_cards(state: &AppState, context: &EnemyTurnContext) -> Opt
             tracing::warn!(
                 enemy_id = context.enemy_id,
                 reason = error.kind(),
+                http_status = error.http_status(),
+                request_category = error.request_category(),
+                provider_error_type = error.provider_error_type(),
+                provider_error_code = error.provider_error_code(),
+                provider_request_id = error.provider_request_id(),
                 "ai battle fallback"
             );
             return None;

@@ -6,6 +6,7 @@ use thiserror::Error;
 use crate::config::Settings;
 
 const MAX_AI_RESPONSE_BYTES: usize = 64 * 1024;
+const MAX_AI_DIAGNOSTIC_FIELD_CHARS: usize = 64;
 
 #[derive(Clone)]
 pub struct AiClient {
@@ -16,10 +17,15 @@ pub struct AiClient {
 pub enum AiProviderError {
     #[error("AI service is not configured")]
     Unconfigured,
-    #[error("AI request failed")]
-    Request,
-    #[error("AI service returned a non-success status")]
-    Status,
+    #[error("AI request failed ({category})")]
+    Request { category: &'static str },
+    #[error("AI service returned HTTP {http_status}")]
+    Status {
+        http_status: u16,
+        provider_error_type: Option<String>,
+        provider_error_code: Option<String>,
+        provider_request_id: Option<String>,
+    },
     #[error("AI response structure is invalid")]
     Response,
     #[error("AI response content is invalid")]
@@ -37,10 +43,54 @@ impl AiProviderError {
     pub fn kind(&self) -> &'static str {
         match self {
             Self::Unconfigured => "unconfigured",
-            Self::Request => "request",
-            Self::Status => "status",
+            Self::Request { .. } => "request",
+            Self::Status { .. } => "status",
             Self::Response => "response",
             Self::Content => "content",
+        }
+    }
+
+    pub fn http_status(&self) -> u16 {
+        match self {
+            Self::Status { http_status, .. } => *http_status,
+            _ => 0,
+        }
+    }
+
+    pub fn request_category(&self) -> &'static str {
+        match self {
+            Self::Request { category } => category,
+            _ => "",
+        }
+    }
+
+    pub fn provider_error_type(&self) -> &str {
+        match self {
+            Self::Status {
+                provider_error_type,
+                ..
+            } => provider_error_type.as_deref().unwrap_or(""),
+            _ => "",
+        }
+    }
+
+    pub fn provider_error_code(&self) -> &str {
+        match self {
+            Self::Status {
+                provider_error_code,
+                ..
+            } => provider_error_code.as_deref().unwrap_or(""),
+            _ => "",
+        }
+    }
+
+    pub fn provider_request_id(&self) -> &str {
+        match self {
+            Self::Status {
+                provider_request_id,
+                ..
+            } => provider_request_id.as_deref().unwrap_or(""),
+            _ => "",
         }
     }
 }
@@ -82,32 +132,30 @@ impl AiClient {
             }))
             .send()
             .await
-            .map_err(|_| AiProviderError::Request)?;
+            .map_err(|error| AiProviderError::Request {
+                category: request_error_category(&error),
+            })?;
         if !response.status().is_success() {
-            return Err(AiProviderError::Status);
+            let http_status = response.status().as_u16();
+            let provider_request_id = response
+                .headers()
+                .get("x-request-id")
+                .or_else(|| response.headers().get("request-id"))
+                .and_then(|value| value.to_str().ok())
+                .and_then(safe_diagnostic_field);
+            let error_body = read_response_bytes(&mut response).await.ok();
+            let (provider_error_type, provider_error_code) = error_body
+                .as_deref()
+                .and_then(provider_error_fields)
+                .unwrap_or_default();
+            return Err(AiProviderError::Status {
+                http_status,
+                provider_error_type,
+                provider_error_code,
+                provider_request_id,
+            });
         }
-        if response
-            .content_length()
-            .is_some_and(|length| length > MAX_AI_RESPONSE_BYTES as u64)
-        {
-            return Err(AiProviderError::Response);
-        }
-        let mut bytes = Vec::with_capacity(
-            response
-                .content_length()
-                .unwrap_or_default()
-                .min(MAX_AI_RESPONSE_BYTES as u64) as usize,
-        );
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|_| AiProviderError::Response)?
-        {
-            if chunk.len() > MAX_AI_RESPONSE_BYTES.saturating_sub(bytes.len()) {
-                return Err(AiProviderError::Response);
-            }
-            bytes.extend_from_slice(&chunk);
-        }
+        let bytes = read_response_bytes(&mut response).await?;
         let body: Value = serde_json::from_slice(&bytes).map_err(|_| AiProviderError::Response)?;
         let content = body
             .get("choices")
@@ -130,6 +178,74 @@ impl AiClient {
                 .unwrap_or(0),
         })
     }
+}
+
+fn request_error_category(error: &reqwest::Error) -> &'static str {
+    if error.is_timeout() {
+        "timeout"
+    } else if error.is_connect() {
+        "connect"
+    } else if error.is_body() {
+        "body"
+    } else {
+        "transport"
+    }
+}
+
+async fn read_response_bytes(
+    response: &mut reqwest::Response,
+) -> Result<Vec<u8>, AiProviderError> {
+    if response
+        .content_length()
+        .is_some_and(|length| length > MAX_AI_RESPONSE_BYTES as u64)
+    {
+        return Err(AiProviderError::Response);
+    }
+    let mut bytes = Vec::with_capacity(
+        response
+            .content_length()
+            .unwrap_or_default()
+            .min(MAX_AI_RESPONSE_BYTES as u64) as usize,
+    );
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| AiProviderError::Response)?
+    {
+        if chunk.len() > MAX_AI_RESPONSE_BYTES.saturating_sub(bytes.len()) {
+            return Err(AiProviderError::Response);
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    Ok(bytes)
+}
+
+fn provider_error_fields(bytes: &[u8]) -> Option<(Option<String>, Option<String>)> {
+    let body: Value = serde_json::from_slice(bytes).ok()?;
+    let error = body.get("error")?.as_object()?;
+    Some((
+        error
+            .get("type")
+            .and_then(Value::as_str)
+            .and_then(safe_diagnostic_field),
+        error
+            .get("code")
+            .and_then(Value::as_str)
+            .and_then(safe_diagnostic_field),
+    ))
+}
+
+fn safe_diagnostic_field(value: &str) -> Option<String> {
+    let value = value.trim();
+    if value.is_empty()
+        || value.chars().count() > MAX_AI_DIAGNOSTIC_FIELD_CHARS
+        || !value
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || "._:-".contains(character))
+    {
+        return None;
+    }
+    Some(value.to_owned())
 }
 
 impl Default for AiClient {
@@ -312,13 +428,18 @@ mod tests {
             .contains("authorization: bearer test-key"));
         assert!(request.contains("\"response_format\":{\"type\":\"json_object\"}"));
 
-        let (base_url, _) = mock_server("500 Internal Server Error", "{}", Duration::ZERO).await;
-        assert!(matches!(
-            AiClient::new()
-                .complete_json(&settings(base_url), vec![], 1.0, 0.0)
-                .await,
-            Err(AiProviderError::Status)
-        ));
+        let provider_error = r#"{"error":{"message":"API key sk-secret is invalid","type":"invalid_request_error","code":"invalid_api_key"}}"#;
+        let (base_url, _) =
+            mock_server("500 Internal Server Error", provider_error, Duration::ZERO).await;
+        let error = AiClient::new()
+            .complete_json(&settings(base_url), vec![], 1.0, 0.0)
+            .await
+            .unwrap_err();
+        assert_eq!(error.kind(), "status");
+        assert_eq!(error.http_status(), 500);
+        assert_eq!(error.provider_error_type(), "invalid_request_error");
+        assert_eq!(error.provider_error_code(), "invalid_api_key");
+        assert!(!format!("{error:?}").contains("sk-secret"));
 
         let invalid = r#"{"choices":[{"message":{"content":"not-json"}}]}"#;
         let (base_url, _) = mock_server("200 OK", invalid, Duration::ZERO).await;
@@ -334,7 +455,9 @@ mod tests {
             AiClient::new()
                 .complete_json(&settings(base_url), vec![], 0.01, 0.0)
                 .await,
-            Err(AiProviderError::Request)
+            Err(AiProviderError::Request {
+                category: "timeout"
+            })
         ));
 
         let (base_url, _) = mock_server(
@@ -381,7 +504,13 @@ mod tests {
                 0.0,
             )
             .await;
-        assert!(matches!(result, Err(AiProviderError::Status)));
+        assert!(matches!(
+            result,
+            Err(AiProviderError::Status {
+                http_status: 302,
+                ..
+            })
+        ));
         redirect_task.await.unwrap();
         assert!(!target_task.await.unwrap());
     }

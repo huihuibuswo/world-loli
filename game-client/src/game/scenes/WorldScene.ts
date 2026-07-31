@@ -16,6 +16,7 @@ import {
   type ForestObstacleLayoutItem,
   type ForestProp,
   type ForestRegionConfig,
+  type ForestWaterway,
 } from '@/game/forestRegions'
 import {
   getEnvironmentStyle,
@@ -105,6 +106,11 @@ export class WorldScene extends Phaser.Scene {
   private environmentLights: Phaser.GameObjects.Arc[] = []
   private environmentObjects: Phaser.GameObjects.GameObject[] = []
   private minimapHiddenObjects: Phaser.GameObjects.GameObject[] = []
+  private forestWaterwayMasks: Array<{
+    mask: Phaser.Display.Masks.GeometryMask
+    shape: Phaser.GameObjects.Graphics
+    texture: Phaser.GameObjects.TileSprite
+  }> = []
   private forestForegroundObjects: ForestForegroundRuntime[] = []
   private mapType = 'village'
   private forestRegion: ForestRegionConfig | null = null
@@ -134,6 +140,7 @@ export class WorldScene extends Phaser.Scene {
     this.environmentLights = []
     this.environmentObjects = []
     this.minimapHiddenObjects = []
+    this.forestWaterwayMasks = []
     this.forestForegroundObjects = []
     this.discardNextDelta = true
     const map = this.registry.get('world-map') as MapData
@@ -377,6 +384,12 @@ export class WorldScene extends Phaser.Scene {
       gameEvents.off('world:input-lock', this.onInputLock)
       gameEvents.off('time:changed', this.onTimeChanged)
       gameEvents.off('plant:collected', this.onPlantCollected)
+      this.forestWaterwayMasks.forEach(({ mask, shape, texture }) => {
+        if (texture.mask === mask) texture.clearMask()
+        mask.destroy()
+        shape.destroy()
+      })
+      this.forestWaterwayMasks = []
       this.npcMapMarkers.clear()
       this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanupEvents)
       this.events.off(Phaser.Scenes.Events.DESTROY, cleanupEvents)
@@ -915,6 +928,34 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private createForestWaterway(
+    layout: ForestWaterway,
+    width: number,
+    height: number,
+  ): void {
+    const route = new Phaser.Curves.Spline(layout.points.map(({ x, y }) => new Phaser.Math.Vector2(x, y)))
+    const samples = route.getSpacedPoints(Math.max(2, Math.ceil(route.getLength() / 24)))
+    const shape = this.make.graphics({ x: 0, y: 0 }, false)
+    shape.fillStyle(0xffffff)
+    samples.forEach((sample) => shape.fillCircle(sample.x, sample.y, layout.width / 2))
+
+    const base = this.make.graphics({ x: 0, y: 0 }, true)
+    base.fillStyle(layout.edgeColor, layout.edgeAlpha)
+    samples.forEach((sample) => base.fillCircle(sample.x, sample.y, layout.width / 2 + layout.edgePadding))
+    base.setDepth(layout.depth - 0.05)
+
+    const texture = this.add.tileSprite(width / 2, height / 2, width, height, layout.texture)
+      .setAlpha(layout.alpha)
+      .setDepth(layout.depth)
+    if (layout.tilePosition) texture.setTilePosition(layout.tilePosition.x, layout.tilePosition.y)
+    const mask = shape.createGeometryMask()
+    texture.setMask(mask)
+
+    this.forestWaterwayMasks.push({ mask, shape, texture })
+    this.environmentObjects.push(base, texture)
+    if (layout.minimapVisible === false) this.minimapHiddenObjects.push(base, texture)
+  }
+
   private drawWorld(
     width: number,
     height: number,
@@ -992,6 +1033,8 @@ export class WorldScene extends Phaser.Scene {
         this.environmentObjects.push(pathSegment)
       })
     })
+
+    forestRegion.waterways.forEach((layout) => this.createForestWaterway(layout, width, height))
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ;[...forestRegion.props, ...forestRegion.landmarks].forEach((layout) => {

@@ -184,6 +184,42 @@ API 密钥不得出现在客户端代码、日志或提交记录中。模型不�
 游戏会自动回退到静态对白、固定快捷回复和服务端确定性连续出牌。每个可战斗 NPC/怪物
 使用独立卡组，客户端只看到敌方卡牌数量和已实际打出的牌，不会获得隐藏手牌或抽牌顺序。
 
+#### AI 日志与配置生效
+
+API 在 Docker 容器中输出 JSON 结构化日志。持续查看日志：
+
+```powershell
+Set-Location server
+docker compose logs -f api
+```
+
+只查看最近 10 分钟的 AI 对话与战斗日志：
+
+```powershell
+docker compose logs --since 10m api |
+  Select-String -Pattern "ai dialogue|ai battle"
+```
+
+AI 调用失败时会记录 `reason`，并按错误类型补充以下脱敏诊断字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `http_status` | 上游 HTTP 状态码；非 HTTP 状态错误时为 `0` |
+| `request_category` | 请求错误类型，如 `timeout`、`connect`、`body` 或 `transport` |
+| `provider_error_type` | 上游返回的短错误类型 |
+| `provider_error_code` | 上游返回的短错误代码 |
+| `provider_request_id` | 上游请求 ID，可用于联系供应商排查 |
+
+日志不会记录 `AI_API_KEY`、提示词、玩家对话或上游完整错误正文。修改 `server/.env` 后，
+普通的 `docker compose restart api` 不会重新加载环境变量；使用以下命令仅重建 API 容器：
+
+```powershell
+docker compose up -d --force-recreate --no-deps api
+```
+
+如果修改的是 PostgreSQL 用户、密码或数据库名，还需要单独处理已有数据库账号和数据卷，
+不能只重建 API 容器。
+
 新角色使用 75 点基础生命和 12 张起始套牌（基础攻击 6、防御姿态 6）。
 战斗创建时服务端按内部 seed 对双方牌堆进行可复现洗牌；seed 与洗牌次数不会返回客户端。
 不同 NPC 通过独立牌组和伤害/护盾权重形成难度差异，错误出牌或忽略防御时允许正常败北。

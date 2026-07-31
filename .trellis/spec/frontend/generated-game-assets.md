@@ -79,6 +79,38 @@ Before accepting a generated asset batch:
 - Contact-sheet and ground-composite previews show no checkerboard, black rectangle, chroma fringe, or hard pale rim.
 - The client type-check, production build, and relevant runtime tests pass after preload keys are added.
 
+## Continuous Terrain Texture Contract
+
+Before laying out a river, road, shoreline, cliff, or other continuous terrain feature, classify the source image by its actual Alpha and composition:
+
+- A full-canvas opaque texture is a **material**, not a placeable segment. Render it once through a spline/polygon mask or derive a deterministic masked overlay.
+- A self-contained pond, bend, island, or bank composition is a **local decal**, not a repeatable shoreline tile. Use it only at a matching local landmark or leave it unloaded.
+- Only assets whose opposite edges and subject direction were explicitly authored for tiling may be repeated as segments.
+
+For Phaser spline-masked waterways, the layout contract must contain the centerline points, visible width, texture, Alpha, edge padding/color, depth, and minimap visibility. The runtime must keep the material below bridges and actors, above crossing path decals, and explicitly destroy GeometryMask/Graphics resources on scene shutdown.
+
+Required regression checks:
+
+- The continuous feature is represented by one authoritative masked layout, not rotated full-canvas image segments.
+- Old segment IDs and unsuitable local decals are absent from runtime layout and preload sets.
+- The texture is visible on the minimap when it carries navigation meaning.
+- Repeated map changes release masks and hidden Graphics objects.
+
+Wrong:
+
+```ts
+// Opaque water texture rotated into visible rectangular pieces.
+waterSegments.map((segment) => add.image(segment.x, segment.y, 'water').setAngle(segment.angle))
+```
+
+Correct:
+
+```ts
+// One material, one spline mask, one continuous navigation feature.
+const water = add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'water')
+water.setMask(createSplineGeometryMask(centerline, width))
+```
+
 ## Wrong vs Correct
 
 Wrong:
