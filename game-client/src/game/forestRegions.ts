@@ -6,7 +6,7 @@ export const FOREST_REGION_KEYS = [
   'glimmer_forest_part_5',
 ] as const
 
-export const FOREST_REGION_ASSET_ROOT = '/assets/generated/environment/glimmer-forest/regions-v2'
+export const FOREST_REGION_ASSET_ROOT = '/assets/generated/environment/glimmer-forest/regions-v3'
 
 export type ForestRegionKey = typeof FOREST_REGION_KEYS[number]
 export type ForestPoint = Readonly<{ x: number; y: number }>
@@ -194,13 +194,19 @@ Object.assign(FOREST_REGION_ASSETS, {
 
 for (let index = 1; index <= 10; index += 1) {
   const suffix = String(index).padStart(2, '0')
-  FOREST_REGION_ASSETS[`forest-region-part-2-bank-${suffix}`] = `sprites/part-2/stream-bank/stream-bank-${suffix}.png`
   FOREST_REGION_ASSETS[`forest-region-part-3-ruin-${suffix}`] = `sprites/part-3/weathered-ruins/weathered-ruin-${suffix}.png`
+}
+for (let index = 1; index <= 9; index += 1) {
+  const suffix = String(index).padStart(2, '0')
+  FOREST_REGION_ASSETS[`forest-region-part-2-bank-${suffix}`] = `sprites/part-2/stream-bank/stream-bank-${suffix}.png`
 }
 for (let index = 1; index <= 6; index += 1) {
   const suffix = String(index).padStart(2, '0')
-  FOREST_REGION_ASSETS[`forest-region-part-2-foliage-${suffix}`] = `sprites/part-2/aquatic-foliage/aquatic-foliage-${suffix}.png`
   FOREST_REGION_ASSETS[`forest-region-part-4-fireflies-${suffix}`] = `effects/part-4/night-fireflies/night-firefly-group-${suffix}.png`
+}
+for (let index = 1; index <= 5; index += 1) {
+  const suffix = String(index).padStart(2, '0')
+  FOREST_REGION_ASSETS[`forest-region-part-2-foliage-${suffix}`] = `sprites/part-2/aquatic-foliage/aquatic-foliage-${suffix}.png`
 }
 for (let index = 1; index <= 8; index += 1) {
   const suffix = String(index).padStart(2, '0')
@@ -379,18 +385,23 @@ const PART_2_WATERWAYS: ForestWaterway[] = [{
 }]
 
 const PART_2_BANKS: ForestProp[] = [
+  prop('p2-bank-01', 'forest-region-part-2-bank-01', 300, 610, 260, 150, 'ground-decal', 24),
+  prop('p2-bank-02', 'forest-region-part-2-bank-02', 760, 845, 250, 150, 'ground-decal', 28),
+  prop('p2-bank-03', 'forest-region-part-2-bank-03', 1320, 1200, 270, 160, 'ground-decal', 18),
+  prop('p2-bank-04', 'forest-region-part-2-bank-04', 1640, 1390, 260, 145, 'ground-decal', 18),
+  prop('p2-bank-05', 'forest-region-part-2-bank-05', 1900, 1500, 220, 135, 'ground-decal', 8),
+  prop('p2-bank-06', 'forest-region-part-2-bank-06', 160, 560, 180, 130, 'ground-decal', 18),
   prop('p2-bank-07', 'forest-region-part-2-bank-07', 540, 720, 320, 170, 'ground-decal', -24),
-  prop('p2-bank-09', 'forest-region-part-2-bank-09', 1030, 1040, 390, 190, 'ground-decal', -42),
-  prop('p2-bank-10', 'forest-region-part-2-bank-10', 620, 760, 250, 200, 'ground-decal', -10),
+  prop('p2-bank-08', 'forest-region-part-2-bank-08', 1030, 1040, 390, 190, 'ground-decal', 0),
+  prop('p2-bank-09', 'forest-region-part-2-bank-09', 620, 760, 250, 200, 'ground-decal', -10),
 ].map((item) => ({ ...item, depth: -6.6 }))
 
 const PART_2_FOLIAGE: ForestProp[] = [
-  prop('p2-foliage-01', 'forest-region-part-2-foliage-01', 260, 780, 90, 150, 'underlay', -8),
-  prop('p2-foliage-02', 'forest-region-part-2-foliage-02', 340, 400, 95, 155, 'underlay', 7),
-  prop('p2-foliage-03', 'forest-region-part-2-foliage-03', 1360, 1540, 145, 110, 'underlay', -12),
-  prop('p2-foliage-04', 'forest-region-part-2-foliage-04', 1220, 1320, 100, 160, 'underlay', 9),
-  prop('p2-foliage-05', 'forest-region-part-2-foliage-05', 1510, 1160, 150, 120, 'underlay', -6),
-  prop('p2-foliage-06', 'forest-region-part-2-foliage-06', 1770, 1640, 90, 155, 'underlay', 11),
+  prop('p2-foliage-01', 'forest-region-part-2-foliage-01', 260, 780, 84, 132, 'underlay', -8),
+  prop('p2-foliage-02', 'forest-region-part-2-foliage-02', 340, 400, 90, 145, 'underlay', 7),
+  prop('p2-foliage-03', 'forest-region-part-2-foliage-03', 1510, 1160, 142, 112, 'underlay', -6),
+  prop('p2-foliage-04', 'forest-region-part-2-foliage-04', 1360, 1540, 104, 92, 'underlay', -12),
+  prop('p2-foliage-05', 'forest-region-part-2-foliage-05', 1770, 1640, 152, 96, 'underlay', 11),
 ].map((item) => ({ ...item, minimapVisible: false }))
 
 const PART_2_BRIDGES: ForestLandmark[] = [

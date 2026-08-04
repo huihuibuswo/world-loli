@@ -3,7 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import shutil
+import stat
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,10 +16,19 @@ ROOT = Path(__file__).resolve().parents[2]
 EXTERNAL_SOURCE_ROOT = Path("D:/\u751f\u6210/images")
 V1_RAW_ROOT = ROOT / "game-client" / "art-source" / "generated" / "glimmer-forest-regions-v1" / "raw"
 SOURCE_ROOT = EXTERNAL_SOURCE_ROOT if EXTERNAL_SOURCE_ROOT.exists() else V1_RAW_ROOT
-VERSION = "glimmer-forest-regions-v2"
+VERSION = "glimmer-forest-regions-v3"
 ART_ROOT = ROOT / "game-client" / "art-source" / "generated" / VERSION
-PUBLIC_ROOT = ROOT / "game-client" / "public" / "assets" / "generated" / "environment" / "glimmer-forest" / "regions-v2"
-RUNTIME_ROOT = "/assets/generated/environment/glimmer-forest/regions-v2/"
+PUBLIC_ROOT = ROOT / "game-client" / "public" / "assets" / "generated" / "environment" / "glimmer-forest" / "regions-v3"
+RUNTIME_ROOT = "/assets/generated/environment/glimmer-forest/regions-v3/"
+
+
+def remove_tree(path: Path) -> None:
+    def clear_readonly(_function, target, _error) -> None:
+        os.chmod(target, stat.S_IWRITE)
+        os.unlink(target)
+
+    if path.exists():
+        shutil.rmtree(path, onerror=clear_readonly)
 
 
 @dataclass(frozen=True)
@@ -26,20 +37,54 @@ class Source:
     filename: str
     role: str
     mode: str
+    external_path: str | None = None
 
     @property
     def path(self) -> Path:
-        return SOURCE_ROOT / self.filename
+        external = Path(self.external_path) if self.external_path else SOURCE_ROOT / self.filename
+        if external.exists():
+            return external
+        return ART_ROOT / "raw" / self.filename
 
 
 SOURCES = [
     Source("W01", "gen_hist_1785391592555_f336z.png", "silver-mist valley ground", "opaque"),
-    Source("W02-flow", "gen_hist_1785392256296_js21a.png", "stream water flow", "opaque"),
-    Source("W03", "gen_hist_1785392075602_mm8dz.png", "stream bank atlas", "chroma"),
-    Source("W04-horizontal", "gen_hist_1785393390825_xkv7l.png", "horizontal bridge", "chroma"),
-    Source("W04-diagonal", "gen_hist_1785392312528_27tdb.png", "diagonal bridge", "chroma"),
-    Source("W05", "gen_hist_1785394397423_sbmfr.png", "aquatic foliage atlas", "chroma"),
-    Source("W06", "gen_hist_1785394427127_4ig1f.png", "reverse mist fall", "mask"),
+    Source("W02-calm", "gen_hist_1785744209965_88zcj.png", "seamless calm water material", "opaque"),
+    Source("W02-flow", "gen_hist_1785744208717_nji67.png", "seamless flowing water material", "opaque"),
+    Source("W03-01", "gen_hist_1785744283456_zp6pq.png", "compact pebble bank", "chroma"),
+    Source("W03-02", "gen_hist_1785744235960_hdz4g.png", "loose pebble bank", "chroma"),
+    Source("W03-03", "gen_hist_1785744329621_gwtop.png", "wet mud cut", "chroma"),
+    Source("W03-04", "gen_hist_1785807536639_4z37f.png", "moss shelf source", "chroma"),
+    Source("W03-05", "gen_hist_1785744899916_75xof.png", "compact shoal stones", "chroma"),
+    Source("W03-06", "gen_hist_1785744488645_t3w5m.png", "alternate shoal stones", "chroma"),
+    Source(
+        "W03-07",
+        "codex-clipboard-c95153cf-105c-4300-b544-213c7c225329.png",
+        "horizontal bridge bed source",
+        "chroma",
+        "C:/Users/EDY/AppData/Local/Temp/codex-clipboard-c95153cf-105c-4300-b544-213c7c225329.png",
+    ),
+    Source("W03-09", "gen_hist_1785807539266_is4bs.png", "wetland tributary mouth", "chroma"),
+    Source("W04-horizontal", "gen_hist_1785744967158_imn6y.png", "horizontal bridge", "chroma"),
+    Source("W04-diagonal", "gen_hist_1785744978164_lve6o.png", "diagonal bridge", "chroma"),
+    Source("W05-silverleaf", "gen_hist_1785745230607_dkbi6.png", "silverleaf aquatic foliage", "chroma"),
+    Source("W05-reed", "gen_hist_1785745185220_e8x0a.png", "reed aquatic foliage", "chroma"),
+    Source("W05-bush", "gen_hist_1785745169374_s5btc.png", "broad aquatic foliage", "chroma"),
+    Source(
+        "W05-star-mint",
+        "codex-clipboard-856a7d99-1507-4638-9e5b-f4c4a6a518a0.png",
+        "replacement star mint",
+        "chroma",
+        "C:/Users/EDY/AppData/Local/Temp/codex-clipboard-856a7d99-1507-4638-9e5b-f4c4a6a518a0.png",
+    ),
+    Source(
+        "W05-aquatic-moss",
+        "codex-clipboard-a5b27ff8-1825-442c-84cf-d749e52f83b3.png",
+        "replacement aquatic moss",
+        "chroma",
+        "C:/Users/EDY/AppData/Local/Temp/codex-clipboard-a5b27ff8-1825-442c-84cf-d749e52f83b3.png",
+    ),
+    Source("W06", "gen_hist_1785745145095_ci65x.png", "reverse mist fall", "mask"),
     Source("W07", "gen_hist_1785395128336_0pdjl.png", "wetland reflection", "mask"),
     Source("E01-left", "gen_hist_1785391445202_6802c.png", "forest exit left", "chroma"),
     Source("E01-right", "gen_hist_1785391836632_yufva.png", "forest exit right", "chroma"),
@@ -129,6 +174,117 @@ def fit_max(image: Image.Image, max_size: tuple[int, int]) -> Image.Image:
     if scale < 1:
         rgba = rgba.resize((max(1, round(rgba.width * scale)), max(1, round(rgba.height * scale))), Image.Resampling.LANCZOS)
     return tight_canvas(rgba)
+
+
+def cropped_chroma(code: str, crop: tuple[int, int, int, int] | None = None, *, alpha_floor: int = 10) -> Image.Image:
+    source = Image.open(SOURCE_BY_CODE[code].path)
+    if crop is not None:
+        source = source.crop(crop)
+    rgba = remove_magenta(source)
+    # These accepted Silver Mist Valley candidates contain no intentional purple.
+    # Remove residual chroma spill even where the generated edge was fully opaque.
+    cleaned = []
+    for r, g, b, a in pixels(rgba):
+        spill = max(0, min(r, b) - g)
+        if spill > 24:
+            a = round(a * max(0.0, 1.0 - min(1.0, (spill - 24) / 72)))
+        if spill > 8:
+            r = max(0, round(r - spill * 0.88))
+            b = max(0, round(b - spill * 0.88))
+        cleaned.append((r, g, b, a))
+    rgba.putdata(cleaned)
+    if alpha_floor > 10:
+        alpha = rgba.getchannel("A").point(lambda value: 0 if value < alpha_floor else value)
+        rgba.putalpha(alpha)
+    return tight_canvas(rgba)
+
+
+def purify_chroma_edges(
+    image: Image.Image,
+    *,
+    passes: int = 3,
+    dark_threshold: int | None = None,
+    alpha_floor: int = 24,
+) -> Image.Image:
+    """Remove generated chroma spill and soft backdrop shadows from sprite edges."""
+    rgba = image.convert("RGBA")
+    width, height = rgba.size
+    data = rgba.load()
+
+    for _ in range(passes):
+        remove: list[tuple[int, int]] = []
+        for y in range(height):
+            for x in range(width):
+                r, g, b, a = data[x, y]
+                if a == 0:
+                    continue
+                touches_transparency = (
+                    x == 0
+                    or y == 0
+                    or x == width - 1
+                    or y == height - 1
+                    or data[max(0, x - 1), y][3] == 0
+                    or data[min(width - 1, x + 1), y][3] == 0
+                    or data[x, max(0, y - 1)][3] == 0
+                    or data[x, min(height - 1, y + 1)][3] == 0
+                )
+                if not touches_transparency:
+                    continue
+                purple_spill = min(r, b) - g
+                luminance = (r * 3 + g * 6 + b) / 10
+                if a < alpha_floor or purple_spill > 8 or (dark_threshold is not None and luminance < dark_threshold):
+                    remove.append((x, y))
+        if not remove:
+            break
+        for x, y in remove:
+            data[x, y] = (0, 0, 0, 0)
+
+    cleaned = []
+    for r, g, b, a in pixels(rgba):
+        if a < alpha_floor:
+            cleaned.append((0, 0, 0, 0))
+            continue
+        spill = max(0, min(r, b) - g)
+        if spill > 4:
+            r = max(0, round(r - spill * 0.9))
+            b = max(0, round(b - spill * 0.9))
+        cleaned.append((r, g, b, a))
+    rgba.putdata(cleaned)
+    return tight_canvas(rgba)
+
+
+def finished_chroma(
+    code: str,
+    max_size: tuple[int, int],
+    crop: tuple[int, int, int, int] | None = None,
+    *,
+    source_alpha_floor: int = 10,
+    edge_passes: int = 3,
+    dark_threshold: int | None = None,
+) -> Image.Image:
+    fitted = fit_max(cropped_chroma(code, crop, alpha_floor=source_alpha_floor), max_size)
+    return purify_chroma_edges(fitted, passes=edge_passes, dark_threshold=dark_threshold)
+
+
+def neutralize_upper_right_haze(image: Image.Image) -> Image.Image:
+    rgba = image.convert("RGBA")
+    data = rgba.load()
+    for y in range(rgba.height):
+        vertical = max(0.0, 1.0 - y / (rgba.height * 0.62))
+        for x in range(rgba.width):
+            horizontal = max(0.0, (x / rgba.width - 0.42) / 0.58)
+            strength = min(1.0, horizontal * vertical * 1.8)
+            if strength <= 0:
+                continue
+            r, g, b, a = data[x, y]
+            if a and b > g and r > g * 0.66:
+                data[x, y] = (
+                    round(r * (1 - 0.42 * strength)),
+                    min(255, round(g * (1 + 0.08 * strength))),
+                    round(b * (1 - 0.24 * strength)),
+                    a,
+                )
+    return rgba
 
 
 def seamless_ground(image: Image.Image, size: tuple[int, int], variant: int = 0) -> Image.Image:
@@ -315,7 +471,8 @@ def copy_sources() -> list[dict[str, object]]:
         if not source.path.exists():
             raise FileNotFoundError(source.path)
         target = raw_root / source.filename
-        shutil.copy2(source.path, target)
+        if source.path.resolve() != target.resolve():
+            shutil.copy2(source.path, target)
         with Image.open(source.path) as image:
             provenance.append({
                 "code": source.code,
@@ -374,6 +531,20 @@ def build_ground_preview(records: list[dict[str, object]]) -> None:
     sheet.save(ART_ROOT / "ground-tile-preview.jpg", quality=90)
 
 
+def build_water_preview(records: list[dict[str, object]]) -> None:
+    water = [record for record in records if record["role"] == "water-material"]
+    if not water:
+        return
+    tile = 256
+    sheet = Image.new("RGB", (tile * 2, tile * 2 * len(water)), (18, 22, 26))
+    for index, record in enumerate(water):
+        image = Image.open(ROOT / str(record["art_source"])).convert("RGB").resize((tile, tile), Image.Resampling.LANCZOS)
+        for row in range(2):
+            for column in range(2):
+                sheet.paste(image, (column * tile, index * tile * 2 + row * tile))
+    sheet.save(ART_ROOT / "water-material-2x2-preview.jpg", quality=92)
+
+
 def validate(records: list[dict[str, object]]) -> dict[str, object]:
     problems: list[str] = []
     for record in records:
@@ -402,10 +573,9 @@ def validate(records: list[dict[str, object]]) -> dict[str, object]:
 
 
 def main() -> None:
-    if ART_ROOT.exists():
-        shutil.rmtree(ART_ROOT)
-    if PUBLIC_ROOT.exists():
-        shutil.rmtree(PUBLIC_ROOT)
+    processed_root = ART_ROOT / "processed"
+    remove_tree(processed_root)
+    remove_tree(PUBLIC_ROOT)
     provenance = copy_sources()
     records: list[dict[str, object]] = []
 
@@ -418,16 +588,42 @@ def main() -> None:
             save_asset(seamless_ground(source, (512, 512), variant), f"ground/part-{part}-{basename}-ground-{variant + 1}.png", [code], records, role="ground-tile", collision_profile=None, anchor=(0.5, 0.5), footpoint=(256, 256))
         save_asset(macro_overlay(source, (1024, 1024), (19, 47, 53)), f"ground/part-{part}-macro-overlay.png", [code], records, role="ground-decal", collision_profile=None, anchor=(0.5, 0.5), footpoint=(512, 512), intentional_padding="full-map low-frequency overlay")
 
-    w03 = component_crops("W03", 10, exclude_near=(544, 818))
-    for index, image in enumerate(w03, 1):
-        save_asset(image, f"sprites/part-2/stream-bank/stream-bank-{index:02d}.png", ["W03"], records, role="ground-prop", collision_profile=None, anchor=(0.5, 0.5))
-    transparent_asset("W04-horizontal", "sprites/part-2/fallen-log-bridge-horizontal.png", records, (640, 420), "landmark", None)
-    transparent_asset("W04-diagonal", "sprites/part-2/fallen-log-bridge-diagonal.png", records, (640, 420), "landmark", None)
-    foliage = component_crops("W05", 12)
-    for output_index, source_index in enumerate((0, 2, 4, 6, 8, 11), 1):
-        save_asset(foliage[source_index], f"sprites/part-2/aquatic-foliage/aquatic-foliage-{output_index:02d}.png", ["W05"], records, role="ground-prop", collision_profile=None)
-    stream = soft_decal(Image.open(SOURCE_BY_CODE["W02-flow"].path), (1024, 384), feather=88, opacity=0.78)
-    save_asset(stream, "ground/part-2-stream-water-flow.png", ["W02-flow"], records, role="ground-decal", collision_profile=None, anchor=(0.5, 0.5), footpoint=(512, 192), intentional_padding="soft water-path edge")
+    water_calm = seamless_ground(Image.open(SOURCE_BY_CODE["W02-calm"].path), (512, 512))
+    water_flow = seamless_ground(Image.open(SOURCE_BY_CODE["W02-flow"].path), (512, 512), 1)
+    save_asset(water_calm, "ground/part-2-stream-water-calm.png", ["W02-calm"], records, role="water-material", collision_profile=None, anchor=(0.5, 0.5), footpoint=(256, 256))
+    save_asset(water_flow, "ground/part-2-stream-water-flow.png", ["W02-flow"], records, role="water-material", collision_profile=None, anchor=(0.5, 0.5), footpoint=(256, 256))
+
+    bank_sources = {
+        1: cropped_chroma("W03-01"),
+        2: cropped_chroma("W03-02"),
+        3: cropped_chroma("W03-03"),
+        # Keep only the straight lower arm of the generated L-shaped candidate.
+        4: finished_chroma("W03-04", (768, 512), (400, 760, 1100, 990), source_alpha_floor=64, edge_passes=8, dark_threshold=64),
+        5: cropped_chroma("W03-05"),
+        6: cropped_chroma("W03-06"),
+        # The narrow central strip excludes both closed ends, edge plants, and visible glow points.
+        7: finished_chroma("W03-07", (768, 512), (540, 470, 996, 548), source_alpha_floor=56, edge_passes=5, dark_threshold=42),
+        9: purify_chroma_edges(
+            fit_max(neutralize_upper_right_haze(cropped_chroma("W03-09", alpha_floor=72)), (768, 512)),
+            passes=9,
+            dark_threshold=64,
+        ),
+    }
+    bank_sources[8] = tight_canvas(bank_sources[7].rotate(-45, expand=True, resample=Image.Resampling.BICUBIC))
+    for index in range(1, 10):
+        prepared = fit_max(bank_sources[index], (768, 512))
+        if index in {4, 7, 8, 9}:
+            prepared = purify_chroma_edges(
+                prepared,
+                passes=6 if index in {7, 8} else 9,
+                dark_threshold=42 if index in {7, 8} else 64,
+            )
+        save_asset(prepared, f"sprites/part-2/stream-bank/stream-bank-{index:02d}.png", [f"W03-{7 if index == 8 else index:02d}"], records, role="ground-prop", collision_profile=None, anchor=(0.5, 0.5))
+    save_asset(finished_chroma("W04-horizontal", (640, 420), source_alpha_floor=48, edge_passes=6), "sprites/part-2/fallen-log-bridge-horizontal.png", ["W04-horizontal"], records, role="landmark", collision_profile=None)
+    save_asset(finished_chroma("W04-diagonal", (640, 420), source_alpha_floor=48, edge_passes=6), "sprites/part-2/fallen-log-bridge-diagonal.png", ["W04-diagonal"], records, role="landmark", collision_profile=None)
+    foliage_codes = ("W05-silverleaf", "W05-reed", "W05-bush", "W05-star-mint", "W05-aquatic-moss")
+    for output_index, code in enumerate(foliage_codes, 1):
+        save_asset(fit_max(cropped_chroma(code, alpha_floor=40), (512, 512)), f"sprites/part-2/aquatic-foliage/aquatic-foliage-{output_index:02d}.png", [code], records, role="ground-prop", collision_profile=None)
     save_asset(fit_max(silver_mask(Image.open(SOURCE_BY_CODE["W06"].path), 0.72), (700, 420)), "effects/part-2/reverse-mist-fall.png", ["W06"], records, role="effect", collision_profile=None, anchor=(0.5, 0.5))
     reflection = feather_alpha(silver_mask(Image.open(SOURCE_BY_CODE["W07"].path), 0.48), (900, 360), feather=92, opacity=0.7)
     save_asset(reflection, "effects/part-2/wetland-reflection.png", ["W07"], records, role="effect", collision_profile=None, anchor=(0.5, 0.5), footpoint=(450, 180), intentional_padding="masked to stream corridor")
@@ -502,6 +698,7 @@ def main() -> None:
 
     build_contact_sheet(records)
     build_ground_preview(records)
+    build_water_preview(records)
     validation = validate(records)
     manifest = {
         "version": VERSION,
@@ -511,7 +708,9 @@ def main() -> None:
             "V2 preserves V1 and rebuilds from immutable original sources.",
             "W03, R03, N03, N06, D03, N02, D02, and N07 use connected-component candidates with explicit semantic selection.",
             "All object sprites use tight RGBA canvases with 12px safety padding and manifest footpoints.",
-            "W02, R05, and D04 are emitted as feathered RGBA decals/effect layers rather than opaque local rectangles.",
+            "W02 water sources are deterministic bidirectionally seamless RGB materials used only through the spline mask.",
+            "W03-07 is conservatively cropped to its undecorated center; W03-08 is a deterministic rotated derivative for the diagonal bridge.",
+            "R05 and D04 are emitted as feathered RGBA decals/effect layers rather than opaque local rectangles.",
         ],
         "sources": provenance,
         "assets": records,
@@ -520,7 +719,7 @@ def main() -> None:
     (ART_ROOT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     if not validation["passed"]:
         raise RuntimeError("Validation failed:\n" + "\n".join(validation["problems"]))
-    print(f"Prepared {len(records)} V2 runtime assets from {len(SOURCES)} sources")
+    print(f"Prepared {len(records)} {VERSION} runtime assets from {len(SOURCES)} sources")
     print(f"Manifest: {ART_ROOT / 'manifest.json'}")
 
 

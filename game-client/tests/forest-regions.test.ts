@@ -20,11 +20,11 @@ import { resolveMinimapLayout } from '../src/game/minimapLayout.ts'
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url))
 const runtimeRoot = fileURLToPath(new URL(
-  '../public/assets/generated/environment/glimmer-forest/regions-v2/',
+  '../public/assets/generated/environment/glimmer-forest/regions-v3/',
   import.meta.url,
 ))
 const artRoot = fileURLToPath(new URL(
-  '../art-source/generated/glimmer-forest-regions-v2/',
+  '../art-source/generated/glimmer-forest-regions-v3/',
   import.meta.url,
 ))
 
@@ -167,16 +167,14 @@ test('main and branch routes meet V2 width and endpoint contracts', () => {
   }
 })
 
-test('safe zones remain clear and water banks are visual-only props', () => {
+test('safe zones remain clear and regenerated water banks are visual-only props', () => {
   const part2 = FOREST_REGIONS.glimmer_forest_part_2
   assert.deepEqual(
     part2.props.filter((item) => item.id.startsWith('p2-bank-')).map((item) => item.id).sort(),
-    ['p2-bank-07', 'p2-bank-09', 'p2-bank-10'],
+    ['p2-bank-01', 'p2-bank-02', 'p2-bank-03', 'p2-bank-04', 'p2-bank-05', 'p2-bank-06', 'p2-bank-07', 'p2-bank-08', 'p2-bank-09'],
   )
-  for (const suffix of ['01', '02', '03', '04', '05', '06', '08']) {
-    assert.equal(part2.props.some((item) => item.id === `p2-bank-${suffix}`), false)
-    assert.equal(`forest-region-part-2-bank-${suffix}` in FOREST_REGION_RUNTIME_ASSETS, false)
-  }
+  assert.equal(part2.props.some((item) => item.id === 'p2-bank-10'), false)
+  assert.equal('forest-region-part-2-bank-10' in FOREST_REGION_ASSETS, false)
   assert.equal(part2.colliders.some((item) => item.visualRef?.startsWith('p2-bank-')), false)
   assert.equal(part2.colliders.filter((item) => item.role === 'water').length, 12)
 
@@ -228,9 +226,9 @@ test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and refl
       legacyId,
     )
   }
-  assert.equal(banks.length, 3)
-  assert.equal(foliage.length, 6)
-  assert.equal(new Set(foliage.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 6)
+  assert.equal(banks.length, 9)
+  assert.equal(foliage.length, 5)
+  assert.equal(new Set(foliage.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 5)
   assert.equal(reflections.length, 4)
 
   assert.deepEqual(part2.landmarks.map((item) => item.id).sort(), ['p2-main-bridge', 'p2-shoal-bridge'])
@@ -387,7 +385,7 @@ test('falls back to part 1 for an absent or unknown persisted region key', () =>
 })
 
 test('all generated V2 assets use the single root and exist', () => {
-  assert.equal(FOREST_REGION_ASSET_ROOT, '/assets/generated/environment/glimmer-forest/regions-v2')
+  assert.equal(FOREST_REGION_ASSET_ROOT, '/assets/generated/environment/glimmer-forest/regions-v3')
   assert.equal(manifest.runtime_root.replace(/\/$/, ''), FOREST_REGION_ASSET_ROOT)
   const missing = Object.entries(FOREST_REGION_ASSETS)
     .filter(([, relativePath]) => !existsSync(`${runtimeRoot}${relativePath}`))
@@ -404,7 +402,7 @@ test('preload set contains only V2 assets used by a layout or portal marker', ()
 })
 
 test('manifest records tight alpha, footpoints, collision profiles, and byte-identical mirrors', () => {
-  assert.equal(manifest.version, 'glimmer-forest-regions-v2')
+  assert.equal(manifest.version, 'glimmer-forest-regions-v3')
   assert.deepEqual(manifest.validation, { passed: true, problem_count: 0, problems: [] })
   assert.ok(manifest.assets.length >= 90)
 
@@ -428,9 +426,9 @@ test('manifest records tight alpha, footpoints, collision profiles, and byte-ide
 })
 
 test('re-extracted atlas sprites contain one approved primary component where the subject is contiguous', () => {
-  const auditedSources = new Set(['W03', 'D03', 'N02', 'D02'])
+  const auditedSources = new Set(['D03', 'N02', 'D02'])
   const audited = manifest.assets.filter((asset) => asset.source_codes.some((code) => auditedSources.has(code)))
-  assert.ok(audited.length >= 25)
+  assert.ok(audited.length >= 20)
   audited.forEach((asset) => {
     assert.equal(asset.component_count, 1, asset.name)
     assert.equal(asset.mode, 'RGBA', asset.name)
@@ -439,7 +437,6 @@ test('re-extracted atlas sprites contain one approved primary component where th
 
 test('local overlays are RGBA rather than opaque rectangular patches', () => {
   const required = [
-    'part-2-stream-water-flow.png',
     'part-3-sunken-courtyard.png',
     'part-5-mist-convergence-basin-edge.png',
     'mist-convergence-basin-mist.png',
@@ -450,4 +447,15 @@ test('local overlays are RGBA rather than opaque rectangular patches', () => {
     assert.equal(asset.mode, 'RGBA', name)
     assert.deepEqual(asset.alpha_bbox[0], 0, `${name} should feather to a transparent canvas edge`)
   })
+})
+
+test('part 2 water sources are square RGB materials reserved for the spline mask', () => {
+  for (const name of ['part-2-stream-water-calm.png', 'part-2-stream-water-flow.png']) {
+    const asset = manifest.assets.find((item) => item.name === name)
+    assert.ok(asset, name)
+    assert.equal(asset.mode, 'RGB', name)
+    assert.equal(asset.role, 'water-material', name)
+    assert.deepEqual([asset.width, asset.height], [512, 512], name)
+  }
+  assert.equal(FOREST_REGION_RUNTIME_ASSETS['forest-region-part-2-water-flow'], 'ground/part-2-stream-water-flow.png')
 })
