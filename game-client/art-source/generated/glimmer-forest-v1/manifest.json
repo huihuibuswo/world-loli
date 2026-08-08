@@ -340,6 +340,13 @@
       "height": 512
     },
     {
+      "name": "forest-tree-wall-blended.png",
+      "art_source": "game-client/art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-wall-blended.png",
+      "public": "game-client/public/assets/generated/sprites/forest/forest-tree-wall-blended.png",
+      "width": 1024,
+      "height": 512
+    },
+    {
       "name": "forest-moon-clearing-overlay.png",
       "art_source": "game-client/art-source/generated/glimmer-forest-v1/textures/forest/forest-moon-clearing-overlay.png",
       "public": "game-client/public/assets/generated/textures/forest/forest-moon-clearing-overlay.png",

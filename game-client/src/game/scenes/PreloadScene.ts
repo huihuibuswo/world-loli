@@ -82,6 +82,7 @@ export class PreloadScene extends Phaser.Scene {
     ;['a', 'b', 'c', 'd', 'e'].forEach((variant) => {
       this.load.image(`forest-tree-common-${variant}`, `${root}/sprites/forest/forest-tree-common-${variant}.png`)
     })
+    this.load.image('forest-tree-wall-blended', `${root}/sprites/forest/forest-tree-wall-blended.png`)
     ;['a', 'b', 'c', 'd'].forEach((variant) => {
       this.load.image(`forest-root-obstacle-${variant}`, `${root}/sprites/forest/forest-root-obstacle-${variant}.png`)
     })

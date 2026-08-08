@@ -171,8 +171,12 @@ test('safe zones remain clear and regenerated water banks are visual-only props'
   const part2 = FOREST_REGIONS.glimmer_forest_part_2
   assert.deepEqual(
     part2.props.filter((item) => item.id.startsWith('p2-bank-')).map((item) => item.id).sort(),
-    ['p2-bank-01', 'p2-bank-02', 'p2-bank-03', 'p2-bank-04', 'p2-bank-05', 'p2-bank-06', 'p2-bank-07', 'p2-bank-08', 'p2-bank-09'],
+    ['p2-bank-01', 'p2-bank-02', 'p2-bank-03'],
   )
+  ;['07', '08', '09'].forEach((suffix) => {
+    assert.equal(part2.props.some((item) => item.id === `p2-bank-${suffix}`), false)
+    assert.equal(FOREST_REGION_RUNTIME_ASSETS[`forest-region-part-2-bank-${suffix}`], undefined)
+  })
   assert.equal(part2.props.some((item) => item.id === 'p2-bank-10'), false)
   assert.equal('forest-region-part-2-bank-10' in FOREST_REGION_ASSETS, false)
   assert.equal(part2.colliders.some((item) => item.visualRef?.startsWith('p2-bank-')), false)
@@ -184,7 +188,7 @@ test('safe zones remain clear and regenerated water banks are visual-only props'
   })
 })
 
-test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and reflection layouts', () => {
+test('part 2 uses cohesive continuous terrain, bank clusters, foliage clusters, and bridge layouts', () => {
   const part2 = FOREST_REGIONS.glimmer_forest_part_2
   const base = part2.groundLayers.find((item) => item.id === 'p2-ground')!
   const variant = part2.groundLayers.find((item) => item.id === 'p2-ground-variant')!
@@ -193,8 +197,8 @@ test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and refl
   assert.equal(base.tile, true)
   assert.equal(base.tilePosition, undefined)
   assert.deepEqual(variant.tilePosition, { x: 384, y: 256 })
-  assert.equal(variant.alpha, 0.22)
-  assert.equal(macro.alpha, 0.24)
+  assert.equal(variant.alpha, 0.12)
+  assert.equal(macro.alpha, 0.34)
   assert.equal(part2.groundLayers.some((item) => item.texture === 'forest-region-part-2-ground-3'), false)
 
   const banks = part2.props.filter((item) => item.id.startsWith('p2-bank-'))
@@ -204,16 +208,22 @@ test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and refl
   assert.deepEqual(part2.waterways[0], {
     id: 'p2-waterway',
     points: [
-      { x: 120, y: 520 }, { x: 360, y: 650 }, { x: 620, y: 760 }, { x: 900, y: 930 },
-      { x: 1160, y: 1110 }, { x: 1430, y: 1290 }, { x: 1710, y: 1450 }, { x: 2020, y: 1540 },
+      { x: 120, y: 520 }, { x: 340, y: 660 }, { x: 540, y: 720 }, { x: 760, y: 810 },
+      { x: 900, y: 930 }, { x: 1030, y: 1040 }, { x: 1220, y: 1140 }, { x: 1430, y: 1290 },
+      { x: 1640, y: 1490 }, { x: 1840, y: 1450 }, { x: 2020, y: 1540 },
     ],
-    width: 230,
+    width: 204,
     texture: 'forest-region-part-2-water-flow',
     alpha: 0.58,
+    tint: 0x829b99,
     tilePosition: { x: 137, y: 61 },
-    edgeColor: 0x1e7182,
-    edgeAlpha: 0.28,
-    edgePadding: 20,
+    edgeColor: 0x294944,
+    edgeAlpha: 0.16,
+    edgePadding: 30,
+    bedColor: 0x16383b,
+    bedAlpha: 0.28,
+    bedPadding: 8,
+    widthVariance: 13,
     depth: -6.8,
   })
   assert.equal(part2.props.some((item) => item.texture === 'forest-region-part-2-water-flow'), false)
@@ -226,16 +236,119 @@ test('part 2 uses phased ground, explicit water, bank, foliage, bridge, and refl
       legacyId,
     )
   }
-  assert.equal(banks.length, 9)
-  assert.equal(foliage.length, 5)
-  assert.equal(new Set(foliage.map((item) => `${item.width}x${item.height}:${item.angle}`)).size, 5)
-  assert.equal(reflections.length, 4)
+  assert.equal(banks.length, 3)
+  assert.equal(foliage.length, 7)
+  assert.equal(reflections.length, 0)
+  assert.equal(part2.effects.map((item) => item.id).join(','), 'p2-mist-fall')
+
+  assert.equal(part2.paths.every((item) => item.continuous === true), true)
+  assert.deepEqual(part2.paths.map((item) => item.visualGaps?.[0]), [
+    { center: { x: 1030, y: 1040 }, radius: 145 },
+    { center: { x: 540, y: 720 }, radius: 135 },
+  ])
+  FOREST_REGION_KEYS.filter((key) => key !== 'glimmer_forest_part_2').forEach((key) => {
+    assert.equal(FOREST_REGIONS[key].paths.some((item) => item.continuous === true), false)
+  })
 
   assert.deepEqual(part2.landmarks.map((item) => item.id).sort(), ['p2-main-bridge', 'p2-shoal-bridge'])
   part2.landmarks.forEach((bridge) => {
     assert.equal(bridge.depthRole, 'underlay')
     assert.equal(isForestVisualVisibleOnMinimap(bridge), true)
   })
+})
+
+test('part 2 bridge heads are embedded below four visual-only bank caps', () => {
+  const part2 = FOREST_REGIONS.glimmer_forest_part_2
+  const caps = part2.props.filter((item) => item.id.startsWith('p2-bridge-cap-'))
+  const bridges = new Map(part2.landmarks.map((item) => [item.id, item]))
+  const expectedCaps = [
+    { id: 'p2-bridge-cap-shoal-southwest', bridgeId: 'p2-shoal-bridge', endpoint: { x: 430, y: 830 } },
+    { id: 'p2-bridge-cap-shoal-northeast', bridgeId: 'p2-shoal-bridge', endpoint: { x: 650, y: 610 } },
+    { id: 'p2-bridge-cap-main-southwest', bridgeId: 'p2-main-bridge', endpoint: { x: 905, y: 1150 } },
+    { id: 'p2-bridge-cap-main-northeast', bridgeId: 'p2-main-bridge', endpoint: { x: 1155, y: 930 } },
+  ]
+
+  assert.deepEqual(caps.map((item) => item.id).sort(), expectedCaps.map((item) => item.id).sort())
+  expectedCaps.forEach(({ id, bridgeId, endpoint }) => {
+    const cap = caps.find((item) => item.id === id)!
+    const bridge = bridges.get(bridgeId)!
+    assert.ok((cap.depth ?? -Infinity) > resolveForestVisualDepth(bridge), `${id} must cover the bridge end`)
+    assert.ok(Math.hypot(cap.x - endpoint.x, cap.y - endpoint.y) <= 45, `${id} misses its bridge endpoint`)
+    assert.equal(isForestVisualVisibleOnMinimap(cap), false)
+    assert.equal(part2.colliders.some((item) => item.visualRef === id), false)
+  })
+
+  const bridgeBlends = part2.groundBlends?.filter((item) => item.id.startsWith('p2-bridge-blend-')) ?? []
+  assert.equal(bridgeBlends.length, 4)
+  bridgeBlends.forEach((blend) => {
+    assert.ok(blend.depth > resolveForestVisualDepth(bridges.get(blend.id.includes('shoal') ? 'p2-shoal-bridge' : 'p2-main-bridge')!))
+    assert.ok(blend.depth < (caps.find((cap) => cap.id.includes(blend.id.includes('shoal') ? 'shoal' : 'main'))?.depth ?? Infinity))
+  })
+})
+
+test('part 2 bank decals stay off the water centerline and bridges cross the stream directly', () => {
+  const part2 = FOREST_REGIONS.glimmer_forest_part_2
+  const water = part2.waterways[0]
+  const centerline = samplePolylineBySpacing(water.points, 12)
+  const distanceToWaterCenterline = (item: { x: number; y: number }): number => Math.min(
+    ...centerline.map((point) => Math.hypot(item.x - point.x, item.y - point.y)),
+  )
+
+  part2.props.filter((item) => /^p2-bank-0[1-6]$/.test(item.id)).forEach((bank) => {
+    assert.ok(distanceToWaterCenterline(bank) >= water.width / 2 + 18, `${bank.id} sits in the stream center`)
+  })
+
+  const bridges = new Map(part2.landmarks.map((item) => [item.id, item]))
+  assert.ok(Math.abs(bridges.get('p2-shoal-bridge')!.angle! - (-45)) <= 1)
+  assert.ok(Math.abs(bridges.get('p2-main-bridge')!.angle! - (-8)) <= 1)
+  bridges.forEach((bridge) => assert.ok(distanceToWaterCenterline(bridge) <= 18, `${bridge.id} misses the stream center`))
+})
+
+test('part 2 foliage forms three compact bank communities away from paths and bridge heads', () => {
+  const part2 = FOREST_REGIONS.glimmer_forest_part_2
+  const foliage = part2.props.filter((item) => item.id.startsWith('p2-foliage-'))
+  const clusters = [
+    { center: { x: 400, y: 440 }, ids: ['p2-foliage-01', 'p2-foliage-02'] },
+    { center: { x: 1325, y: 1430 }, ids: ['p2-foliage-03', 'p2-foliage-04', 'p2-foliage-05'] },
+    { center: { x: 1730, y: 1285 }, ids: ['p2-foliage-06', 'p2-foliage-07'] },
+  ]
+  assert.equal(foliage.length, 7)
+  clusters.forEach((cluster) => cluster.ids.forEach((id) => {
+    const plant = foliage.find((item) => item.id === id)!
+    assert.ok(Math.hypot(plant.x - cluster.center.x, plant.y - cluster.center.y) <= 150, `${id} is isolated from its community`)
+  }))
+
+  const forbidden = [
+    ...part2.paths.flatMap((route) => samplePolylineBySpacing(route.points, 24).map((point) => ({ point, radius: route.width / 2 + 24 }))),
+    ...part2.landmarks.flatMap((bridge) => [
+      { point: { x: bridge.x - 110, y: bridge.y + 110 }, radius: 105 },
+      { point: { x: bridge.x + 110, y: bridge.y - 110 }, radius: 105 },
+    ]),
+  ]
+  foliage.forEach((plant) => {
+    assert.equal(forbidden.some(({ point, radius }) => Math.hypot(plant.x - point.x, plant.y - point.y) < radius), false, `${plant.id} enters a path or bridge-head safety area`)
+  })
+})
+
+test('part 2 is enclosed by a coherent forest boundary without blocking travel safe zones', () => {
+  const part2 = FOREST_REGIONS.glimmer_forest_part_2
+  const boundary = part2.props.filter((item) => item.id.startsWith('p2-north-') || item.id.startsWith('p2-west-') || item.id.startsWith('p2-south-') || item.id.startsWith('p2-east-'))
+  assert.equal(boundary.length, 8)
+  assert.equal(boundary.filter((item) => item.texture === 'forest-tree-wall-blended').length, 2)
+  assert.equal(boundary.find((item) => item.id === 'p2-south-tree-wall')?.flipX, true)
+  assert.equal(new Set(boundary.filter((item) => item.texture.startsWith('forest-tree-common-')).map((item) => item.texture)).size, 5)
+  assert.equal(part2.colliders.filter((item) => item.visualRef?.endsWith('tree-wall')).length, 6)
+  assert.equal(part2.groundBlends?.length, 11)
+  const terrainBlends = part2.groundBlends?.filter((item) => !item.id.startsWith('p2-bridge-blend-')) ?? []
+  assert.equal(terrainBlends.length, 7)
+  assert.equal(terrainBlends.every((item) => item.alpha <= 0.16 && item.depth < -6.4), true)
+  assert.equal(boundary.every((item) => item.tint !== undefined && (item.alpha ?? 1) < 1), true)
+  const blendedWallArt = `${projectRoot}art-source/generated/glimmer-forest-v1/sprites/forest/forest-tree-wall-blended.png`
+  const blendedWallRuntime = `${projectRoot}public/assets/generated/sprites/forest/forest-tree-wall-blended.png`
+  assert.equal(existsSync(blendedWallArt), true)
+  assert.equal(existsSync(blendedWallRuntime), true)
+  assert.equal(digest(blendedWallArt), digest(blendedWallRuntime))
+  assert.equal(validateForestRegionConfig(part2).filter((problem) => problem.includes('safe zone')).length, 0)
 })
 
 test('part 2 routes remain collision-free and both bridge centerlines are open', () => {
@@ -268,18 +381,20 @@ test('part 2 routes remain collision-free and both bridge centerlines are open',
 test('part 2 water chain blocks both sides continuously except at the two bridge gaps', () => {
   const water = FOREST_REGIONS.glimmer_forest_part_2.colliders.filter((item) => item.role === 'water')
   assert.equal(water.length, 12)
+  const waterChain = water
 
-  water.slice(1).forEach((current, index) => {
+  waterChain.slice(1).forEach((current, index) => {
     if (index === 1 || index === 4) return
-    const previous = water[index]
+    const previous = waterChain[index]
     const horizontalGap = Math.max(0, Math.abs(current.x - previous.x) - ((current.width ?? 0) + (previous.width ?? 0)) / 2)
     const verticalGap = Math.max(0, Math.abs(current.y - previous.y) - ((current.height ?? 0) + (previous.height ?? 0)) / 2)
     assert.equal(Math.hypot(horizontalGap, verticalGap), 0, `${previous.id}/${current.id} leaves a non-bridge gap`)
   })
 
   const streamCenterline = [
-    { x: 120, y: 520 }, { x: 360, y: 650 }, { x: 620, y: 760 }, { x: 900, y: 930 },
-    { x: 1160, y: 1110 }, { x: 1430, y: 1290 }, { x: 1710, y: 1450 }, { x: 2020, y: 1540 },
+    { x: 120, y: 520 }, { x: 340, y: 660 }, { x: 540, y: 720 }, { x: 760, y: 810 },
+    { x: 900, y: 930 }, { x: 1030, y: 1040 }, { x: 1220, y: 1140 }, { x: 1430, y: 1290 },
+    { x: 1640, y: 1490 }, { x: 1840, y: 1450 }, { x: 2020, y: 1540 },
   ]
   const openRuns = samplePolylineBySpacing(streamCenterline, 8).reduce<{ x: number; y: number }[][]>((runs, point) => {
     if (part2WaterContains(point.x, point.y)) return runs
@@ -300,6 +415,12 @@ test('part 2 water chain blocks both sides continuously except at the two bridge
     assert.ok(Math.hypot(midpoint.x - expectedBridges[index].x, midpoint.y - expectedBridges[index].y) <= 32, `gap ${index + 1} is not centered on its bridge`)
     assert.ok(span >= 112 && span <= 230, `gap ${index + 1} span ${span} is outside the bridge contract`)
   })
+
+  const bridgeSideBlocks = new Map(water.map((item) => [item.id, item]))
+  assert.ok((bridgeSideBlocks.get('p2-water-block-02')!.x + bridgeSideBlocks.get('p2-water-block-02')!.width! / 2) >= 440)
+  assert.ok((bridgeSideBlocks.get('p2-water-block-03')!.x - bridgeSideBlocks.get('p2-water-block-03')!.width! / 2) <= 595)
+  assert.ok((bridgeSideBlocks.get('p2-water-block-05')!.x + bridgeSideBlocks.get('p2-water-block-05')!.width! / 2) >= 980)
+  assert.ok((bridgeSideBlocks.get('p2-water-block-06')!.x - bridgeSideBlocks.get('p2-water-block-06')!.width! / 2) <= 1090)
 })
 
 test('part 2 minimap keeps navigation layers and hides decorative effects and foliage', () => {
@@ -316,6 +437,7 @@ test('part 2 minimap keeps navigation layers and hides decorative effects and fo
   assert.equal(part2.waterways.every((item) => item.minimapVisible !== false), true)
   assert.equal(part2.landmarks.every((item) => visibleProps.includes(item.id)), true)
   assert.equal(part2.props.filter((item) => item.id.startsWith('p2-foliage-')).every((item) => hiddenProps.includes(item.id)), true)
+  assert.equal(part2.props.filter((item) => item.id.startsWith('p2-bridge-cap-')).every((item) => hiddenProps.includes(item.id)), true)
   assert.equal(part2.effects.every((item) => hiddenProps.includes(item.id)), true)
 })
 

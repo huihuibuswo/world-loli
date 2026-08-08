@@ -111,6 +111,59 @@ const water = add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldH
 water.setMask(createSplineGeometryMask(centerline, width))
 ```
 
+## Full-Map Composition Acceptance Contract
+
+Asset validity does not imply scene validity. A transparent sprite can pass Alpha, manifest, preload, and contact-sheet checks while the assembled map still reads as unrelated stickers.
+
+Before accepting a region layout, render one deterministic full-map composite at the authoritative world size and inspect it at both full-map scale and gameplay-scale crops. The composite must include the actual ground-layer Alpha, continuous paths and waterways, landmarks, repeated props, boundaries, and foreground/effect layers that materially affect composition.
+
+The review must verify:
+
+- Boundary assets form intentional masses or corridors instead of evenly spaced isolated objects.
+- Repeated props form two or more recognizable ecology families with consistent scale, palette, and placement rules.
+- Continuous terrain varies in width or contour where appropriate and does not read as a uniform translucent tube or a chain of rectangular stamps.
+- Major landmarks have visual support from surrounding terrain and do not float in empty ground.
+- Playable negative space is deliberate: routes, bridge heads, spawns, portals, and interaction zones remain readable without making the whole map look unfinished.
+- Ground tiling and repeated silhouettes are not obvious at full-map scale.
+
+Contact sheets remain required for per-asset defects, but they cannot replace the full-map composite. Runtime acceptance requires both checks.
+
+Wrong:
+
+```text
+Alpha passes + assets load + unit tests pass -> approve region art
+```
+
+Correct:
+
+```text
+per-asset QA -> full-map composite -> gameplay crops -> collision/navigation checks -> approve region art
+```
+
+## Bridge-to-Terrain Contact Contract
+
+A bridge crossing a masked waterway is not visually complete when the bridge sprite merely overlaps the water. Both bridge endpoints must be embedded into the shoreline so the bridge reads as part of the terrain rather than a detached transparent sticker.
+
+Required layer order:
+
+```text
+waterway / riverbed
+bridge body
+soft bridge-head terrain blend
+bridge-head bank cap
+optional sparse shoreline foliage
+```
+
+- Keep the bridge body below the bridge-head blend and bank cap at both endpoints.
+- Stop continuous road/path rendering before it enters the water mask. Preserve the logical route through the bridge for navigation, but declare a visual gap around the bridge center so translucent water cannot reveal a road band beneath the bridge.
+- Use four explicit endpoint caps for two bridges; do not rely on a generic shoreline decal that happens to overlap one end.
+- Bridge-head caps are visual-only and must not create colliders or change the authoritative water-gap coordinates.
+- Tighten the adjacent water colliders toward the bridge sides while preserving one continuous walkable gap and all bridge-head safe zones. Do not add small colliders inside a bridge-head safe zone to hide visual defects.
+- Hide bridge-head caps from the minimap while keeping the bridge body and waterway visible.
+- Review each bridge in a gameplay-scale crop. A full-map preview alone can hide exposed log ends, dark Alpha seams, or a cap placed on the wrong side of the bank.
+
+Regression tests must assert that every expected bridge-head cap exists, resolves to a depth above its bridge, remains close to the declared endpoint, and has no collider reference. They must also assert that bridge-centered path visual gaps exist, both bridge centerlines remain open, the stream has exactly two open runs, and adjacent water colliders stay within the approved bridge-side bounds.
+
 ## Wrong vs Correct
 
 Wrong:

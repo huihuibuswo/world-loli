@@ -12,6 +12,7 @@ import {
   validateForestRegionConfig,
   type ForestCollider,
   type ForestEffect,
+  type ForestGroundBlend,
   type ForestForeground,
   type ForestObstacleLayoutItem,
   type ForestProp,
@@ -894,6 +895,8 @@ export class WorldScene extends Phaser.Scene {
       .setAlpha(layout.alpha ?? 1)
       .setAngle(layout.angle ?? 0)
       .setDepth(this.forestDepth(layout))
+    if (layout.flipX) object.setFlipX(true)
+    if (layout.tint !== undefined) object.setTint(layout.tint)
     if (layout.additive) object.setBlendMode(Phaser.BlendModes.ADD)
     this.environmentObjects.push(object)
     if (hideFromMinimap) this.minimapHiddenObjects.push(object)
@@ -935,25 +938,82 @@ export class WorldScene extends Phaser.Scene {
   ): void {
     const route = new Phaser.Curves.Spline(layout.points.map(({ x, y }) => new Phaser.Math.Vector2(x, y)))
     const samples = route.getSpacedPoints(Math.max(2, Math.ceil(route.getLength() / 24)))
+    const sampleRadius = (index: number): number => {
+      if (!layout.widthVariance) return layout.width / 2
+      const progress = samples.length <= 1 ? 0 : index / (samples.length - 1)
+      const variation = Math.sin(progress * Math.PI * 3.2) * layout.widthVariance
+        + Math.sin(progress * Math.PI * 7.4 + 0.8) * layout.widthVariance * 0.34
+      return layout.width / 2 + variation
+    }
     const shape = this.make.graphics({ x: 0, y: 0 }, false)
     shape.fillStyle(0xffffff)
-    samples.forEach((sample) => shape.fillCircle(sample.x, sample.y, layout.width / 2))
+    samples.forEach((sample, index) => shape.fillCircle(sample.x, sample.y, sampleRadius(index)))
 
-    const base = this.make.graphics({ x: 0, y: 0 }, true)
-    base.fillStyle(layout.edgeColor, layout.edgeAlpha)
-    samples.forEach((sample) => base.fillCircle(sample.x, sample.y, layout.width / 2 + layout.edgePadding))
-    base.setDepth(layout.depth - 0.05)
+    const edgeBands = [
+      { padding: layout.edgePadding, alpha: layout.edgeAlpha * 0.35, depth: layout.depth - 0.07 },
+      { padding: layout.edgePadding * 0.66, alpha: layout.edgeAlpha * 0.55, depth: layout.depth - 0.06 },
+      { padding: layout.edgePadding * 0.33, alpha: layout.edgeAlpha * 0.8, depth: layout.depth - 0.05 },
+    ].map(({ padding, alpha, depth }) => {
+      const band = this.make.graphics({ x: 0, y: 0 }, true)
+      band.fillStyle(layout.edgeColor, alpha)
+      samples.forEach((sample, index) => band.fillCircle(sample.x, sample.y, sampleRadius(index) + padding))
+      band.setDepth(depth)
+      return band
+    })
+
+    const bed = this.make.graphics({ x: 0, y: 0 }, true)
+    bed.fillStyle(layout.bedColor ?? layout.edgeColor, layout.bedAlpha ?? layout.edgeAlpha)
+    samples.forEach((sample, index) => bed.fillCircle(sample.x, sample.y, sampleRadius(index) + (layout.bedPadding ?? 0)))
+    bed.setDepth(layout.depth - 0.025)
 
     const texture = this.add.tileSprite(width / 2, height / 2, width, height, layout.texture)
       .setAlpha(layout.alpha)
       .setDepth(layout.depth)
+    if (layout.tint !== undefined) texture.setTint(layout.tint)
     if (layout.tilePosition) texture.setTilePosition(layout.tilePosition.x, layout.tilePosition.y)
     const mask = shape.createGeometryMask()
     texture.setMask(mask)
 
     this.forestWaterwayMasks.push({ mask, shape, texture })
-    this.environmentObjects.push(base, texture)
-    if (layout.minimapVisible === false) this.minimapHiddenObjects.push(base, texture)
+    this.environmentObjects.push(...edgeBands, bed, texture)
+    if (layout.minimapVisible === false) this.minimapHiddenObjects.push(...edgeBands, bed, texture)
+  }
+
+  private createForestGroundBlend(layout: ForestGroundBlend): void {
+    const rings = [
+      { scale: 1, alpha: layout.alpha * 0.28 },
+      { scale: 0.78, alpha: layout.alpha * 0.48 },
+      { scale: 0.56, alpha: layout.alpha * 0.72 },
+    ]
+    rings.forEach(({ scale, alpha }, index) => {
+      const blend = this.add.graphics({ x: layout.x, y: layout.y })
+      blend.fillStyle(layout.color, alpha)
+      blend.fillEllipse(0, 0, layout.width * scale, layout.height * scale)
+      blend.setAngle(layout.angle ?? 0).setDepth(layout.depth + index * 0.005)
+      this.environmentObjects.push(blend)
+    })
+  }
+
+  private createContinuousForestPath(
+    layout: ForestRegionConfig['paths'][number],
+  ): void {
+    const route = new Phaser.Curves.Spline(layout.points.map(({ x, y }) => new Phaser.Math.Vector2(x, y)))
+    const samples = route.getSpacedPoints(Math.max(2, Math.ceil(route.getLength() / 22)))
+    const visibleSamples = samples.filter((sample) => !layout.visualGaps?.some(({ center, radius }) => (
+      Phaser.Math.Distance.Between(sample.x, sample.y, center.x, center.y) < radius
+    )))
+    const outer = this.make.graphics({ x: 0, y: 0 }, true)
+    outer.fillStyle(0x25362f, layout.alpha * 0.5)
+    visibleSamples.forEach((sample) => outer.fillCircle(sample.x, sample.y, layout.width / 2))
+    outer.setDepth(-7.05)
+
+    const innerWidth = Math.max(64, layout.width - 36)
+    const inner = this.make.graphics({ x: 0, y: 0 }, true)
+    inner.fillStyle(0x4a5043, layout.alpha * 0.32)
+    visibleSamples.forEach((sample) => inner.fillCircle(sample.x, sample.y, innerWidth / 2))
+    inner.setDepth(-7)
+
+    this.environmentObjects.push(outer, inner)
   }
 
   private drawWorld(
@@ -1018,6 +1078,10 @@ export class WorldScene extends Phaser.Scene {
     })
 
     forestRegion.paths.forEach((layout) => {
+      if (layout.continuous) {
+        this.createContinuousForestPath(layout)
+        return
+      }
       const route = new Phaser.Curves.Spline(layout.points.map(({ x, y }) => new Phaser.Math.Vector2(x, y)))
       const divisions = Math.max(2, Math.ceil(route.getLength() / 145))
       const points = route.getSpacedPoints(divisions)
@@ -1035,6 +1099,7 @@ export class WorldScene extends Phaser.Scene {
     })
 
     forestRegion.waterways.forEach((layout) => this.createForestWaterway(layout, width, height))
+    forestRegion.groundBlends?.forEach((layout) => this.createForestGroundBlend(layout))
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ;[...forestRegion.props, ...forestRegion.landmarks].forEach((layout) => {

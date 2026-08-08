@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import random
@@ -153,6 +154,39 @@ def trim_alpha(image: Image.Image, padding: int = 16) -> Image.Image:
     right = min(rgba.width, bbox[2] + padding)
     bottom = min(rgba.height, bbox[3] + padding)
     return rgba.crop((left, top, right, bottom))
+
+
+def feather_ground_contact(
+    image: Image.Image,
+    *,
+    bottom_pixels: int = 86,
+    side_pixels: int = 72,
+) -> Image.Image:
+    rgba = image.convert("RGBA")
+    alpha = rgba.getchannel("A")
+    bbox = alpha.getbbox()
+    if bbox is None:
+        return rgba
+    left, _, right, bottom = bbox
+    pixels = alpha.load()
+
+    def smoothstep(value: float) -> float:
+        value = max(0.0, min(1.0, value))
+        return value * value * (3 - 2 * value)
+
+    for y in range(alpha.height):
+        bottom_factor = 1.0
+        if y > bottom - bottom_pixels:
+            bottom_factor = smoothstep((bottom - y) / bottom_pixels)
+        for x in range(alpha.width):
+            side_factor = 1.0
+            if x < left + side_pixels:
+                side_factor = smoothstep((x - left) / side_pixels)
+            elif x > right - side_pixels:
+                side_factor = smoothstep((right - x) / side_pixels)
+            pixels[x, y] = round(pixels[x, y] * min(bottom_factor, side_factor))
+    rgba.putalpha(alpha)
+    return rgba
 
 
 def keep_largest_component(image: Image.Image, threshold: int = 36) -> Image.Image:
@@ -368,6 +402,23 @@ def save_ground(image: Image.Image, relative: str, size: tuple[int, int]) -> dic
     }
 
 
+def prepare_blended_tree_wall() -> None:
+    relative = "sprites/forest/forest-tree-wall-blended.png"
+    wall = feather_ground_contact(remove_checker(Image.open(SOURCES["tree_wall"].path)))
+    record = save_asset(wall, relative, canvas=(1024, 512))
+    manifest_path = ART_ROOT / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assets = [item for item in manifest["assets"] if item["name"] != record["name"]]
+    original_index = next(
+        (index for index, item in enumerate(assets) if item["name"] == "forest-tree-wall-a.png"),
+        len(assets) - 1,
+    )
+    assets.insert(original_index + 1, record)
+    manifest["assets"] = assets
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Prepared {record['name']}")
+
+
 def atlas_cells(
     image: Image.Image,
     boxes: list[tuple[float, float, float, float]],
@@ -499,6 +550,11 @@ def main() -> None:
 
     wall = remove_checker(Image.open(SOURCES["tree_wall"].path))
     records.append(save_asset(wall, "sprites/forest/forest-tree-wall-a.png", canvas=(1024, 512)))
+    records.append(save_asset(
+        feather_ground_contact(wall),
+        "sprites/forest/forest-tree-wall-blended.png",
+        canvas=(1024, 512),
+    ))
 
     clearing = apply_elliptical_fade(
         suppress_white_halo(remove_checker(Image.open(SOURCES["clearing"].path), threshold=12, feather=42)),
@@ -542,4 +598,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only-tree-wall-blended", action="store_true")
+    args = parser.parse_args()
+    if args.only_tree_wall_blended:
+        prepare_blended_tree_wall()
+    else:
+        main()
